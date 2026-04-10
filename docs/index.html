@@ -49,6 +49,7 @@
         <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold">5</span></div>
         <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp">100</span></div>
         <div class="hud-item"><span class="hud-label">Difficulty</span><span id="hud-difficulty">Normal</span></div>
+        <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
       <main class="shop-main">
@@ -70,9 +71,9 @@
 
         <!-- Deck inventory -->
         <section class="shop-section">
-          <h3 class="shop-section-title">Your Deck (<span id="deck-count">0</span> / 10)</h3>
+          <h3 class="shop-section-title">Your Deck (<span id="deck-count">0</span> owned · <span id="deck-placed">0</span>/10 on grid)</h3>
           <div class="deck-inventory" id="deck-inventory"></div>
-          <p class="shop-hint">Tap a plant to place it on the grid. Tap a spell to cast it on one of your placed plants. Tap the "Sell" pill to sell.</p>
+          <p class="shop-hint">Tap a plant to place it on the grid. Tap a spell to cast it on one of your placed plants. Tap the "Sell" pill to sell. Own as many cards as you like — only 10 can be on the grid at once.</p>
         </section>
 
         <!-- Battlefield grid -->
@@ -99,6 +100,7 @@
         <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round-combat">1</span></div>
         <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold-combat">5</span></div>
         <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp-combat">100</span></div>
+        <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
         <button class="speed-btn" id="speed-btn" data-action="toggle-speed" title="Fast-forward combat" aria-label="Fast-forward">▶ 1×</button>
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
@@ -289,6 +291,12 @@
             <span>Sound Volume</span>
             <input type="range" id="setting-sfx-volume" min="0" max="100" value="80">
           </label>
+          <hr class="settings-divider">
+          <label class="setting-row">
+            <span>Dev Mode</span>
+            <input type="checkbox" id="setting-dev-mode">
+          </label>
+          <p class="setting-hint" id="dev-mode-hint" hidden>Dev mode active — gold button in the HUD grants +10 gold per tap.</p>
           <hr class="settings-divider">
           <button class="btn" data-action="save-game">Save Game</button>
           <button class="btn btn-danger" data-action="reset-game">Reset Game</button>

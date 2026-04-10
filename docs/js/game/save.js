@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = {
   sounds: true,
   musicVolume: 0.6,
   sfxVolume: 0.8,
+  devMode: false, // Unlocked via 4-digit code in the Settings screen
 };
 
 const DEFAULT_RUN = {

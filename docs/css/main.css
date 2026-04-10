@@ -345,6 +345,55 @@ input, select, textarea {
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
 }
 
+/* Dev gold button — sits left of the speed / pause buttons.
+   Only visible when settings.devMode is on. */
+.dev-gold-btn {
+  position: absolute;
+  top: 12px;
+  right: 115px; /* desktop: left of the speed button */
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  background: linear-gradient(135deg, var(--accent), #b8860b);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 11;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+  animation: devGoldPulse 2s ease-in-out infinite;
+}
+
+.dev-gold-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.9);
+}
+
+.dev-gold-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes devGoldPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.6); }
+  50%      { box-shadow: 0 0 18px rgba(212, 175, 55, 0.9); }
+}
+
+/* Shop header has no speed button so dev-gold sits closer to pause */
+#screen-shop .dev-gold-btn { right: 56px; }
+
+/* Settings hint text (shown when dev mode is on) */
+.setting-hint {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-style: italic;
+  line-height: 1.4;
+  padding: 0 0.25rem;
+}
+
 .btn-danger {
   border-color: var(--accent-red);
   color: var(--accent-red);
@@ -2152,6 +2201,8 @@ input, select, textarea {
   .hud-item span:last-child { font-size: 0.95rem; }
   .pause-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 1rem; min-height: 34px; }
   .speed-btn { top: 6px; right: 48px; height: 34px; min-height: 34px; padding: 0 0.6rem; font-size: 0.7rem; }
+  .dev-gold-btn { width: 32px; height: 32px; min-height: 32px; top: 7px; right: 102px; font-size: 0.9rem; }
+  #screen-shop .dev-gold-btn { right: 46px; top: 7px; }
 
   /* ----- Combat ----- */
   .combat-main {

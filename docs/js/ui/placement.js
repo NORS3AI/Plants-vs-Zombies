@@ -25,6 +25,11 @@ import { renderGrid } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
 import { showModal, confirmModal } from './modal.js';
 
+// Maximum number of plants that can be placed on the grid at once.
+// The deck itself is uncapped — this cap just gates how many of the
+// player's cards can be active in combat simultaneously.
+export const MAX_PLACED_PLANTS = 10;
+
 // ---------- State ----------
 // Current selection is module-scoped. Null = nothing selected.
 // When non-null, grid tiles highlight as valid drop targets.
@@ -82,6 +87,15 @@ function placeAt(run, row, col) {
   // Tile occupied?
   const existing = findAtTile(run, row, col);
   if (existing) return false;
+
+  // Cap active plants at MAX_PLACED_PLANTS. Opening chests is unlimited
+  // but the grid can only hold 10 simultaneously.
+  const placedCount = run.deck.filter((d) => d.gridRow != null).length;
+  if (placedCount >= MAX_PLACED_PLANTS) {
+    flashError(`Max ${MAX_PLACED_PLANTS} plants on the grid. Remove one first.`);
+    _audio?.playSfx('back');
+    return false;
+  }
 
   instance.gridRow = row;
   instance.gridCol = col;
@@ -553,7 +567,10 @@ export function renderPlacement(run) {
 function renderDeckInventory(run) {
   const host = document.getElementById('deck-inventory');
   const countEl = document.getElementById('deck-count');
+  const placedEl = document.getElementById('deck-placed');
+  const placedCount = run.deck.filter((d) => d.gridRow != null).length;
   if (countEl) countEl.textContent = String(run.deck.length);
+  if (placedEl) placedEl.textContent = String(placedCount);
   if (!host) return;
   host.innerHTML = '';
 

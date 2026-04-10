@@ -49,12 +49,21 @@ function applySettings(settings) {
   const soundsCb = document.getElementById('setting-sounds');
   const musicVol = document.getElementById('setting-music-volume');
   const sfxVol = document.getElementById('setting-sfx-volume');
+  const devModeCb = document.getElementById('setting-dev-mode');
+  const devHint = document.getElementById('dev-mode-hint');
 
   if (themeSel) themeSel.value = settings.theme;
   if (musicCb) musicCb.checked = !!settings.music;
   if (soundsCb) soundsCb.checked = !!settings.sounds;
   if (musicVol) musicVol.value = Math.round((settings.musicVolume ?? 0.6) * 100);
   if (sfxVol) sfxVol.value = Math.round((settings.sfxVolume ?? 0.8) * 100);
+  if (devModeCb) devModeCb.checked = !!settings.devMode;
+  if (devHint) devHint.hidden = !settings.devMode;
+
+  // Show/hide all dev-gold buttons across screens based on the setting
+  document.querySelectorAll('.dev-gold-btn').forEach((btn) => {
+    btn.hidden = !settings.devMode;
+  });
 
   audio.setSettings({
     music: settings.music,
@@ -667,6 +676,17 @@ document.addEventListener('click', (e) => {
         updateSpeedButton();
       }
       break;
+    case 'dev-gold':
+      // Dev-mode cheat: +10 gold per tap. Only wired when
+      // settings.devMode is true (the button is hidden otherwise,
+      // but check again here defensively).
+      if (Save.loadSettings().devMode && currentRun) {
+        currentRun.gold += 10;
+        syncHUD();
+        Save.saveRun(currentRun);
+        audio.playSfx('click');
+      }
+      break;
     case 'start-countdown':
       state.transition(STATES.COUNTDOWN);
       break;
@@ -728,7 +748,40 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'leaderboard-filter') {
     renderLeaderboard();
   }
+  if (e.target.id === 'setting-dev-mode') {
+    handleDevModeToggle(e.target);
+  }
 });
+
+/**
+ * Handle a dev-mode checkbox toggle. Enabling requires the 4-digit
+ * unlock code (1337); disabling is instant and password-free.
+ */
+function handleDevModeToggle(checkbox) {
+  if (checkbox.checked) {
+    // Trying to enable — prompt for the code
+    // eslint-disable-next-line no-alert
+    const code = window.prompt('Enter 4-digit dev mode code:');
+    if (code === '1337') {
+      const s = readSettingsFromDOM();
+      s.devMode = true;
+      Save.saveSettings(s);
+      applySettings(s);
+      flashToast('🛠 Dev mode enabled');
+    } else {
+      // Wrong or cancelled — revert the checkbox
+      checkbox.checked = false;
+      if (code !== null) flashToast('Incorrect code');
+    }
+  } else {
+    // Disabling: no password needed
+    const s = readSettingsFromDOM();
+    s.devMode = false;
+    Save.saveSettings(s);
+    applySettings(s);
+    flashToast('Dev mode disabled');
+  }
+}
 
 // Live volume slider handlers (use 'input' for instant feedback)
 document.addEventListener('input', (e) => {
@@ -744,12 +797,18 @@ function readSettingsFromDOM() {
   // overwritten with the default. (You should be able to mute via slider.)
   const musicVolRaw = document.getElementById('setting-music-volume')?.value;
   const sfxVolRaw = document.getElementById('setting-sfx-volume')?.value;
+  // devMode is loaded from persisted settings, NOT the checkbox directly
+  // (the checkbox is a user-facing control that goes through a password
+  // flow before being saved). This way a half-typed enable doesn't leak
+  // into the saved settings.
+  const persistedDevMode = !!Save.loadSettings().devMode;
   return {
     theme: document.getElementById('setting-theme')?.value || 'dark',
     music: !!document.getElementById('setting-music')?.checked,
     sounds: !!document.getElementById('setting-sounds')?.checked,
     musicVolume: (musicVolRaw !== undefined ? Number(musicVolRaw) : 60) / 100,
     sfxVolume: (sfxVolRaw !== undefined ? Number(sfxVolRaw) : 80) / 100,
+    devMode: persistedDevMode,
   };
 }
 

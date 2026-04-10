@@ -20,7 +20,11 @@ import {
 import { renderCard, renderPackChest } from './cardView.js';
 import { confirmModal, showModal } from './modal.js';
 
-export const MAX_DECK_SIZE = 10;
+// Deck itself is uncapped — "opening a chest should be super exciting".
+// The 10-card limit is now on how many plants can be PLACED on the
+// grid at once (enforced in placement.js). Kept as a historical
+// reference export for any code that still imports it.
+export const MAX_DECK_SIZE = Infinity;
 export const SHOP_CARD_COUNT = 3;
 export const REFRESH_COST = 1;
 
@@ -128,6 +132,8 @@ function addToAetherSpells(run, card) {
 
 /**
  * Buy a card from the shop slot. Returns true on success.
+ * No deck-size cap — the player can own any number of cards; the cap
+ * applies only to how many can be placed on the grid at once (Phase 11+).
  */
 export function buyShopSlot(run, slotIndex) {
   const slot = run.shopRoll[slotIndex];
@@ -138,11 +144,6 @@ export function buyShopSlot(run, slotIndex) {
 
   if (run.gold < slot.cost) {
     flashError(`Need ${slot.cost} gold (you have ${run.gold})`);
-    _audio?.playSfx('back');
-    return false;
-  }
-  if (run.deck.length >= MAX_DECK_SIZE) {
-    flashError(`Deck full (${MAX_DECK_SIZE} max)`);
     _audio?.playSfx('back');
     return false;
   }
@@ -199,10 +200,6 @@ export async function buyPack(run, packId) {
     return false;
   }
 
-  // No pre-flight deck-full check: pack contents may be all Aether-Root
-  // spells (which go to a separate inventory). We distribute carefully
-  // below and warn if deck overflow causes drops.
-
   // Pre-increment the pity counter, then roll
   run.gold -= pack.cost;
   if (!run.packsOpened) run.packsOpened = { mythic: 0, arcane: 0, frenzy: 0 };
@@ -220,26 +217,20 @@ export async function buyPack(run, packId) {
     return false;
   }
 
-  // Distribute: deck cards capped at MAX_DECK_SIZE, Aether-Root spells go
-  // to the side panel inventory. Track overflow drops to warn the player.
-  let droppedCount = 0;
+  // Distribute: every card is kept. Regular cards go to the deck (no
+  // size cap — "opening a chest should be super exciting, never a
+  // negative"). Aether-Root spells go to the side panel inventory.
   for (const card of cards) {
     if (card.category === 'aether_root') {
       addToAetherSpells(run, card);
-    } else if (run.deck.length < MAX_DECK_SIZE) {
-      addToDeck(run, card);
     } else {
-      droppedCount++;
+      addToDeck(run, card);
     }
   }
 
   _audio?.playSfx('go');
   _onFirstPack?.();
   _onChange?.();
-
-  if (droppedCount > 0) {
-    flashError(`Deck full — ${droppedCount} card${droppedCount > 1 ? 's' : ''} lost. Sell some cards first.`);
-  }
 
   // Show pack-opening modal
   await showPackRevealModal(pack, cards);
