@@ -39,11 +39,14 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 - [x] **Endless Mode** — Locked until Round 10 boss kill; appears under Insane (locked-state working)
 
 ### 1.4 Round Flow
-- [x] Shop Mode → Countdown → Combat → Round End loop (skeleton)
-- [ ] First-ever shop has no countdown
+- [x] Shop Mode → Countdown → Combat → Round End loop
+- [x] Countdown only between shop→combat (never on shop entry)
 - [x] Animated 5-second countdown (small → zoom-in → fade)
-- [x] Round counter UI
-- [ ] Round-end summary (gold earned, kills, plants lost)
+- [x] Round counter UI ("Round X / 10" or "Round X" for endless)
+- [x] HP color coding (red/amber thresholds)
+- [x] Round-end summary screen (gold earned, kills, plants lost, HP, total gold)
+- [x] Game-over screen with run totals (kills, gold, plants, difficulty, round)
+- [x] Round 10 victory stub (unlocks Endless)
 
 ---
 

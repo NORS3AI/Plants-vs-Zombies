@@ -30,6 +30,12 @@ const DEFAULT_RUN = {
   aetherRootMaxHP: 100,
   deck: [],
   grid: [],
+  // Run-totals (persist across rounds)
+  totalKills: 0,
+  totalGoldEarned: 0,
+  totalPlantsLost: 0,
+  // Last completed round's stats (for the round-end summary screen)
+  lastRoundStats: null,
 };
 
 const DEFAULT_META = {

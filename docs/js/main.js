@@ -4,9 +4,12 @@
  * Initializes the state machine, screen manager, audio, and game loop.
  * Wires DOM event handlers to state transitions.
  *
- * Phase 2 scope: animated menu, full settings (theme, audio, volume sliders),
- * Resume Game, in-game pause, modal-based confirmation, audio SFX.
+ * Phase 3 scope: full round flow with stats tracking, round-end summary,
+ * game-over flow with debug damage, enriched difficulty cards, HP color
+ * coding, "Round X / 10" formatting.
  */
+
+const ROUNDS_TOTAL = 10; // Standard mode runs to round 10; Endless ignores this
 
 import { StateMachine, STATES } from './game/state.js';
 import { GameLoop } from './game/loop.js';
@@ -55,19 +58,34 @@ const settings = Save.loadSettings();
 applySettings(settings);
 
 // ---------- HUD Sync ----------
+function formatRound(run) {
+  if (!run) return '—';
+  return run.difficulty === 'endless' ? `${run.round}` : `${run.round} / ${ROUNDS_TOTAL}`;
+}
+
+function applyHpColor(el, hp, max) {
+  if (!el) return;
+  el.classList.remove('hud-hp-low', 'hud-hp-med');
+  if (hp <= max * 0.25) el.classList.add('hud-hp-low');
+  else if (hp <= max * 0.5) el.classList.add('hud-hp-med');
+}
+
 function syncHUD() {
   if (!currentRun) return;
   const set = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
   };
-  set('hud-round', currentRun.round);
+  set('hud-round', formatRound(currentRun));
   set('hud-gold', currentRun.gold);
-  set('hud-hp', currentRun.aetherRootHP);
+  set('hud-hp', `${currentRun.aetherRootHP} / ${currentRun.aetherRootMaxHP}`);
   set('hud-difficulty', getDifficulty(currentRun.difficulty)?.label ?? '—');
-  set('hud-round-combat', currentRun.round);
+  set('hud-round-combat', formatRound(currentRun));
   set('hud-gold-combat', currentRun.gold);
-  set('hud-hp-combat', currentRun.aetherRootHP);
+  set('hud-hp-combat', `${currentRun.aetherRootHP} / ${currentRun.aetherRootMaxHP}`);
+
+  applyHpColor(document.getElementById('hud-hp'), currentRun.aetherRootHP, currentRun.aetherRootMaxHP);
+  applyHpColor(document.getElementById('hud-hp-combat'), currentRun.aetherRootHP, currentRun.aetherRootMaxHP);
 }
 
 // ---------- State Registrations ----------
@@ -129,20 +147,18 @@ state.register(STATES.COMBAT, {
 state.register(STATES.ROUND_END, {
   enter() {
     screens.show('round_end');
-    if (currentRun) {
-      currentRun.round += 1;
-      Save.saveRun(currentRun);
-    }
+    paintRoundSummary();
   },
 });
 
 state.register(STATES.GAME_OVER, {
   enter() {
     screens.show('game_over');
-    const el = document.getElementById('game-over-round');
-    if (el && currentRun) el.textContent = currentRun.round;
+    paintGameOver();
+    audio.playSfx('gameover');
     Save.clearRun();
-    currentRun = null;
+    // Note: keep currentRun in memory until user returns to menu so the
+    // game-over screen can read its stats; cleared on back-to-menu.
   },
 });
 
@@ -172,12 +188,25 @@ function buildDifficultyCards() {
 
     const metaEl = document.createElement('span');
     metaEl.className = 'diff-meta';
-    metaEl.textContent = isLocked
-      ? '🔒 Beat Round 10'
-      : `${d.playerHP} HP · ${d.startGold} Gold`;
+    if (isLocked) {
+      metaEl.textContent = '🔒 Beat Round 10';
+    } else {
+      metaEl.textContent = `${d.playerHP} HP · ${d.startGold} Gold`;
+    }
 
     btn.appendChild(name);
     btn.appendChild(metaEl);
+
+    // Enemy multiplier subtext
+    if (!isLocked) {
+      const mods = document.createElement('span');
+      mods.className = 'diff-mods';
+      const hpPct = Math.round(d.enemyHPMul * 100);
+      const dmgPct = Math.round(d.enemyDmgMul * 100);
+      mods.textContent = `Enemy: ${hpPct}% HP · ${dmgPct}% DMG`;
+      btn.appendChild(mods);
+    }
+
     host.appendChild(btn);
   }
 }
@@ -227,9 +256,121 @@ function startNewRun(difficultyId) {
     aetherRootMaxHP: d.playerHP,
     deck: [],
     grid: [],
+    totalKills: 0,
+    totalGoldEarned: 0,
+    totalPlantsLost: 0,
+    lastRoundStats: null,
   };
   Save.saveRun(currentRun);
   state.transition(STATES.SHOP);
+}
+
+/**
+ * End the current round. Records lastRoundStats, increments round counter,
+ * and either advances to ROUND_END or — if this was the final round on a
+ * non-endless run — to GAME_OVER (treated as a victory in Phase 8+).
+ *
+ * Phase 3 has no real combat, so the per-round stats are zeros. The data
+ * pipeline is in place for Phase 7's combat engine to populate.
+ */
+function endRound() {
+  if (!currentRun) return;
+
+  // Build the per-round summary from accumulators (zeros for now)
+  // In Phase 7+, the combat engine will populate these on the live run.
+  const stats = {
+    round: currentRun.round,
+    goldEarned: currentRun.lastRoundGoldEarned ?? 0,
+    kills: currentRun.lastRoundKills ?? 0,
+    plantsLost: currentRun.lastRoundPlantsLost ?? 0,
+  };
+  currentRun.lastRoundStats = stats;
+  currentRun.totalGoldEarned += stats.goldEarned;
+  currentRun.totalKills += stats.kills;
+  currentRun.totalPlantsLost += stats.plantsLost;
+
+  // Reset per-round accumulators (Phase 7 will use these)
+  currentRun.lastRoundGoldEarned = 0;
+  currentRun.lastRoundKills = 0;
+  currentRun.lastRoundPlantsLost = 0;
+
+  // Advance round counter for the next round
+  currentRun.round += 1;
+  Save.saveRun(currentRun);
+
+  state.transition(STATES.ROUND_END);
+}
+
+/** Apply damage to the Aether-Root. Triggers GAME_OVER at HP <= 0. */
+function damageAetherRoot(amount) {
+  if (!currentRun) return;
+  currentRun.aetherRootHP = Math.max(0, currentRun.aetherRootHP - amount);
+  Save.saveRun(currentRun);
+  syncHUD();
+  audio.playSfx('damage');
+  if (currentRun.aetherRootHP <= 0) {
+    state.transition(STATES.GAME_OVER);
+  }
+}
+
+function paintRoundSummary() {
+  if (!currentRun || !currentRun.lastRoundStats) return;
+  const s = currentRun.lastRoundStats;
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  // Title shows the round that JUST FINISHED, not the upcoming one
+  set('round-end-title', `Round ${s.round} Complete`);
+  set('summary-gold', `+${s.goldEarned}`);
+  set('summary-kills', s.kills);
+  set('summary-plants-lost', s.plantsLost);
+  set('summary-hp', `${currentRun.aetherRootHP} / ${currentRun.aetherRootMaxHP}`);
+  set('summary-total-gold', currentRun.gold);
+
+  // Hide "Next Round" if we just beat the final round (handled in Phase 8 victory)
+  const nextBtn = document.getElementById('next-round-button');
+  if (nextBtn) {
+    if (currentRun.difficulty !== 'endless' && s.round >= ROUNDS_TOTAL) {
+      nextBtn.textContent = 'Victory!';
+    } else {
+      nextBtn.textContent = 'Next Round →';
+    }
+  }
+}
+
+/**
+ * Handle a round 10 victory: unlock Endless, return to menu.
+ * Phase 3 stub — Phase 8 will add a proper victory screen with stats.
+ */
+function handleRound10Victory() {
+  const meta = Save.loadMeta();
+  if (!meta.endlessUnlocked) {
+    meta.endlessUnlocked = true;
+    Save.saveMeta(meta);
+    flashToast('🏆 Endless Mode unlocked!');
+  } else {
+    flashToast('Victory!');
+  }
+  Save.clearRun();
+  currentRun = null;
+  state.transition(STATES.MENU);
+}
+
+function paintGameOver() {
+  if (!currentRun) return;
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  // currentRun.round = the round they were playing when they died.
+  // endRound() only increments round AFTER a successful round completion,
+  // so this is the round they were on at death.
+  set('game-over-round', `Round ${currentRun.round}`);
+  set('game-over-difficulty', getDifficulty(currentRun.difficulty)?.label ?? '—');
+  set('game-over-kills', currentRun.totalKills);
+  set('game-over-gold', currentRun.totalGoldEarned);
+  set('game-over-plants', currentRun.totalPlantsLost);
 }
 
 function resumeRun() {
@@ -295,9 +436,6 @@ document.addEventListener('click', (e) => {
       // Phase 11
       flashToast('Leaderboard arrives in Phase 11');
       break;
-    case 'back-to-menu':
-      state.transition(STATES.MENU);
-      break;
     case 'settings-back':
       // Return to previous screen if mid-run, otherwise menu
       if (currentRun && state.previous && state.previous !== STATES.SETTINGS) {
@@ -310,10 +448,23 @@ document.addEventListener('click', (e) => {
       state.transition(STATES.COUNTDOWN);
       break;
     case 'end-round':
-      state.transition(STATES.ROUND_END);
+      endRound();
+      break;
+    case 'debug-damage':
+      damageAetherRoot(10);
       break;
     case 'next-round':
-      state.transition(STATES.SHOP);
+      // Round 10 victory check (Phase 3 stub — Phase 8 adds full victory screen)
+      if (currentRun && currentRun.difficulty !== 'endless' && currentRun.round > ROUNDS_TOTAL) {
+        handleRound10Victory();
+      } else {
+        state.transition(STATES.SHOP);
+      }
+      break;
+    case 'back-to-menu':
+      // currentRun was kept for game-over rendering; clear it now
+      if (state.current === STATES.GAME_OVER) currentRun = null;
+      state.transition(STATES.MENU);
       break;
     case 'save-game':
       if (currentRun) Save.saveRun(currentRun);
@@ -352,12 +503,16 @@ document.addEventListener('input', (e) => {
 });
 
 function readSettingsFromDOM() {
+  // Use ?? not || so a slider value of 0 isn't treated as falsy and
+  // overwritten with the default. (You should be able to mute via slider.)
+  const musicVolRaw = document.getElementById('setting-music-volume')?.value;
+  const sfxVolRaw = document.getElementById('setting-sfx-volume')?.value;
   return {
     theme: document.getElementById('setting-theme')?.value || 'dark',
     music: !!document.getElementById('setting-music')?.checked,
     sounds: !!document.getElementById('setting-sounds')?.checked,
-    musicVolume: (Number(document.getElementById('setting-music-volume')?.value) || 60) / 100,
-    sfxVolume: (Number(document.getElementById('setting-sfx-volume')?.value) || 80) / 100,
+    musicVolume: (musicVolRaw !== undefined ? Number(musicVolRaw) : 60) / 100,
+    sfxVolume: (sfxVolRaw !== undefined ? Number(sfxVolRaw) : 80) / 100,
   };
 }
 

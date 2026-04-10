@@ -79,7 +79,7 @@ html, body {
 #phase-badge {
   position: fixed;
   top: 12px;
-  right: 12px;
+  left: 12px;
   padding: 4px 10px;
   background: var(--bg-elev);
   border: 1px solid var(--accent);
@@ -252,7 +252,7 @@ html, body {
 .pause-btn {
   position: absolute;
   top: 12px;
-  right: 64px;
+  right: 12px;
   width: 36px;
   height: 36px;
   background: var(--bg-elev);
@@ -324,6 +324,13 @@ html, body {
   color: var(--fg-muted);
 }
 
+.diff-mods {
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+
 /* ---------- Game Header (HUD) ---------- */
 .game-header {
   position: absolute;
@@ -357,6 +364,16 @@ html, body {
   font-weight: 700;
   color: var(--accent);
 }
+
+.hud-item .hud-sub {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  font-weight: 400;
+}
+
+/* HP color shifts as it drops */
+.hud-hp-low { color: #ef4444 !important; }
+.hud-hp-med { color: #f59e0b !important; }
 
 /* ---------- Shop Screen ---------- */
 .shop-main {
@@ -566,6 +583,60 @@ html, body {
   border: none;
   border-top: 1px solid var(--border);
   margin: 0.5rem 0;
+}
+
+/* ---------- Round Summary ---------- */
+.round-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.5rem 2rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 320px;
+  box-shadow: var(--shadow);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+}
+
+.summary-label {
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+}
+
+.summary-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--fg-base);
+}
+
+.summary-value.gold-value {
+  color: var(--accent);
+}
+
+.summary-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
+
+/* Combat debug button row */
+.combat-debug {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
 }
 
 /* ---------- Modal ---------- */

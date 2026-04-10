@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 3 — Difficulty Selection & Round Flow** (Phase 2 complete)
+> **Current Phase:** **Phase 4 — Card Data Model** (Phase 3 complete)
 
 ---
 
@@ -64,20 +64,27 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 3 — Difficulty Selection & Round Flow
+## Phase 3 — Difficulty Selection & Round Flow ✅
 
 **Goal:** Player can pick difficulty and walk through the round-flow skeleton.
 
-- [ ] Difficulty selection screen (Tutorial / Easy / Normal / Hard / Insane)
-- [ ] Endless option present but locked
-- [ ] Difficulty stat config object (player HP, gold, scaling multipliers)
-- [ ] Round counter UI
-- [ ] Animated 5-second countdown (small → zoom → fade)
-- [ ] First-shop-no-countdown logic
-- [ ] Round-end summary screen
-- [ ] Game-over screen on Aether-Root death
+- [x] Difficulty selection screen (Tutorial / Easy / Normal / Hard / Insane)
+- [x] Endless option present but locked
+- [x] Difficulty stat config object (player HP, gold, scaling multipliers)
+- [x] Difficulty cards show enemy HP/DMG multiplier subtext
+- [x] Round counter UI ("Round X / 10" or "Round X" for endless)
+- [x] HP color coding (red below 25%, amber below 50%)
+- [x] Animated 5-second countdown (small → zoom → fade)
+- [x] First-shop-no-countdown logic (countdown only between shop→combat)
+- [x] Round-end summary screen with real stats fields
+- [x] Per-round stats tracking on `currentRun` (gold/kills/plants lost)
+- [x] Run-total tracking (totalKills, totalGoldEarned, totalPlantsLost)
+- [x] Game-over screen on Aether-Root death (with stats)
+- [x] Debug damage button (Phase 7 will replace with real combat damage)
+- [x] Round 10 victory stub (unlocks Endless, returns to menu)
+- [x] New SFX: `damage` and `gameover`
 
-**Exit Criteria:** Player can pick difficulty, see countdown, and loop through empty rounds.
+**Exit Criteria:** Player can pick difficulty, see countdown, loop through rounds, take damage, and trigger game-over with full stats. ✅
 
 ---
 

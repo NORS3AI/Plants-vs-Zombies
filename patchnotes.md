@@ -5,6 +5,33 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.3.0 — 2026-04-10 — Phase 3: Round Flow & Game Over
+
+### Added
+- **Round summary screen** — gold earned, kills, plants lost, current HP, total gold. Wired to `currentRun.lastRoundStats`. The combat engine in Phase 7 will populate the values.
+- **Game-over flow** — `damageAetherRoot()` decrements HP and transitions to `GAME_OVER` at 0. Game-over screen shows total kills, gold earned, plants lost, difficulty, and round reached.
+- **Debug "Take 10 Damage" button** on the combat screen — lets you exercise the game-over flow before real combat lands.
+- **HUD format upgrade** — round counter shows "Round X / 10" for standard modes and just "Round X" for Endless. HP shows "current / max".
+- **HP color coding** — `.hud-hp-low` (red) below 25%, `.hud-hp-med` (amber) below 50%.
+- **Difficulty card enrichment** — each card now shows enemy HP/DMG multipliers as subtext (e.g., "Enemy: 200% HP · 150% DMG" on Hard).
+- **Round 10 victory stub** — clicking "Victory!" on the round-end summary unlocks Endless mode (saves to meta), shows toast, returns to menu. Phase 8 will add a proper victory screen.
+- **New SFX** — `damage` (low sawtooth sweep, alarming) and `gameover` (descending lament).
+- **Per-round stat accumulators** on `currentRun` — `lastRoundGoldEarned`, `lastRoundKills`, `lastRoundPlantsLost` ready for Phase 7 combat to populate.
+- **Run-total tracking** — `totalKills`, `totalGoldEarned`, `totalPlantsLost` persisted across rounds.
+
+### Changed
+- `endRound()` is now a real function: snapshots per-round stats into `lastRoundStats`, accumulates run totals, increments round counter, transitions to ROUND_END.
+- `GAME_OVER` no longer immediately clears `currentRun` — it's kept in memory so the game-over screen can read its stats. Cleared on back-to-menu.
+- Phase badge advances to "Phase 3 — Round Flow".
+- Version label bumped to v0.3.0.
+
+### Fixed (Phase 2 audit follow-ups)
+- **Bug 1:** Volume scaling was quadratic. The SFX bus AND each preset both multiplied by `sfxVolume`, so 50% slider gave ~6% sound. Presets now use fixed inner gains; the bus is the only volume scaler. Slider response is now linear.
+- **Bug 2:** Volume slider couldn't reach 0. `Number(value) || 60` treated 0 as falsy and silently substituted 60. Replaced with explicit `value !== undefined ? Number(value) : 60`.
+- **Bug 3:** Pause button overlapped the phase badge. Phase badge moved from `top-right` to `top-left`; pause button kept at top-right of game header.
+
+---
+
 ## v0.2.0 — 2026-04-10 — Phase 2: Main Menu & Settings
 
 ### Added

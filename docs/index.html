@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 2 — Menu &amp; Settings</div>
+    <div id="phase-badge">Phase 3 — Round Flow</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.2.0 — Phase 2</p>
+        <p class="version">v0.3.0 — Phase 3</p>
       </div>
     </section>
 
@@ -79,15 +79,40 @@
         </aside>
         <div id="grid-container-combat" class="grid-wrap"></div>
       </main>
-      <button class="btn" data-action="end-round">End Round (debug)</button>
+      <div class="combat-debug">
+        <button class="btn" data-action="end-round">End Round (debug)</button>
+        <button class="btn btn-danger" data-action="debug-damage">Take 10 Damage (debug)</button>
+      </div>
     </section>
 
     <!-- Screen: Round End -->
     <section id="screen-round-end" class="screen" data-screen="round_end" hidden>
       <div class="menu-stack">
-        <h2 class="title-sm">Round Complete</h2>
-        <p class="muted">Round summary will be implemented in Phase 8.</p>
-        <button class="btn btn-primary" data-action="next-round">Next Round →</button>
+        <h2 class="title-sm" id="round-end-title">Round 1 Complete</h2>
+        <div class="round-summary">
+          <div class="summary-row">
+            <span class="summary-label">Gold Earned</span>
+            <span class="summary-value gold-value" id="summary-gold">+0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Kills</span>
+            <span class="summary-value" id="summary-kills">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Plants Lost</span>
+            <span class="summary-value" id="summary-plants-lost">0</span>
+          </div>
+          <hr class="summary-divider">
+          <div class="summary-row">
+            <span class="summary-label">Aether-Root HP</span>
+            <span class="summary-value" id="summary-hp">100 / 100</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Gold</span>
+            <span class="summary-value" id="summary-total-gold">0</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" data-action="next-round" id="next-round-button">Next Round →</button>
       </div>
     </section>
 
@@ -95,7 +120,21 @@
     <section id="screen-game-over" class="screen" data-screen="game_over" hidden>
       <div class="menu-stack">
         <h2 class="title-sm">The Aether-Root has fallen</h2>
-        <p class="muted">You survived <span id="game-over-round">0</span> rounds.</p>
+        <p class="muted">You reached <span id="game-over-round">Round 1</span> on <span id="game-over-difficulty">Normal</span>.</p>
+        <div class="round-summary">
+          <div class="summary-row">
+            <span class="summary-label">Total Kills</span>
+            <span class="summary-value" id="game-over-kills">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Gold Earned</span>
+            <span class="summary-value gold-value" id="game-over-gold">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Plants Lost</span>
+            <span class="summary-value" id="game-over-plants">0</span>
+          </div>
+        </div>
         <button class="btn btn-primary" data-action="back-to-menu">Return to Menu</button>
       </div>
     </section>

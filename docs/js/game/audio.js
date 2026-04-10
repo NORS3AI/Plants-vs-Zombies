@@ -10,7 +10,7 @@
  */
 
 const SFX_PRESETS = {
-  click: (ctx, vol, dest) => {
+  click: (ctx, dest) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -19,13 +19,13 @@ const SFX_PRESETS = {
     osc.frequency.value = 720;
     const t = ctx.currentTime;
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.25, t + 0.005);
+    gain.gain.linearRampToValueAtTime(0.25, t + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
     osc.start(t);
     osc.stop(t + 0.1);
   },
 
-  hover: (ctx, vol, dest) => {
+  hover: (ctx, dest) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -35,13 +35,13 @@ const SFX_PRESETS = {
     osc.frequency.setValueAtTime(520, t);
     osc.frequency.exponentialRampToValueAtTime(680, t + 0.06);
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.12, t + 0.005);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
     osc.start(t);
     osc.stop(t + 0.1);
   },
 
-  tick: (ctx, vol, dest) => {
+  tick: (ctx, dest) => {
     // Countdown tick — short, urgent
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -51,13 +51,13 @@ const SFX_PRESETS = {
     osc.frequency.value = 480;
     const t = ctx.currentTime;
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.15, t + 0.005);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     osc.start(t);
     osc.stop(t + 0.13);
   },
 
-  go: (ctx, vol, dest) => {
+  go: (ctx, dest) => {
     // Round start — ascending arpeggio
     const notes = [440, 554, 660, 880];
     notes.forEach((freq, i) => {
@@ -69,14 +69,14 @@ const SFX_PRESETS = {
       osc.frequency.value = freq;
       const t = ctx.currentTime + i * 0.06;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(vol * 0.2, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0.2, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
       osc.start(t);
       osc.stop(t + 0.2);
     });
   },
 
-  back: (ctx, vol, dest) => {
+  back: (ctx, dest) => {
     // Back/cancel — descending blip
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -87,10 +87,46 @@ const SFX_PRESETS = {
     osc.frequency.setValueAtTime(520, t);
     osc.frequency.exponentialRampToValueAtTime(320, t + 0.1);
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.18, t + 0.005);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     osc.start(t);
     osc.stop(t + 0.13);
+  },
+
+  damage: (ctx, dest) => {
+    // Aether-Root takes damage — low, alarming
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(dest);
+    osc.type = 'sawtooth';
+    const t = ctx.currentTime;
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.25);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.22, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    osc.start(t);
+    osc.stop(t + 0.32);
+  },
+
+  gameover: (ctx, dest) => {
+    // Game over — descending lament
+    const notes = [440, 392, 349, 294, 220];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      osc.start(t);
+      osc.stop(t + 0.28);
+    });
   },
 };
 
@@ -152,7 +188,9 @@ export class AudioManager {
     if (!preset) return;
     if (this.ctx.state === 'suspended') this.ctx.resume();
     try {
-      preset(this.ctx, this.sfxVolume, this.sfxBus);
+      // Bus handles all volume scaling — presets use fixed inner gains
+      // so the slider response is linear, not quadratic.
+      preset(this.ctx, this.sfxBus);
     } catch (e) {
       console.warn(`[audio] sfx '${name}' failed:`, e);
     }
