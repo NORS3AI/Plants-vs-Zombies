@@ -38,7 +38,7 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 - [x] Set up localStorage save/load skeleton
 - [x] Verify GitHub Pages serves `/docs` on `main` correctly
 
-**Exit Criteria:** A blank game shell loads at `nors3ai.github.io/plants-vs-zombies`, transitions between states, and saves to localStorage. ✅
+**Exit Criteria:** A blank game shell loads at `nors3ai.github.io/Plants-vs-Zombies`, transitions between states, and saves to localStorage. ✅
 
 ---
 
@@ -250,7 +250,7 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 - [ ] Bug bash
 - [ ] **v1.0.0 release** to GitHub Pages
 
-**Exit Criteria:** Game is feature-complete, polished, and live at `nors3ai.github.io/plants-vs-zombies`.
+**Exit Criteria:** Game is feature-complete, polished, and live at `nors3ai.github.io/Plants-vs-Zombies`.
 
 ---
 

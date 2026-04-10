@@ -4,7 +4,7 @@ A browser-based card battler reimagining of the classic Plants vs Zombies. Build
 
 ## Play the Game
 
-**[Play on GitHub Pages →](https://nors3ai.github.io/plants-vs-zombies/)**
+**[Play on GitHub Pages →](https://nors3ai.github.io/Plants-vs-Zombies/)**
 
 > The game is currently in the **Planning Phase**. The link above will go live once Phase 1 (Core Engine) is complete.
 
@@ -81,4 +81,4 @@ TBD
 
 ---
 
-**Repository:** [nors3ai/plants-vs-zombies](https://github.com/nors3ai/plants-vs-zombies)
+**Repository:** [nors3ai/Plants-vs-Zombies](https://github.com/nors3ai/Plants-vs-Zombies)

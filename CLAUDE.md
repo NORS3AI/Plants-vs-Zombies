@@ -94,7 +94,7 @@ GitHub Pages serves the game from the `/docs` folder on the `main` branch. **All
 ├── Features.md         # Living list of all features
 ├── Phases.md           # Development phases roadmap
 ├── patchnotes.md       # Version history
-└── /docs               # GitHub Pages root (served at nors3ai.github.io/plants-vs-zombies)
+└── /docs               # GitHub Pages root (served at nors3ai.github.io/Plants-vs-Zombies)
     ├── index.html      # Game entry point
     ├── /css            # Stylesheets
     ├── /js             # Game source
