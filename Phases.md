@@ -25,19 +25,20 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ## Phase 1 — Project Skeleton & Core Engine
 
-**Goal:** Stand up the browser project with a renderable game loop.
+**Goal:** Stand up the browser project with a renderable game loop, served from `/docs` on `main`.
 
-- [ ] Create `index.html` entry point
-- [ ] Create `/src` folder structure (`game/`, `cards/`, `ui/`, `assets/`)
-- [ ] Set up CSS reset + theme variables (dark/light mode foundations)
-- [ ] Implement core game loop (`requestAnimationFrame`)
+- [ ] Create `/docs/index.html` entry point (GitHub Pages root)
+- [ ] Create `/docs/css/`, `/docs/js/`, `/docs/assets/` folder structure
+- [ ] Create `/docs/js/game/`, `/docs/js/cards/`, `/docs/js/ui/` subfolders
+- [ ] Set up CSS reset + theme variables (dark/light mode foundations) in `/docs/css/`
+- [ ] Implement core game loop (`requestAnimationFrame`) in `/docs/js/game/`
 - [ ] Implement state machine: `MENU → DIFFICULTY → SHOP → COUNTDOWN → COMBAT → ROUND_END`
 - [ ] Render the 5×12 grid (placeholder tiles)
 - [ ] Render the Aether-Root sprite (placeholder)
 - [ ] Set up localStorage save/load skeleton
-- [ ] Configure GitHub Pages deployment (Actions or branch)
+- [ ] Verify GitHub Pages serves `/docs` on `main` correctly
 
-**Exit Criteria:** A blank game shell loads in the browser, transitions between states, and saves to localStorage. Deployed to `nors3ai.github.io/plants-vs-zombies`.
+**Exit Criteria:** A blank game shell loads at `nors3ai.github.io/plants-vs-zombies`, transitions between states, and saves to localStorage.
 
 ---
 

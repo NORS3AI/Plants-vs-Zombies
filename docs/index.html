@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plants vs Zombies: Card Battler</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --accent: #d4af37;
+      --accent-red: #c0392b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at center, #1a2332 0%, var(--bg) 100%);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .container { max-width: 640px; }
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      background: linear-gradient(45deg, var(--accent), var(--accent-red));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+    .tagline { font-size: 1.1rem; opacity: 0.85; margin-bottom: 2rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--accent);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 2rem;
+    }
+    .links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .links a {
+      color: var(--fg);
+      text-decoration: none;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .links a:hover {
+      border-color: var(--accent);
+      background: rgba(212, 175, 55, 0.1);
+    }
+    footer { margin-top: 3rem; opacity: 0.5; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Phase 0 — Planning</div>
+    <h1>Plants vs Zombies: Card Battler</h1>
+    <p class="tagline">A browser-based card battler reimagining of the classic. Defend the Aether-Root.</p>
+    <div class="links">
+      <a href="https://github.com/nors3ai/plants-vs-zombies">GitHub</a>
+      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/Phases.md">Roadmap</a>
+      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/Features.md">Features</a>
+      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/patchnotes.md">Patch Notes</a>
+    </div>
+    <footer>The game is currently in development. Check back soon!</footer>
+  </div>
+</body>
+</html>

@@ -5,6 +5,19 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.0.2 — 2026-04-10 — GitHub Pages Setup
+
+### Added
+- `/docs/index.html` placeholder landing page so GitHub Pages has something to serve
+- Updated CLAUDE.md with new repo structure (game lives under `/docs`)
+- Updated Phases.md Phase 1 to target `/docs` instead of `/src`
+
+### Changed
+- GitHub Pages now serves from `main` branch `/docs` folder
+- Default branch is now `main`
+
+---
+
 ## v0.0.1 — 2026-04-10 — Project Initialization
 
 ### Added

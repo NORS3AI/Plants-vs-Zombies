@@ -85,6 +85,8 @@ The only active intervention during combat is casting side-panel spells on the A
 
 ## Repository Structure (Planned)
 
+GitHub Pages serves the game from the `/docs` folder on the `main` branch. **All game source code lives under `/docs`** so the deployed site is always in sync with the repo.
+
 ```
 /
 ├── CLAUDE.md           # This file — guidance for Claude Code
@@ -92,14 +94,17 @@ The only active intervention during combat is casting side-panel spells on the A
 ├── Features.md         # Living list of all features
 ├── Phases.md           # Development phases roadmap
 ├── patchnotes.md       # Version history
-├── index.html          # Game entry point (TBD)
-├── /src                # Source code (TBD)
-│   ├── /game           # Core game logic
-│   ├── /cards          # Card definitions
-│   ├── /ui             # UI components
-│   └── /assets         # Sprites, audio
-└── /docs               # Additional docs
+└── /docs               # GitHub Pages root (served at nors3ai.github.io/plants-vs-zombies)
+    ├── index.html      # Game entry point
+    ├── /css            # Stylesheets
+    ├── /js             # Game source
+    │   ├── /game       # Core game logic
+    │   ├── /cards      # Card definitions
+    │   └── /ui         # UI components
+    └── /assets         # Sprites, audio, images
 ```
+
+**Important:** Never put game runtime files outside `/docs` — they won't be served. Design docs (`*.md`) live at the repo root and are not deployed.
 
 ## Development Workflow
 
