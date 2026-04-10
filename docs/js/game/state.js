@@ -14,6 +14,8 @@ export const STATES = Object.freeze({
   COMBAT: 'combat',
   ROUND_END: 'round_end',
   GAME_OVER: 'game_over',
+  VICTORY: 'victory',
+  LEADERBOARD: 'leaderboard',
   SETTINGS: 'settings',
 });
 

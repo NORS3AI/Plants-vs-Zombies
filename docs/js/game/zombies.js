@@ -196,8 +196,13 @@ function bossDefForRound(round) {
 
 const BASE_SPEED = 0.5; // tiles per second
 
-export function makeZombieType(round, diff = {}) {
-  const def = zombieTypeDefForRound(round);
+export function makeZombieType(round, diff = {}, typeOverrideIdx) {
+  // If an explicit type index is provided (endless mixed waves), use it.
+  // Otherwise look up by round as normal.
+  const def =
+    typeof typeOverrideIdx === 'number'
+      ? ZOMBIE_TYPES[typeOverrideIdx % ZOMBIE_TYPES.length]
+      : zombieTypeDefForRound(round);
   const baseHp = 10 + round * 10;
   const baseDmg = 2 + round * 3;
   const hpMul = diff.enemyHPMul ?? 1;
@@ -251,21 +256,41 @@ export function generateSpawnSchedule(round, diff = {}) {
   const windowSec =
     SPAWN_WINDOW_BASE_SEC + (round - 1) * SPAWN_WINDOW_PER_ROUND_SEC;
   const schedule = [];
-  const type = makeZombieType(round, diff);
 
-  // Standard wave: round-robin across rows with jitter in timing
-  for (let i = 0; i < count; i++) {
-    const baseTime = (i / Math.max(1, count - 1)) * windowSec;
-    const jitter = (Math.random() - 0.5) * (windowSec / count) * 0.6;
-    const time = Math.max(0, baseTime + jitter);
-    const row = i % GRID_ROWS;
-    schedule.push({ time, type, row, isBoss: false });
+  if (round > 10) {
+    // Endless: mix 3 zombie types in the same wave (spec: "a mix of
+    // Easy mode zombies and Insane mode zombies"). We use type defs
+    // from easy / mid / hard rounds but scale their stats via the
+    // current endless round number so they keep pace.
+    const typePool = [
+      makeZombieType(round, diff, 0), // Easy-mode type (Shambling Husk)
+      makeZombieType(round, diff, 4), // Mid (Plague-Knight — armored)
+      makeZombieType(round, diff, 9), // Hard (Abyssal Revenant — armored)
+    ];
+    for (let i = 0; i < count; i++) {
+      const baseTime = (i / Math.max(1, count - 1)) * windowSec;
+      const jitter = (Math.random() - 0.5) * (windowSec / count) * 0.6;
+      const time = Math.max(0, baseTime + jitter);
+      const row = i % GRID_ROWS;
+      const type = typePool[i % typePool.length];
+      schedule.push({ time, type, row, isBoss: false });
+    }
+  } else {
+    // Rounds 1-10: single type matching the round
+    const type = makeZombieType(round, diff);
+    for (let i = 0; i < count; i++) {
+      const baseTime = (i / Math.max(1, count - 1)) * windowSec;
+      const jitter = (Math.random() - 0.5) * (windowSec / count) * 0.6;
+      const time = Math.max(0, baseTime + jitter);
+      const row = i % GRID_ROWS;
+      schedule.push({ time, type, row, isBoss: false });
+    }
   }
 
   // Boss spawns after the last standard zombie, in the middle row
   const boss = makeBossType(round, diff);
   const bossTime = windowSec + BOSS_DELAY_AFTER_LAST;
-  const bossRow = Math.floor(GRID_ROWS / 2); // middle row
+  const bossRow = Math.floor(GRID_ROWS / 2);
   schedule.push({ time: bossTime, type: boss, row: bossRow, isBoss: true });
 
   schedule.sort((a, b) => a.time - b.time);

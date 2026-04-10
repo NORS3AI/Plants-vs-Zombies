@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 11 — Endless Mode & Leaderboard** (Phase 10 complete)
+> **Current Phase:** **Phase 12 — Polish, Audio & Release** (Phase 11 complete)
 
 ---
 
@@ -252,21 +252,25 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 11 — Endless Mode & Leaderboard
+## Phase 11 — Endless Mode & Leaderboard ✅
 
 **Goal:** Post-Round-10 endgame loop.
 
-- [ ] Endless unlock trigger
-- [ ] Endless menu entry below Insane
-- [ ] Infinite wave scaling
-- [ ] Mixed-difficulty wave composition
-- [ ] Round counter persistence
-- [ ] Local leaderboard (localStorage)
-- [ ] Player name entry on death
-- [ ] Leaderboard UI (sortable by round)
-- [ ] Difficulty filter on leaderboard
+- [x] Endless unlock trigger (R10 Arch-Lich Malakor kill → VICTORY state)
+- [x] Endless menu entry below Insane (already in difficulty config; gated by `meta.endlessUnlocked`)
+- [x] Infinite wave scaling (count + HP/DMG extrapolate past round 10)
+- [x] Mixed-difficulty wave composition — endless rounds mix 3 zombie type pools (easy, mid armored, hard armored)
+- [x] Round counter persistence (already via Save)
+- [x] Local leaderboard in `meta.leaderboard` (max 50 entries, sorted by highest round)
+- [x] Player name entry on game-over AND on victory (last name remembered)
+- [x] Leaderboard UI — sortable table with rank / name / difficulty / round / kills / gold
+- [x] Difficulty filter dropdown on leaderboard
+- [x] Victory screen (replaces the Phase 3 stub) with animated title, unlock banner, stats, name entry
+- [x] Victory entries marked with 🏆 in the leaderboard table
+- [x] Menu Leaderboard button enabled when any entries exist OR endless is unlocked
+- [x] Boss cycles through BOSSES by `(round - 1) % 10` in endless
 
-**Exit Criteria:** Player can play infinite mode and submit scores.
+**Exit Criteria:** Player can play infinite mode and submit scores. ✅
 
 ---
 

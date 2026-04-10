@@ -5,6 +5,48 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.11.0 — 2026-04-10 — Phase 11: Endless Mode & Leaderboard
+
+### Added
+- **`docs/js/game/leaderboard.js`** — Local-storage leaderboard:
+  - `addEntry({ name, difficulty, round, kills, gold, victory })` — inserts, sorts by round DESC (then date ASC), caps at 50 entries, returns 1-indexed rank
+  - `getEntries({ difficulty })` — optional filter by difficulty, or `'all'`
+  - `hasEntries()`, `clear()`, `getPersonalBest()`, `getLastName()`, `setLastName()`
+- **VICTORY state** (new) — replaces the Phase 3 `handleRound10Victory` stub:
+  - Animated title with shimmer + pulse glow
+  - Unlock banner shown only the first time Endless is unlocked
+  - Full run stats (difficulty / kills / gold / plants lost)
+  - Name entry with pre-fill from last-used name
+  - Submit → add to leaderboard → clear run → return to menu
+- **LEADERBOARD state** (new) — sortable table screen:
+  - Rank / Name / Difficulty / Round / Kills / Gold columns
+  - Victory rows highlighted + marked with 🏆
+  - Difficulty filter dropdown (all / tutorial / easy / normal / hard / insane / endless)
+  - Empty state hint for new players
+- **Game-over name entry** — same name-entry block on the game-over screen; submits a non-victory score. Pre-fills with last-used name.
+- **Menu Leaderboard button** — now enabled when any entries exist OR endless is unlocked. Routes to the LEADERBOARD state.
+- **Endless wave composition** — rounds 11+ mix 3 zombie type pools (Shambling Husk + Plague-Knight armored + Abyssal Revenant armored) per spec's "mix of Easy and Insane zombies". `makeZombieType` now accepts an optional `typeOverrideIdx`.
+- **Endless boss cycling** — `bossDefForRound` uses `(round - 1) % 10` for endless rounds so bosses rotate through all 10 types.
+
+### Changed
+- `handleRound10Victory` → transitions to VICTORY state instead of flashing a toast and returning to menu
+- Phase badge → "Phase 11 — Endless", version → v0.11.0
+- `window.__pvz.Leaderboard` exposed for debug
+
+### Verified (headless)
+- 3 entries inserted — correctly sorted by round (Carol R12 → Alice R10 victory → Bob R6)
+- Difficulty filter returns only matching entries
+- `getPersonalBest` returns the top entry
+- Endless R12 schedule produces 60 mixed-type zombies (Shambling Husk + Plague-Knight + Abyssal Revenant, HP=130 = 10+12×10) + 1 Rot-Hoof Centaur boss
+- Leaderboard persists via `meta.leaderboard` and survives page reload
+
+### Notes
+- Leaderboard is local-only (browser localStorage). A global leaderboard is a stretch goal for Phase 13+.
+- Cooldown reset on combat init means endless rounds always start with spells ready, matching the standard round behavior.
+- Endless difficulty runs correctly through ROUND_END → SHOP loop indefinitely since the round-10 victory check only fires for `difficulty !== 'endless'`.
+
+---
+
 ## v0.10.0 — 2026-04-10 — Phase 10: Tutorial Mode
 
 ### Added

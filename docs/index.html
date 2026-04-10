@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 10 — Tutorial</div>
+    <div id="phase-badge">Phase 11 — Endless</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.10.0 — Phase 10</p>
+        <p class="version">v0.11.0 — Phase 11</p>
       </div>
     </section>
 
@@ -172,7 +172,87 @@
             <span class="summary-value" id="game-over-plants">0</span>
           </div>
         </div>
-        <button class="btn btn-primary" data-action="back-to-menu">Return to Menu</button>
+        <div id="game-over-rank" class="game-over-rank" hidden></div>
+        <div class="name-entry">
+          <label for="player-name-input" class="name-entry-label">Enter your name for the leaderboard</label>
+          <input type="text" id="player-name-input" maxlength="20" placeholder="Anonymous" class="name-entry-input">
+          <button class="btn btn-primary" data-action="submit-score">Submit Score</button>
+        </div>
+        <button class="btn" data-action="back-to-menu">Return to Menu</button>
+      </div>
+    </section>
+
+    <!-- Screen: Victory -->
+    <section id="screen-victory" class="screen" data-screen="victory" hidden>
+      <div class="menu-stack victory-stack">
+        <h1 class="title victory-title">VICTORY</h1>
+        <p class="victory-subtitle">The Arch-Lich Malakor has fallen.</p>
+        <div class="victory-unlock" id="victory-unlock">
+          <div class="victory-unlock-icon">🏆</div>
+          <div class="victory-unlock-text">
+            <strong>Endless Mode Unlocked</strong>
+            <span>Your battle continues past Round 10.</span>
+          </div>
+        </div>
+        <div class="round-summary">
+          <div class="summary-row">
+            <span class="summary-label">Difficulty</span>
+            <span class="summary-value" id="victory-difficulty">Normal</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Kills</span>
+            <span class="summary-value" id="victory-kills">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Gold Earned</span>
+            <span class="summary-value gold-value" id="victory-gold">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Plants Lost</span>
+            <span class="summary-value" id="victory-plants">0</span>
+          </div>
+        </div>
+        <div class="name-entry">
+          <label for="victory-name-input" class="name-entry-label">Record your name on the Hall of Heroes</label>
+          <input type="text" id="victory-name-input" maxlength="20" placeholder="Anonymous" class="name-entry-input">
+          <button class="btn btn-primary" data-action="submit-victory">Submit & Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen: Leaderboard -->
+    <section id="screen-leaderboard" class="screen screen-scrollable" data-screen="leaderboard" hidden>
+      <div class="menu-stack leaderboard-stack">
+        <h2 class="title-sm">Leaderboard</h2>
+        <div class="leaderboard-filter">
+          <label for="leaderboard-filter">Difficulty:</label>
+          <select id="leaderboard-filter">
+            <option value="all">All</option>
+            <option value="tutorial">Tutorial</option>
+            <option value="easy">Easy</option>
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+            <option value="insane">Insane</option>
+            <option value="endless">Endless</option>
+          </select>
+        </div>
+        <div class="leaderboard-table-wrap">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th class="col-rank">#</th>
+                <th class="col-name">Name</th>
+                <th class="col-diff">Difficulty</th>
+                <th class="col-round">Round</th>
+                <th class="col-kills">Kills</th>
+                <th class="col-gold">Gold</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-rows"></tbody>
+          </table>
+          <p class="leaderboard-empty" id="leaderboard-empty" hidden>No runs recorded yet — play a round and submit your score!</p>
+        </div>
+        <button class="btn" data-action="back-to-menu">← Back to Menu</button>
       </div>
     </section>
 

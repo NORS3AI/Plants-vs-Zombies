@@ -25,6 +25,7 @@ import * as Shop from './ui/shop.js';
 import * as Placement from './ui/placement.js';
 import * as CombatView from './ui/combatView.js';
 import * as Tutorial from './ui/tutorial.js';
+import * as Leaderboard from './game/leaderboard.js';
 
 // Validate the card database at boot (logs errors/warnings to console)
 Cards.validateAndLog();
@@ -225,8 +226,37 @@ state.register(STATES.GAME_OVER, {
     paintGameOver();
     audio.playSfx('gameover');
     Save.clearRun();
+    // Pre-fill name input with last-used name
+    const nameInput = document.getElementById('player-name-input');
+    if (nameInput) nameInput.value = Leaderboard.getLastName();
+    // Clear rank banner from previous game-overs
+    const rankEl = document.getElementById('game-over-rank');
+    if (rankEl) { rankEl.hidden = true; rankEl.textContent = ''; }
+    // Re-show name entry (may have been hidden after a previous submit)
+    const entry = document.querySelector('#screen-game-over .name-entry');
+    if (entry) entry.hidden = false;
     // Note: keep currentRun in memory until user returns to menu so the
     // game-over screen can read its stats; cleared on back-to-menu.
+  },
+});
+
+state.register(STATES.VICTORY, {
+  enter() {
+    screens.show('victory');
+    paintVictory();
+    audio.playSfx('go');
+    // Pre-fill name input with last-used name
+    const nameInput = document.getElementById('victory-name-input');
+    if (nameInput) nameInput.value = Leaderboard.getLastName();
+    const entry = document.querySelector('#screen-victory .name-entry');
+    if (entry) entry.hidden = false;
+  },
+});
+
+state.register(STATES.LEADERBOARD, {
+  enter() {
+    screens.show('leaderboard');
+    renderLeaderboard();
   },
 });
 
@@ -285,11 +315,13 @@ function refreshMenuButtons() {
   const resumeBtn = document.getElementById('resume-button');
   if (resumeBtn) resumeBtn.hidden = !Save.hasRun();
 
-  // Leaderboard unlock follows endless unlock
+  // Leaderboard: enabled when any entries exist OR endless is unlocked
   const lbBtn = document.getElementById('leaderboard-button');
   if (lbBtn) {
     const meta = Save.loadMeta();
-    lbBtn.disabled = !meta.endlessUnlocked;
+    const hasEntries = Leaderboard.hasEntries();
+    lbBtn.disabled = !meta.endlessUnlocked && !hasEntries;
+    if (!lbBtn.disabled) lbBtn.title = 'View your best runs';
   }
 }
 
@@ -386,21 +418,23 @@ function paintRoundSummary() {
 }
 
 /**
- * Handle a round 10 victory: unlock Endless, return to menu.
- * Phase 3 stub — Phase 8 will add a proper victory screen with stats.
+ * Handle a round 10 victory: unlock Endless, show victory screen,
+ * prompt for leaderboard name entry.
  */
 function handleRound10Victory() {
+  if (!currentRun) return;
+  // Mark the run as a completed victory for the leaderboard
+  currentRun.victory = true;
   const meta = Save.loadMeta();
-  if (!meta.endlessUnlocked) {
+  const wasUnlocked = meta.endlessUnlocked;
+  if (!wasUnlocked) {
     meta.endlessUnlocked = true;
     Save.saveMeta(meta);
-    flashToast('🏆 Endless Mode unlocked!');
-  } else {
-    flashToast('Victory!');
   }
-  Save.clearRun();
-  currentRun = null;
-  state.transition(STATES.MENU);
+  // Show the unlock banner only the first time
+  const unlockBanner = document.getElementById('victory-unlock');
+  if (unlockBanner) unlockBanner.hidden = wasUnlocked;
+  state.transition(STATES.VICTORY);
 }
 
 function paintGameOver() {
@@ -417,6 +451,109 @@ function paintGameOver() {
   set('game-over-kills', currentRun.totalKills);
   set('game-over-gold', currentRun.totalGoldEarned);
   set('game-over-plants', currentRun.totalPlantsLost);
+}
+
+function paintVictory() {
+  if (!currentRun) return;
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  set('victory-difficulty', getDifficulty(currentRun.difficulty)?.label ?? '—');
+  set('victory-kills', currentRun.totalKills);
+  set('victory-gold', currentRun.totalGoldEarned);
+  set('victory-plants', currentRun.totalPlantsLost);
+}
+
+// ---------- Score submission ----------
+function submitScore({ victory }) {
+  if (!currentRun) return;
+  const inputId = victory ? 'victory-name-input' : 'player-name-input';
+  const input = document.getElementById(inputId);
+  const name = (input?.value || '').trim() || 'Anonymous';
+  Leaderboard.setLastName(name);
+  const rank = Leaderboard.addEntry({
+    name,
+    difficulty: currentRun.difficulty,
+    round: currentRun.round,
+    kills: currentRun.totalKills,
+    gold: currentRun.totalGoldEarned,
+    victory: !!victory,
+  });
+  flashToast(`Score submitted — rank #${rank}`);
+  // Hide the name entry block after submission
+  const entrySelector = victory
+    ? '#screen-victory .name-entry'
+    : '#screen-game-over .name-entry';
+  const entry = document.querySelector(entrySelector);
+  if (entry) entry.hidden = true;
+  if (!victory) {
+    const rankEl = document.getElementById('game-over-rank');
+    if (rankEl) {
+      rankEl.hidden = false;
+      rankEl.textContent = `Leaderboard rank: #${rank}`;
+    }
+  } else {
+    // After victory submit, clear the run and go back to menu so the
+    // player can enter Endless mode.
+    Save.clearRun();
+    currentRun = null;
+    state.transition(STATES.MENU);
+  }
+}
+
+// ---------- Leaderboard rendering ----------
+function renderLeaderboard() {
+  const filter = document.getElementById('leaderboard-filter');
+  const selected = filter?.value || 'all';
+  const rowsHost = document.getElementById('leaderboard-rows');
+  const emptyEl = document.getElementById('leaderboard-empty');
+  if (!rowsHost) return;
+  rowsHost.innerHTML = '';
+
+  const entries = Leaderboard.getEntries({ difficulty: selected });
+  if (entries.length === 0) {
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+
+  entries.forEach((entry, i) => {
+    const tr = document.createElement('tr');
+    if (entry.victory) tr.classList.add('row-victory');
+
+    const rank = document.createElement('td');
+    rank.className = 'col-rank';
+    rank.textContent = String(i + 1);
+    tr.appendChild(rank);
+
+    const name = document.createElement('td');
+    name.className = 'col-name';
+    name.textContent = entry.name;
+    tr.appendChild(name);
+
+    const diff = document.createElement('td');
+    diff.className = 'col-diff';
+    diff.textContent = getDifficulty(entry.difficulty)?.label ?? entry.difficulty;
+    tr.appendChild(diff);
+
+    const round = document.createElement('td');
+    round.className = 'col-round';
+    round.textContent = String(entry.round);
+    tr.appendChild(round);
+
+    const kills = document.createElement('td');
+    kills.className = 'col-kills';
+    kills.textContent = String(entry.kills);
+    tr.appendChild(kills);
+
+    const gold = document.createElement('td');
+    gold.className = 'col-gold';
+    gold.textContent = String(entry.gold);
+    tr.appendChild(gold);
+
+    rowsHost.appendChild(tr);
+  });
 }
 
 function resumeRun() {
@@ -480,8 +617,13 @@ document.addEventListener('click', (e) => {
       state.transition(STATES.SETTINGS);
       break;
     case 'open-leaderboard':
-      // Phase 11
-      flashToast('Leaderboard arrives in Phase 11');
+      state.transition(STATES.LEADERBOARD);
+      break;
+    case 'submit-score':
+      submitScore({ victory: false });
+      break;
+    case 'submit-victory':
+      submitScore({ victory: true });
       break;
     case 'settings-back':
       // Return to previous screen if mid-run, otherwise menu
@@ -531,7 +673,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Settings change handlers
+// Settings + leaderboard filter change handlers
 document.addEventListener('change', (e) => {
   if (e.target.id === 'setting-theme') {
     document.documentElement.dataset.theme = e.target.value;
@@ -541,6 +683,9 @@ document.addEventListener('change', (e) => {
     const s = readSettingsFromDOM();
     Save.saveSettings(s);
     audio.setSettings(s);
+  }
+  if (e.target.id === 'leaderboard-filter') {
+    renderLeaderboard();
   }
 });
 
@@ -602,8 +747,9 @@ window.__pvz = {
   CombatView,
   AetherSpells,
   Tutorial,
+  Leaderboard,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 10 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 11 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

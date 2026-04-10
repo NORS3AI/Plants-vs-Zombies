@@ -214,21 +214,22 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 
 ## 6. Endless Mode
 
-- [ ] Unlock trigger: defeat Arch-Lich Malakor
-- [ ] Achievement popup on unlock
-- [ ] Difficulty menu insertion (below Insane)
-- [ ] Infinite round scaling
-- [ ] Mixed wave composition (Easy + Insane zombies cycled)
+- [x] Unlock trigger: defeat Arch-Lich Malakor
+- [x] Achievement banner on unlock (Victory screen)
+- [x] Difficulty menu insertion (below Insane, already in config)
+- [x] Infinite round scaling (count + HP/DMG formulas extend past round 10)
+- [x] Mixed wave composition (Easy + Mid armored + Hard armored zombies per round)
 - [ ] Round counter persistence
 - [ ] Death → submit to leaderboard
 
 ## 7. Leaderboard
 
-- [ ] Local leaderboard (localStorage)
-- [ ] Top rounds reached
-- [ ] Player name entry
-- [ ] Difficulty filter
-- [ ] Date stamp
+- [x] Local leaderboard (localStorage, max 50 entries)
+- [x] Top rounds reached (primary sort)
+- [x] Player name entry (game-over + victory screens, pre-filled from last name)
+- [x] Difficulty filter (dropdown on the leaderboard screen)
+- [x] Date stamp (stored; not currently rendered — space for future)
+- [x] Victory marker (🏆 on entries that beat Round 10)
 - [ ] Future: global leaderboard backend (TBD)
 
 ---
