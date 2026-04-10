@@ -28,12 +28,32 @@ const DEFAULT_RUN = {
   gold: 5,
   aetherRootHP: 100,
   aetherRootMaxHP: 100,
+
+  // Owned cards (each is a card-instance with rolled sellValue + instanceId).
+  // Max 10 entries enforced by shop logic.
   deck: [],
+
+  // Aether-Root spells (live in side panel, separate from regular deck).
+  aetherSpells: [],
+
+  // Grid model (5×12 of cardInstanceIds or null). Phase 6 wires placement.
   grid: [],
+
+  // Current 3-card shop offering. Persists across save/reload so the
+  // shop doesn't reroll on page refresh; explicit Refresh button rerolls,
+  // and entering SHOP at the start of a new round auto-rerolls (free).
+  // Each: { cardId, cost, sold }
+  shopRoll: [],
+  shopRollRound: 0, // The round number when shopRoll was generated
+
+  // Pity counters for the every-Nth-pack-guarantees-Legendary rule.
+  packsOpened: { mythic: 0, arcane: 0, frenzy: 0 },
+
   // Run-totals (persist across rounds)
   totalKills: 0,
   totalGoldEarned: 0,
   totalPlantsLost: 0,
+
   // Last completed round's stats (for the round-end summary screen)
   lastRoundStats: null,
 };

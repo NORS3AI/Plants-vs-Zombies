@@ -5,6 +5,43 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.5.0 — 2026-04-10 — Phase 5: Shop Mode
+
+### Added
+- **Full shop UI** with three rarity-colored card slots, refresh button (1 gold), pack chests, and deck inventory.
+- **`docs/js/ui/cardView.js`** — Reusable card renderer used by shop slots, deck inventory, and pack reveals. Renders rarity stripe, name, type, stats, description, and footer (cost or sell value).
+- **`docs/js/ui/shop.js`** — Full shop logic module:
+  - `rerollShop`, `refreshShop`, `ensureShopRollForRound` — shop roll lifecycle
+  - `buyShopSlot` — gold check, deck-cap check, atomic buy
+  - `sellDeckCard` — confirms via modal, refunds gold
+  - `buyPack` — pity-aware pack opening, distributes regular cards to deck and Aether-Root spells to side panel inventory
+  - `renderShop` — full UI repaint
+- **Pack chests** with rarity-tinted backgrounds. Frenzy chest shimmers. Each chest shows current pity status ("Pity in N").
+- **Pack reveal modal** — staggered fade-in of revealed cards with rarity-colored borders. Legendary cards glow gold.
+- **Deck inventory** — compact card view, tap to sell with confirmation. Shows current count "X / 10".
+- **Free auto-reroll** at the start of each new round (tracked via `shopRollRound`). The paid Refresh button still works mid-round.
+- **Card-instance system** — Each owned card has a unique `instanceId` and a deterministic `sellValue` rolled at acquisition (no save-scumming).
+- **Aether-Root spell side inventory** (`run.aetherSpells`) — Aether-Root spells from packs go here instead of the regular deck. Phase 9 wires the side panel.
+- **`bodyHtml` + `wide` options on showModal** — supports the rich pack reveal layout.
+- **CSS** — `.card.*` rarity tinting, `.pack-chest-*` chest variants, `.deck-inventory` grid, `.reveal-grid` modal layout, `.screen-scrollable` for the now-vertical shop screen.
+
+### Fixed (Phase 4 audit follow-ups)
+- **Validator scope:** Now also enforces a valid `pack` field for `economy` category cards (Crystal Fern, Amber Grain, Midas Mandrake) when they ship in packs.
+- **Validator coverage:** "missing rarity in pack" warning now considers AETHER_ROOT_SPELLS as part of the pack pool, preventing false positives for packs that rely on side-panel spells for some rarity tier.
+
+### Changed
+- `currentRun` schema additions: `shopRoll`, `shopRollRound`, `aetherSpells`, `packsOpened` (already existed but now actually used).
+- Shop screen is now `screen-scrollable` (allows vertical content beyond viewport).
+- Phase badge advances to "Phase 5 — Shop Mode".
+- Version label bumped to v0.5.0.
+
+### Notes
+- Pack reveal animation is currently a modal. Phase 12 may upgrade it to a full-screen chest-opening sequence.
+- Deck cards are not yet placeable on the grid — that's Phase 6.
+- Sunflower auto-merge into Gilded Rose is also Phase 6 (placement-time logic).
+
+---
+
 ## v0.4.0 — 2026-04-10 — Phase 4: Card Data Model
 
 ### Added

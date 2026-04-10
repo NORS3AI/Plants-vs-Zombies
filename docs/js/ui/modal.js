@@ -18,7 +18,7 @@
 
 let activeModal = null;
 
-export function showModal({ title, message, buttons = [], dismissible = true }) {
+export function showModal({ title, message, bodyHtml, buttons = [], dismissible = true, wide = false }) {
   // Close any existing modal first
   if (activeModal) closeModal(null);
 
@@ -30,7 +30,7 @@ export function showModal({ title, message, buttons = [], dismissible = true }) 
     if (title) backdrop.setAttribute('aria-label', title);
 
     const dialog = document.createElement('div');
-    dialog.className = 'modal-dialog';
+    dialog.className = 'modal-dialog' + (wide ? ' modal-dialog-wide' : '');
 
     if (title) {
       const titleEl = document.createElement('h3');
@@ -44,6 +44,13 @@ export function showModal({ title, message, buttons = [], dismissible = true }) 
       msgEl.className = 'modal-message';
       msgEl.textContent = message;
       dialog.appendChild(msgEl);
+    }
+
+    if (bodyHtml) {
+      const bodyEl = document.createElement('div');
+      bodyEl.className = 'modal-body';
+      bodyEl.innerHTML = bodyHtml;
+      dialog.appendChild(bodyEl);
     }
 
     const actions = document.createElement('div');

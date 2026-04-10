@@ -53,22 +53,25 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 2. Shop Mode
 
 ### 2.1 Card Shop
-- [ ] Three randomized cards displayed per shop visit
-- [ ] Mix of Plants and Spells based on rarity weights
-- [ ] Long-hold / long-tap to reveal card details
-- [ ] Tap to purchase / add to deck
-- [ ] **Refresh button** (1 gold) — rerolls the three cards
-- [ ] Sell card option (returns rarity-based gold)
-- [ ] Maximum 10 cards in active deck
+- [x] Three randomized cards displayed per shop visit
+- [x] Mix of Plants and Spells based on rarity weights
+- [x] Card details inline on each card (name, stats, description)
+- [ ] Long-hold for expanded detail panel (Phase 12 polish)
+- [x] Tap to purchase / add to deck
+- [x] **Refresh button** (1 gold) — rerolls the three cards
+- [x] Sell card option (returns rarity-based gold) with confirmation
+- [x] Maximum 10 cards in active deck (enforced, error toast)
+- [x] Free auto-reroll at start of each round
 
 ### 2.2 Card Pack Shop
-- [ ] **Mythic Chest** (20 gold) — big & shiny
-- [ ] **Arcane Chest** (30 gold) — bigger, shinier, animated
-- [ ] **Frenzy Chest** (50 gold) — ultimate animation
-- [ ] Pack opening animation
-- [ ] Pity tracker for Frenzy packs (every 5th = guaranteed Legendary)
-- [ ] Frenzy guaranteed-Epic logic
-- [ ] Pack-exclusive card pool isolation
+- [x] **Mythic Chest** (20 gold) — green tinted
+- [x] **Arcane Chest** (30 gold) — purple tinted
+- [x] **Frenzy Chest** (50 gold) — gold shimmer animation
+- [x] Pack opening animation (modal reveal with staggered fade-in)
+- [x] Pity tracker for Frenzy packs (every 5th = guaranteed Legendary)
+- [x] Frenzy guaranteed-Epic logic
+- [x] Pack-exclusive card pool isolation
+- [x] Aether-Root spells from packs go to separate inventory
 
 ### 2.3 Grid Placement
 - [ ] 5×12 grid renderer

@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 4 — Card Data</div>
+    <div id="phase-badge">Phase 5 — Shop Mode</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.4.0 — Phase 4</p>
+        <p class="version">v0.5.0 — Phase 5</p>
       </div>
     </section>
 
@@ -39,7 +39,7 @@
     </section>
 
     <!-- Screen: Shop -->
-    <section id="screen-shop" class="screen" data-screen="shop" hidden>
+    <section id="screen-shop" class="screen screen-scrollable" data-screen="shop" hidden>
       <header class="game-header">
         <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round">1</span></div>
         <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold">5</span></div>
@@ -48,12 +48,37 @@
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
       <main class="shop-main">
-        <div class="shop-placeholder">
-          <h3>Shop Mode</h3>
-          <p class="muted">Card shop will be implemented in Phase 5. Place cards on the grid in Phase 6.</p>
-          <button class="btn btn-primary" data-action="start-countdown">Start Round</button>
-        </div>
-        <div id="grid-container" class="grid-wrap"></div>
+        <!-- Shop cards (3 random) -->
+        <section class="shop-section">
+          <div class="shop-section-head">
+            <h3 class="shop-section-title">Shop</h3>
+            <button class="btn btn-small" id="refresh-shop-button" data-action="refresh-shop" title="Reroll the 3 cards (1 gold)">↻ Refresh (1g)</button>
+          </div>
+          <div class="shop-cards" id="shop-cards"></div>
+          <p class="shop-hint">Tap a card to buy. Hover for full description.</p>
+        </section>
+
+        <!-- Pack chests -->
+        <section class="shop-section">
+          <h3 class="shop-section-title">Card Packs</h3>
+          <div class="pack-chests" id="pack-chests"></div>
+        </section>
+
+        <!-- Deck inventory -->
+        <section class="shop-section">
+          <h3 class="shop-section-title">Your Deck (<span id="deck-count">0</span> / 10)</h3>
+          <div class="deck-inventory" id="deck-inventory"></div>
+          <p class="shop-hint">Tap a deck card to sell it.</p>
+        </section>
+
+        <!-- Battlefield grid -->
+        <section class="shop-section">
+          <h3 class="shop-section-title">Battlefield</h3>
+          <div id="grid-container" class="grid-wrap"></div>
+          <p class="shop-hint">Phase 6 will let you drag deck cards onto the grid.</p>
+        </section>
+
+        <button class="btn btn-primary btn-pulse start-round-btn" data-action="start-countdown">Start Round →</button>
       </main>
     </section>
 

@@ -20,6 +20,7 @@ import { AudioManager } from './game/audio.js';
 import { ScreenManager } from './ui/screens.js';
 import { confirmModal } from './ui/modal.js';
 import * as Cards from './cards/index.js';
+import * as Shop from './ui/shop.js';
 
 // Validate the card database at boot (logs errors/warnings to console)
 Cards.validateAndLog();
@@ -60,6 +61,16 @@ function applySettings(settings) {
 
 const settings = Save.loadSettings();
 applySettings(settings);
+
+// Initialize shop module with audio + run-mutation callback
+Shop.initShop({
+  audio,
+  onChange: () => {
+    if (currentRun) Save.saveRun(currentRun);
+    syncHUD();
+    if (state.current === STATES.SHOP) Shop.renderShop(currentRun);
+  },
+});
 
 // ---------- HUD Sync ----------
 function formatRound(run) {
@@ -112,6 +123,7 @@ state.register(STATES.SHOP, {
     screens.show('shop');
     syncHUD();
     renderGrid(document.getElementById('grid-container'));
+    if (currentRun) Shop.renderShop(currentRun);
   },
 });
 
@@ -448,6 +460,9 @@ document.addEventListener('click', (e) => {
         state.transition(STATES.MENU);
       }
       break;
+    case 'refresh-shop':
+      if (currentRun) Shop.refreshShop(currentRun);
+      break;
     case 'start-countdown':
       state.transition(STATES.COUNTDOWN);
       break;
@@ -549,8 +564,9 @@ window.__pvz = {
   Save,
   audio,
   Cards,
+  Shop,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 4 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 5 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 5 — Shop Mode** (Phase 4 complete)
+> **Current Phase:** **Phase 6 — Grid Placement** (Phase 5 complete)
 
 ---
 
@@ -110,24 +110,28 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 5 — Shop Mode
+## Phase 5 — Shop Mode ✅
 
 **Goal:** Player can spend gold on cards and packs.
 
-- [ ] Shop UI (3 randomized cards)
-- [ ] Weighted random card generator using rarity drop %
-- [ ] Card detail panel (long-hold/long-tap)
-- [ ] Buy card button
-- [ ] Sell card button (rarity-based gold return)
-- [ ] Refresh button (1 gold)
-- [ ] Card pack section (Mythic / Arcane / Frenzy chests)
-- [ ] Pack-opening animation
-- [ ] Pack drop logic with pity mechanics
-- [ ] Frenzy guaranteed-Epic enforcement
-- [ ] Every-5th-Frenzy guaranteed Legendary
-- [ ] Deck UI showing owned cards (max 10 active)
+- [x] Shop UI (3 randomized cards with rarity-colored borders)
+- [x] Weighted random card generator using rarity drop %
+- [x] Card detail rendered inline (full description on each card)
+- [x] Tap-to-buy
+- [x] Tap-to-sell from deck inventory (with confirmation modal)
+- [x] Refresh button (1 gold) — disabled when broke
+- [x] Card pack section (Mythic / Arcane / Frenzy chests)
+- [x] Pack-opening animation (modal reveal with staggered card fade-in)
+- [x] Pack drop logic with pity mechanics
+- [x] Frenzy guaranteed-Epic enforcement
+- [x] Every-5th-Frenzy guaranteed Legendary
+- [x] Deck UI showing owned cards (max 10 active)
+- [x] Free auto-reroll at start of each new round
+- [x] Aether-Root spells from packs go to separate inventory
+- [x] Pack pity counter shown on chest ("Pity in N")
+- [x] Legendary cards have animated gold/red shine
 
-**Exit Criteria:** Player can buy, sell, refresh, and open packs with correct probabilities.
+**Exit Criteria:** Player can buy, sell, refresh, and open packs with correct probabilities. ✅
 
 ---
 

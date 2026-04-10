@@ -1,0 +1,367 @@
+/**
+ * Shop Module
+ *
+ * All shop logic: roll/refresh the 3-card spawn, buy/sell, open packs.
+ * Manages currentRun.shopRoll, currentRun.deck, currentRun.packsOpened.
+ *
+ * Phase 5 scope: data flow + UI rendering. Combat / placement land in
+ * Phase 6 (placement) and Phase 7 (combat).
+ */
+
+import {
+  getCard,
+  rollShopCards,
+  rollPackCards,
+  rollCost,
+  rollSell,
+  PACKS,
+  PACK_ORDER,
+} from '../cards/index.js';
+import { renderCard, renderPackChest } from './cardView.js';
+import { confirmModal, showModal } from './modal.js';
+
+export const MAX_DECK_SIZE = 10;
+export const SHOP_CARD_COUNT = 3;
+export const REFRESH_COST = 1;
+
+let _audio = null;
+let _onChange = null;
+
+/**
+ * Initialize the shop module. Call once at boot.
+ *
+ * @param {object} deps
+ *   - audio: AudioManager (for SFX)
+ *   - onChange: () => void — called whenever the run mutates so the caller
+ *     can save and re-render the HUD.
+ */
+export function initShop({ audio, onChange }) {
+  _audio = audio;
+  _onChange = onChange;
+}
+
+// ============================================================
+// SHOP ROLL — generate / refresh
+// ============================================================
+
+/** Generate a fresh 3-card shop offering, replacing any existing roll. */
+export function rerollShop(run) {
+  const cards = rollShopCards(SHOP_CARD_COUNT);
+  run.shopRoll = cards.map((card) => ({
+    cardId: card.id,
+    cost: rollCost(card),
+    sold: false,
+  }));
+  run.shopRollRound = run.round;
+}
+
+/**
+ * Ensure currentRun has a shopRoll for the current round. Free auto-reroll
+ * when the round number has advanced; otherwise no-op (preserves the roll
+ * across save/reload within a round).
+ */
+export function ensureShopRollForRound(run) {
+  if (
+    !run.shopRoll ||
+    run.shopRoll.length === 0 ||
+    run.shopRollRound !== run.round
+  ) {
+    rerollShop(run);
+  }
+}
+
+/** Pay 1 gold to refresh the shop offering. Returns true on success. */
+export function refreshShop(run) {
+  if (run.gold < REFRESH_COST) {
+    flashError(`Need ${REFRESH_COST} gold to refresh`);
+    _audio?.playSfx('back');
+    return false;
+  }
+  run.gold -= REFRESH_COST;
+  rerollShop(run);
+  _audio?.playSfx('click');
+  _onChange?.();
+  return true;
+}
+
+// ============================================================
+// BUY / SELL
+// ============================================================
+
+let _instanceCounter = 1;
+
+function freshInstanceId() {
+  return `inst_${Date.now()}_${_instanceCounter++}`;
+}
+
+/**
+ * Add a card to the deck. Rolls a sellValue at insertion time so it's
+ * deterministic for the lifetime of that instance.
+ */
+function addToDeck(run, card) {
+  const instance = {
+    cardId: card.id,
+    instanceId: freshInstanceId(),
+    sellValue: rollSell(card),
+  };
+  run.deck.push(instance);
+}
+
+/**
+ * Add an Aether-Root spell to the side panel inventory.
+ */
+function addToAetherSpells(run, card) {
+  if (!run.aetherSpells) run.aetherSpells = [];
+  run.aetherSpells.push({
+    cardId: card.id,
+    instanceId: freshInstanceId(),
+    sellValue: rollSell(card),
+    cooldownRemaining: 0,
+    usedThisRound: false,
+  });
+}
+
+/**
+ * Buy a card from the shop slot. Returns true on success.
+ */
+export function buyShopSlot(run, slotIndex) {
+  const slot = run.shopRoll[slotIndex];
+  if (!slot || slot.sold) return false;
+
+  const card = getCard(slot.cardId);
+  if (!card) return false;
+
+  if (run.gold < slot.cost) {
+    flashError(`Need ${slot.cost} gold (you have ${run.gold})`);
+    _audio?.playSfx('back');
+    return false;
+  }
+  if (run.deck.length >= MAX_DECK_SIZE) {
+    flashError(`Deck full (${MAX_DECK_SIZE} max)`);
+    _audio?.playSfx('back');
+    return false;
+  }
+
+  run.gold -= slot.cost;
+  slot.sold = true;
+  addToDeck(run, card);
+  _audio?.playSfx('click');
+  _onChange?.();
+  return true;
+}
+
+/**
+ * Sell a deck card by its instance id. Confirms via modal first.
+ */
+export async function sellDeckCard(run, instanceId) {
+  const idx = run.deck.findIndex((c) => c.instanceId === instanceId);
+  if (idx < 0) return false;
+  const instance = run.deck[idx];
+  const card = getCard(instance.cardId);
+  if (!card) return false;
+
+  const ok = await confirmModal({
+    title: `Sell ${card.name}?`,
+    message: `You will receive ${instance.sellValue} gold. This cannot be undone.`,
+    confirmLabel: `Sell for ${instance.sellValue}g`,
+    cancelLabel: 'Cancel',
+  });
+  if (!ok) return false;
+
+  run.deck.splice(idx, 1);
+  run.gold += instance.sellValue;
+  _audio?.playSfx('click');
+  _onChange?.();
+  return true;
+}
+
+// ============================================================
+// PACKS
+// ============================================================
+
+/**
+ * Buy and open a pack. Animates the reveal in a modal, adds cards to
+ * the deck (or aetherSpells inventory). Honors deck cap and pity rules.
+ */
+export async function buyPack(run, packId) {
+  const pack = PACKS[packId];
+  if (!pack) return false;
+
+  if (run.gold < pack.cost) {
+    flashError(`Need ${pack.cost} gold (you have ${run.gold})`);
+    _audio?.playSfx('back');
+    return false;
+  }
+
+  // Note: pack contents may include Aether-Root spells, which go to a
+  // separate inventory and don't count toward MAX_DECK_SIZE. We still
+  // require at least 1 deck slot free as a safety check.
+  if (run.deck.length >= MAX_DECK_SIZE) {
+    flashError(`Deck full (${MAX_DECK_SIZE} max)`);
+    _audio?.playSfx('back');
+    return false;
+  }
+
+  // Pre-increment the pity counter, then roll
+  run.gold -= pack.cost;
+  if (!run.packsOpened) run.packsOpened = { mythic: 0, arcane: 0, frenzy: 0 };
+  run.packsOpened[packId] = (run.packsOpened[packId] ?? 0) + 1;
+  const pityState = {
+    mythicCount: run.packsOpened.mythic,
+    arcaneCount: run.packsOpened.arcane,
+    frenzyCount: run.packsOpened.frenzy,
+  };
+
+  const cards = rollPackCards(packId, pityState);
+  if (cards.length === 0) {
+    flashError(`Pack opened empty — please report this bug`);
+    _onChange?.();
+    return false;
+  }
+
+  // Distribute: deck cards capped at MAX_DECK_SIZE, Aether-Root spells go
+  // to the side panel inventory. If deck would overflow, drop extras
+  // (this is rare; the safety check above usually prevents it).
+  const added = { deck: [], aether: [] };
+  for (const card of cards) {
+    if (card.category === 'aether_root') {
+      addToAetherSpells(run, card);
+      added.aether.push(card);
+    } else if (run.deck.length < MAX_DECK_SIZE) {
+      addToDeck(run, card);
+      added.deck.push(card);
+    } else {
+      // Deck full, can't fit — leave the card out (rare edge case)
+    }
+  }
+
+  _audio?.playSfx('go');
+  _onChange?.();
+
+  // Show pack-opening modal
+  await showPackRevealModal(pack, cards);
+  return true;
+}
+
+function showPackRevealModal(pack, cards) {
+  const titleEl = `${pack.label} Pack — ${cards.length} cards`;
+  const cardsHtml = cards
+    .map((c) => {
+      const rarityClass = `card-rarity-${c.rarity}`;
+      const icon = c.type === 'plant' ? '🌱' : '✨';
+      return `
+        <div class="reveal-card ${rarityClass}">
+          <div class="reveal-card-icon">${icon}</div>
+          <div class="reveal-card-name">${escapeHtml(c.name)}</div>
+          <div class="reveal-card-rarity">${escapeHtml(c.rarity)}</div>
+        </div>
+      `;
+    })
+    .join('');
+
+  return showModal({
+    title: titleEl,
+    bodyHtml: `<div class="reveal-grid">${cardsHtml}</div>`,
+    buttons: [{ label: 'Continue', value: true, kind: 'primary' }],
+    wide: true,
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+
+/**
+ * Render the entire shop UI into its host elements.
+ * Called whenever the run changes (after buy/sell/refresh/etc).
+ */
+export function renderShop(run) {
+  ensureShopRollForRound(run);
+  renderShopCards(run);
+  renderPackRow(run);
+  renderDeckInventory(run);
+  updateRefreshButton(run);
+}
+
+function renderShopCards(run) {
+  const host = document.getElementById('shop-cards');
+  if (!host) return;
+  host.innerHTML = '';
+  run.shopRoll.forEach((slot, slotIndex) => {
+    const card = getCard(slot.cardId);
+    if (!card) return;
+    const el = renderCard(card, {
+      cost: slot.cost,
+      sold: slot.sold,
+      onClick: () => buyShopSlot(run, slotIndex),
+    });
+    host.appendChild(el);
+  });
+}
+
+function renderPackRow(run) {
+  const host = document.getElementById('pack-chests');
+  if (!host) return;
+  host.innerHTML = '';
+  for (const id of PACK_ORDER) {
+    const pack = PACKS[id];
+    const opened = run.packsOpened?.[id] ?? 0;
+    const el = renderPackChest(pack, {
+      opened,
+      disabled: run.gold < pack.cost,
+      onClick: () => buyPack(run, id),
+    });
+    host.appendChild(el);
+  }
+}
+
+function renderDeckInventory(run) {
+  const host = document.getElementById('deck-inventory');
+  const countEl = document.getElementById('deck-count');
+  if (countEl) countEl.textContent = String(run.deck.length);
+  if (!host) return;
+  host.innerHTML = '';
+
+  if (run.deck.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'deck-empty';
+    empty.textContent = 'Deck empty — buy cards above to start building';
+    host.appendChild(empty);
+    return;
+  }
+
+  for (const instance of run.deck) {
+    const card = getCard(instance.cardId);
+    if (!card) continue;
+    const el = renderCard(card, {
+      sellValue: instance.sellValue,
+      small: true,
+      onClick: () => sellDeckCard(run, instance.instanceId),
+    });
+    host.appendChild(el);
+  }
+}
+
+function updateRefreshButton(run) {
+  const btn = document.getElementById('refresh-shop-button');
+  if (!btn) return;
+  btn.disabled = run.gold < REFRESH_COST;
+}
+
+// ============================================================
+// MISC
+// ============================================================
+
+function flashError(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.className = 'shop-toast';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}

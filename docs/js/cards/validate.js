@@ -49,8 +49,14 @@ export function validateCards() {
       ids.add(card.id);
     }
 
-    // Pack-exclusive cards must reference a real pack
-    if (card.category === 'pack_exclusive' || card.category === 'aether_root') {
+    // Pack-affiliated cards must reference a real pack. This includes
+    // pack_exclusive, aether_root, AND economy cards that ship in packs
+    // (Crystal Fern, Amber Grain, Midas Mandrake).
+    const isPackAffiliated =
+      card.category === 'pack_exclusive' ||
+      card.category === 'aether_root' ||
+      (card.category === 'economy' && card.pack);
+    if (isPackAffiliated) {
       if (!card.pack || !PACKS[card.pack]) {
         errors.push(`${ctx} category=${card.category} but pack='${card.pack}' is invalid`);
       }
@@ -101,10 +107,13 @@ export function validateCards() {
     }
   }
 
-  // Each pack should have at least one card per declared rarity
+  // Each pack should have at least one card per declared rarity.
+  // Counts both regular pack-exclusives AND Aether-Root spells, since the
+  // pack roller pulls from both pools.
+  const allPackPool = [...PACK_EXCLUSIVE_CARDS, ...AETHER_ROOT_SPELLS];
   for (const pack of Object.values(PACKS)) {
     for (const rarity of Object.keys(pack.rarityWeights)) {
-      const found = PACK_EXCLUSIVE_CARDS.some(
+      const found = allPackPool.some(
         (c) => c.pack === pack.id && c.rarity === rarity,
       );
       if (!found) {
@@ -116,7 +125,7 @@ export function validateCards() {
   }
 
   // Frenzy pack should have at least one Legendary (for pity drops)
-  const frenzyLegendaries = PACK_EXCLUSIVE_CARDS.filter(
+  const frenzyLegendaries = allPackPool.filter(
     (c) => c.pack === 'frenzy' && c.rarity === 'legendary',
   );
   if (frenzyLegendaries.length === 0) {

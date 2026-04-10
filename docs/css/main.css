@@ -102,6 +102,14 @@ html, body {
   padding: 2rem;
 }
 
+/* Scrollable variant for content-heavy screens (shop, leaderboard, etc.) */
+.screen.screen-scrollable {
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding-top: 5rem;
+  padding-bottom: 2rem;
+}
+
 .screen[hidden] { display: none; }
 
 /* Fade-in is applied by ScreenManager via .is-active so it re-runs on every show */
@@ -379,23 +387,347 @@ html, body {
 .shop-main {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  margin-top: 4rem;
+  align-items: stretch;
+  gap: 1.5rem;
   width: 100%;
+  max-width: 1100px;
+  padding: 0 1rem;
 }
 
-.shop-placeholder {
-  text-align: center;
-  padding: 1.5rem;
+.shop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
   background: var(--bg-elev);
-  border: 1px dashed var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 
-.shop-placeholder h3 { margin-bottom: 0.5rem; color: var(--accent); }
+.shop-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.shop-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.shop-hint {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.shop-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.start-round-btn {
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.btn-small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
 
 .muted { color: var(--fg-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* ---------- Card Component ---------- */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev-2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  min-height: 220px;
+}
+
+.card-clickable { cursor: pointer; }
+
+.card-clickable:hover:not(.card-sold) {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.card-stripe {
+  height: 6px;
+  width: 100%;
+  background: var(--border);
+}
+
+.card-rarity-trash       .card-stripe { background: var(--rarity-trash); }
+.card-rarity-trash       { border-color: var(--rarity-trash); }
+.card-rarity-common      .card-stripe { background: var(--rarity-common); }
+.card-rarity-common      { border-color: var(--rarity-common); }
+.card-rarity-uncommon    .card-stripe { background: var(--rarity-uncommon); }
+.card-rarity-uncommon    { border-color: var(--rarity-uncommon); }
+.card-rarity-rare        .card-stripe { background: var(--rarity-rare); }
+.card-rarity-rare        { border-color: var(--rarity-rare); }
+.card-rarity-epic        .card-stripe { background: var(--rarity-epic); }
+.card-rarity-epic        { border-color: var(--rarity-epic); }
+.card-rarity-legendary   .card-stripe { background: var(--rarity-legendary); }
+.card-rarity-legendary   { border-color: var(--rarity-legendary); }
+
+.card-legendary-shine {
+  background: linear-gradient(135deg, var(--bg-elev-2), rgba(212, 175, 55, 0.08));
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  animation: legendaryPulse 3s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); }
+  50%      { box-shadow: 0 0 28px rgba(192, 57, 43, 0.25); }
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.85rem;
+  flex: 1;
+}
+
+.card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fg-base);
+  line-height: 1.2;
+}
+
+.card-type-row {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-stats {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.card-desc {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.card-footer {
+  padding: 0.5rem 0.85rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.card-cost { color: var(--accent); }
+.card-sell { color: var(--accent-green); font-size: 0.75rem; }
+
+.card-sold {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.card-sold .card-cost { color: var(--fg-muted); }
+
+/* Compact card for deck inventory */
+.card-small {
+  min-height: 100px;
+  font-size: 0.85rem;
+}
+
+.card-small .card-body { padding: 0.5rem 0.6rem; gap: 0.2rem; }
+.card-small .card-name { font-size: 0.8rem; }
+.card-small .card-type-row { font-size: 0.65rem; }
+.card-small .card-footer { padding: 0.3rem 0.5rem; }
+
+/* ---------- Pack Chests ---------- */
+.pack-chests {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.pack-chest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1.25rem 1rem;
+  background: var(--bg-elev-2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.pack-chest:hover:not(.disabled) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--shadow);
+}
+
+.pack-chest.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pack-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.pack-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--fg-base);
+}
+
+.pack-cost {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.pack-pity {
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.pack-chest-mythic {
+  border-color: var(--rarity-uncommon);
+  background: linear-gradient(135deg, var(--bg-elev-2), rgba(74, 222, 128, 0.05));
+}
+
+.pack-chest-arcane {
+  border-color: var(--rarity-epic);
+  background: linear-gradient(135deg, var(--bg-elev-2), rgba(168, 85, 247, 0.07));
+}
+
+.pack-chest-frenzy {
+  border-color: var(--rarity-legendary);
+  background: linear-gradient(135deg, var(--bg-elev-2), rgba(212, 175, 55, 0.1));
+  animation: frenzyShimmer 4s ease-in-out infinite;
+}
+
+@keyframes frenzyShimmer {
+  0%, 100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+  50%      { box-shadow: 0 0 24px rgba(212, 175, 55, 0.25); }
+}
+
+/* ---------- Deck Inventory ---------- */
+.deck-inventory {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.deck-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--fg-muted);
+  font-style: italic;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+/* ---------- Pack Reveal Modal ---------- */
+.modal-dialog-wide { max-width: 720px; }
+
+.reveal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.reveal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0.5rem;
+  background: var(--bg-elev-2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  animation: revealCard 0.4s ease backwards;
+}
+
+.reveal-card:nth-child(1) { animation-delay: 0.0s; }
+.reveal-card:nth-child(2) { animation-delay: 0.1s; }
+.reveal-card:nth-child(3) { animation-delay: 0.2s; }
+.reveal-card:nth-child(4) { animation-delay: 0.3s; }
+.reveal-card:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes revealCard {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.reveal-card-icon { font-size: 2rem; }
+
+.reveal-card-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--fg-base);
+  text-align: center;
+}
+
+.reveal-card-rarity {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+}
+
+/* Apply rarity colors to reveal cards */
+.reveal-card.card-rarity-trash       { border-color: var(--rarity-trash); }
+.reveal-card.card-rarity-common      { border-color: var(--rarity-common); }
+.reveal-card.card-rarity-uncommon    { border-color: var(--rarity-uncommon); }
+.reveal-card.card-rarity-rare        { border-color: var(--rarity-rare); }
+.reveal-card.card-rarity-epic        { border-color: var(--rarity-epic); }
+.reveal-card.card-rarity-legendary   {
+  border-color: var(--rarity-legendary);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ---------- Shop Toast (error flash) ---------- */
+.shop-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elev);
+  color: var(--accent-red);
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  z-index: 9999;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.2s ease;
+}
 
 /* ---------- Grid (5x12) ---------- */
 .grid-wrap {
