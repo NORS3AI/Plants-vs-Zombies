@@ -28,6 +28,7 @@ const DEFAULT_RUN = {
   gold: 5,
   aetherRootHP: 100,
   aetherRootMaxHP: 100,
+  aetherRootShield: 0, // Phase 9: absorbed by incoming damage before HP
 
   // Owned cards (each is a card-instance with rolled sellValue + instanceId).
   // Max 10 entries enforced by shop logic.

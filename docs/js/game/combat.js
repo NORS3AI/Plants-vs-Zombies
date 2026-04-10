@@ -26,6 +26,11 @@
 import { getCard } from '../cards/index.js';
 import { getDifficulty } from './difficulty.js';
 import { generateSpawnSchedule } from './zombies.js';
+import {
+  tickAetherCooldowns,
+  resetAetherForRound,
+  tickActiveBeams,
+} from './aetherSpells.js';
 
 export const GRID_COLS = 12;
 export const GRID_ROWS = 5;
@@ -89,7 +94,13 @@ export function initCombat(run, callbacks = {}) {
     bossActive: null, // reference to the currently-live boss zombie, if any
     bossName: null,
     roundNumber: run.round,
+    activeBeams: [], // Nature's Wrath etc.
   };
+
+  // Phase 9: clear any stale Aether-Root shield from previous rounds
+  // and reset once-per-round spell flags + cooldowns.
+  run.aetherRootShield = 0;
+  resetAetherForRound(run);
 
   return _state;
 }
@@ -117,13 +128,23 @@ export function tickCombat(dt) {
   // 2. Tick plants (cast timers → attack / produce gold)
   tickPlants(dt);
 
-  // 3. Tick zombies (move / attack plants / damage Aether-Root)
+  // 3. Active beam effects (Nature's Wrath) — apply DoT to rows, mark kills
+  tickActiveBeams(_state, dt);
+  // Beam damage happens inline; reap any zombies that died from it
+  for (const z of _state.zombies) {
+    if (z.hp <= 0 && !z._counted) killZombie(z);
+  }
+
+  // 4. Tick zombies (move / attack plants / damage Aether-Root)
   tickZombies(dt);
 
-  // 4. Expire floating texts
+  // 5. Tick Aether-Root spell cooldowns
+  tickAetherCooldowns(_run, dt);
+
+  // 6. Expire floating texts
   tickFloatingTexts(dt);
 
-  // 5. Check end conditions
+  // 7. Check end conditions
   checkEndConditions();
 }
 
@@ -397,8 +418,17 @@ function tickZombies(dt) {
 
       // Reached the Aether-Root
       if (z.col <= 0) {
-        _run.aetherRootHP = Math.max(0, _run.aetherRootHP - z.dmg);
+        let remaining = z.dmg;
+        // Aether-Root shield absorbs damage first (Phase 9)
+        if ((_run.aetherRootShield ?? 0) > 0) {
+          const absorbed = Math.min(_run.aetherRootShield, remaining);
+          _run.aetherRootShield -= absorbed;
+          remaining -= absorbed;
+        }
+        _run.aetherRootHP = Math.max(0, _run.aetherRootHP - remaining);
         _callbacks?.onAetherHit?.();
+        // Boss breached: clear bossActive so the banner dismisses
+        if (_state.bossActive === z) _state.bossActive = null;
         zombies.splice(i, 1);
       }
     }

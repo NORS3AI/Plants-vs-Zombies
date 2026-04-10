@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 9 — Aether-Root Spells** (Phase 8 complete)
+> **Current Phase:** **Phase 10 — Tutorial Mode** (Phase 9 complete)
 
 ---
 
@@ -205,22 +205,27 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 9 — Aether-Root Spells (Player Active)
+## Phase 9 — Aether-Root Spells (Player Active) ✅
 
 **Goal:** Side-panel spell system with cooldowns.
 
-- [ ] Side-panel UI
-- [ ] Spell slots populated from owned Aether-Root spells
-- [ ] **Sap-Mend** (15s cd)
-- [ ] **Grove-Shield** (30s cd)
-- [ ] **Thorn-Pulse** (45s cd)
-- [ ] **Photosynthetic Burst** (60s cd)
-- [ ] **Verdant Rebirth** (1/round)
-- [ ] **Nature's Wrath** (90s cd)
-- [ ] Visual cooldown indicators
-- [ ] Aether-Root spells only obtainable from card packs
+- [x] Side-panel UI (button per owned spell with icon, name, cooldown overlay)
+- [x] Spell slots populated from `run.aetherSpells` (Phase 5 pack drops)
+- [x] **Sap-Mend** (15s cd) — heals Aether-Root 10 HP
+- [x] **Grove-Shield** (30s cd) — +25 HP shield
+- [x] **Thorn-Pulse** (45s cd) — knocks all zombies back 2 tiles and resets their attack state
+- [x] **Photosynthetic Burst** (60s cd) — +5 gold, -5 HP (bypasses shield)
+- [x] **Verdant Rebirth** (1/round) — full heal + 50 HP shield
+- [x] **Nature's Wrath** (90s cd) — 5-second 50 dps beam down the center row
+- [x] Visual cooldown indicators (dimmed overlay + seconds text)
+- [x] Aether-Root spells only obtainable from card packs (Phase 5 routing preserved)
+- [x] Aether-Root shield bar (blue) visible in side panel when shield > 0
+- [x] Shield absorbs damage before HP in the zombie-breach pipeline
+- [x] Spell cooldowns tick during combat
+- [x] Cooldowns and `usedThisRound` flags reset at each round start
+- [x] Aether-Root shield cleared at round start
 
-**Exit Criteria:** Player can cast spells mid-combat with correct cooldowns and effects.
+**Exit Criteria:** Player can cast spells mid-combat with correct cooldowns and effects. ✅
 
 ---
 

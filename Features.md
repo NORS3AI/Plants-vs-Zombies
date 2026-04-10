@@ -116,13 +116,14 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 - [x] Health UI prominently displayed (HUD with color thresholds)
 
 ### 3.4 Side-Panel Spells (Player Active)
-- [ ] **Sap-Mend** — Heal 10 HP (15s cooldown)
-- [ ] **Grove-Shield** — 25 HP shield (30s cooldown)
-- [ ] **Thorn-Pulse** — Knockback 2 tiles (45s cooldown)
-- [ ] **Photosynthetic Burst** — +5 gold, -5 HP (60s cooldown)
-- [ ] **Verdant Rebirth** — Full heal + 50 shield (1/round)
-- [ ] **Nature's Wrath** — Center-lane beam, 5s (90s cooldown)
-- [ ] Visual cooldown indicators
+- [x] **Sap-Mend** — Heal 10 HP (15s cooldown)
+- [x] **Grove-Shield** — 25 HP shield (30s cooldown)
+- [x] **Thorn-Pulse** — Knockback 2 tiles (45s cooldown)
+- [x] **Photosynthetic Burst** — +5 gold, -5 HP (60s cooldown)
+- [x] **Nature's Wrath** — 5s center-lane 50 dps beam (90s cooldown)
+- [x] **Verdant Rebirth** — Full heal + 50 shield (1/round)
+- [x] Visual cooldown overlay with seconds countdown
+- [x] Aether-Root shield bar (blue) in side panel
 
 ---
 

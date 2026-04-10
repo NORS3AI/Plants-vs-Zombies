@@ -17,6 +17,7 @@ import { Save, DEFAULT_RUN } from './game/save.js';
 import { getDifficulty, DIFFICULTIES } from './game/difficulty.js';
 import { AudioManager } from './game/audio.js';
 import * as Combat from './game/combat.js';
+import * as AetherSpells from './game/aetherSpells.js';
 import { ScreenManager } from './ui/screens.js';
 import { confirmModal } from './ui/modal.js';
 import * as Cards from './cards/index.js';
@@ -585,8 +586,9 @@ window.__pvz = {
   Placement,
   Combat,
   CombatView,
+  AetherSpells,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 7 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 9 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

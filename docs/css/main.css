@@ -982,6 +982,148 @@ html, body {
   margin-bottom: 0.5rem;
 }
 
+.spell-panel-empty {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.spell-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.spell-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-elev-2);
+  border: 2px solid var(--accent-green);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--fg-base);
+  font: inherit;
+  text-align: left;
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.spell-slot:hover:not(.spell-on-cooldown) {
+  background: rgba(74, 222, 128, 0.15);
+  transform: translateX(2px);
+}
+
+.spell-slot.spell-on-cooldown {
+  border-color: var(--fg-muted);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spell-slot.spell-just-cast {
+  animation: spellCast 0.3s ease;
+}
+
+@keyframes spellCast {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.8); }
+  50%      { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+}
+
+.spell-slot.spell-denied {
+  animation: spellDenied 0.3s ease;
+}
+
+@keyframes spellDenied {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+
+.spell-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.spell-name {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--fg-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spell-cooldown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.spell-slot.spell-on-cooldown .spell-cooldown-overlay {
+  opacity: 1;
+}
+
+.spell-cooldown-text {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--fg-base);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Aether-Root Shield Bar ---------- */
+.aether-shield-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.aether-shield-wrap.is-active {
+  display: flex;
+}
+
+.aether-shield-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-blue);
+}
+
+.aether-shield-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.aether-shield-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), #93c5fd);
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+  transition: width 0.2s ease;
+}
+
+.aether-shield-wrap::after {
+  content: attr(data-value);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  text-align: right;
+}
+
 /* Combat grid wrapper (static grid + absolute overlay for zombies) */
 .combat-grid-wrap {
   position: relative;

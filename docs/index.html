@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 8 — Content</div>
+    <div id="phase-badge">Phase 9 — Aether Spells</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.8.0 — Phase 8</p>
+        <p class="version">v0.9.0 — Phase 9</p>
       </div>
     </section>
 
@@ -107,9 +107,15 @@
         <div class="boss-banner-hp-bar"><div class="boss-banner-hp-fill"></div></div>
       </div>
       <main class="combat-main">
-        <aside class="spell-panel">
+        <aside class="spell-panel" id="spell-panel">
           <h4>Aether-Root Spells</h4>
-          <p class="muted">Coming in Phase 9</p>
+          <div class="spell-slots" id="spell-slots"></div>
+          <div class="aether-shield-wrap" id="aether-shield-bar">
+            <span class="aether-shield-label">Shield</span>
+            <div class="aether-shield-track">
+              <div class="aether-shield-fill" id="aether-shield-fill"></div>
+            </div>
+          </div>
         </aside>
         <div id="grid-container-combat" class="grid-wrap"></div>
       </main>

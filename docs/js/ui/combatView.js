@@ -16,6 +16,17 @@
 import { getCard } from '../cards/index.js';
 import { renderGridCardIcon } from './cardView.js';
 import { GRID_ROWS, GRID_COLS } from '../game/grid.js';
+import { castAetherSpell } from '../game/aetherSpells.js';
+
+// Emoji icons for each Aether-Root spell (keyed by card id)
+const SPELL_ICONS = {
+  sap_mend: '💚',
+  grove_shield: '🛡️',
+  thorn_pulse: '🌿',
+  photosynthetic_burst: '☀️',
+  natures_wrath: '⚡',
+  verdant_rebirth: '🌱',
+};
 
 // Pixel sizing (must match main.css .grid-tile size)
 const TILE_PX = 56;
@@ -76,6 +87,9 @@ export function initCombatView(host, run) {
   host.appendChild(wrap);
   _gridEl = gridEl;
   _overlayEl = overlay;
+
+  // Build the Aether-Root spell side panel (outside the grid host)
+  buildSpellPanel(run);
 
   // Seed plant elements on their tiles
   for (const instance of run.deck) {
@@ -174,6 +188,12 @@ export function renderCombatFrame(state) {
   // Boss banner
   updateBossBanner(state);
 
+  // Aether-Root spell cooldowns (side panel)
+  updateSpellPanel(state);
+
+  // Aether-Root shield bar (HUD overlay)
+  updateAetherHUD(state);
+
   // Remove zombies that are no longer in state
   for (const [id, entry] of _zombieEls) {
     if (!seen.has(id)) {
@@ -244,6 +264,113 @@ function renderFloatingTexts(state, step) {
   }
 }
 
+// ---------- Aether-Root Spell Panel ----------
+
+let _currentRun = null;
+const _spellSlotEls = new Map(); // instanceId → { el, cooldownEl, readyDot }
+
+function buildSpellPanel(run) {
+  _currentRun = run;
+  const host = document.getElementById('spell-slots');
+  if (!host) return;
+  host.innerHTML = '';
+  _spellSlotEls.clear();
+
+  const spells = run.aetherSpells ?? [];
+  if (spells.length === 0) {
+    const hint = document.createElement('p');
+    hint.className = 'spell-panel-empty';
+    hint.textContent = 'Open Mythic, Arcane, or Frenzy packs to find Aether-Root spells.';
+    host.appendChild(hint);
+    return;
+  }
+
+  for (const instance of spells) {
+    const card = getCard(instance.cardId);
+    if (!card) continue;
+    const slot = document.createElement('button');
+    slot.className = 'spell-slot';
+    slot.dataset.instanceId = instance.instanceId;
+    slot.title = `${card.name}\n${card.description}`;
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'spell-icon';
+    iconEl.textContent = SPELL_ICONS[card.id] ?? '✨';
+    slot.appendChild(iconEl);
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'spell-name';
+    nameEl.textContent = card.name;
+    slot.appendChild(nameEl);
+
+    const cooldownEl = document.createElement('div');
+    cooldownEl.className = 'spell-cooldown-overlay';
+    const cooldownText = document.createElement('span');
+    cooldownText.className = 'spell-cooldown-text';
+    cooldownEl.appendChild(cooldownText);
+    slot.appendChild(cooldownEl);
+
+    slot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const ok = castAetherSpell(run, instance.instanceId);
+      if (ok) {
+        slot.classList.add('spell-just-cast');
+        setTimeout(() => slot.classList.remove('spell-just-cast'), 300);
+      } else {
+        slot.classList.add('spell-denied');
+        setTimeout(() => slot.classList.remove('spell-denied'), 300);
+      }
+    });
+
+    host.appendChild(slot);
+    _spellSlotEls.set(instance.instanceId, { slot, cooldownEl, cooldownText });
+  }
+}
+
+function updateSpellPanel(state) {
+  if (!_currentRun?.aetherSpells) return;
+  for (const instance of _currentRun.aetherSpells) {
+    const entry = _spellSlotEls.get(instance.instanceId);
+    if (!entry) continue;
+    const card = getCard(instance.cardId);
+    const card_onRound = card?.oncePerRound;
+    const cd = instance.cooldownRemaining ?? 0;
+    const usedRound = card_onRound && instance.usedThisRound;
+
+    if (cd > 0 || usedRound) {
+      entry.slot.classList.add('spell-on-cooldown');
+      if (usedRound) {
+        entry.cooldownText.textContent = '1/rnd';
+      } else {
+        entry.cooldownText.textContent = `${Math.ceil(cd)}s`;
+      }
+    } else {
+      entry.slot.classList.remove('spell-on-cooldown');
+      entry.cooldownText.textContent = '';
+    }
+  }
+}
+
+// ---------- Aether-Root HUD (shield bar + HP) ----------
+
+function updateAetherHUD(state) {
+  if (!_currentRun) return;
+  const shieldEl = document.getElementById('aether-shield-bar');
+  const shieldFill = document.getElementById('aether-shield-fill');
+  if (shieldEl && shieldFill) {
+    const shield = _currentRun.aetherRootShield ?? 0;
+    if (shield > 0) {
+      shieldEl.classList.add('is-active');
+      // Scale visible width to a rough max of 100 shield
+      const pct = Math.min(1, shield / 100);
+      shieldFill.style.width = `${pct * 100}%`;
+      shieldEl.dataset.value = String(Math.round(shield));
+    } else {
+      shieldEl.classList.remove('is-active');
+    }
+  }
+}
+
 // ---------- Boss banner ----------
 
 function updateBossBanner(state) {
@@ -271,10 +398,16 @@ export function resetCombatView() {
   if (_hostEl) _hostEl.innerHTML = '';
   const banner = document.getElementById('boss-banner');
   if (banner) banner.classList.remove('is-active');
+  const spellHost = document.getElementById('spell-slots');
+  if (spellHost) spellHost.innerHTML = '';
+  const shieldEl = document.getElementById('aether-shield-bar');
+  if (shieldEl) shieldEl.classList.remove('is-active');
   _hostEl = null;
   _gridEl = null;
   _overlayEl = null;
   _zombieEls.clear();
   _plantEls.clear();
   _floatingEls.clear();
+  _spellSlotEls.clear();
+  _currentRun = null;
 }

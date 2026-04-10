@@ -5,6 +5,53 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.9.0 — 2026-04-10 — Phase 9: Aether-Root Spells
+
+### Added
+- **`docs/js/game/aetherSpells.js`** — Full spell effect dispatcher:
+  - `castAetherSpell(run, instanceId)` — validates cooldown / usedThisRound, dispatches to the effect function, starts cooldown
+  - `tickAetherCooldowns(run, dt)` — decrements cooldownRemaining each frame
+  - `tickActiveBeams(state, dt)` — applies Nature's Wrath DoT to the center row
+  - `resetAetherForRound(run)` — clears cooldowns and usedThisRound flags at combat init
+- **6 spell effects wired:**
+  - **Sap-Mend** — heal 10 HP (15s cd)
+  - **Grove-Shield** — +25 HP shield (30s cd)
+  - **Thorn-Pulse** — knockback all zombies 2 tiles, reset attack state (45s cd)
+  - **Photosynthetic Burst** — +5 gold (credited to run + totals), -5 HP (bypasses shield) (60s cd)
+  - **Nature's Wrath** — 5s continuous 50 dps beam down the center row (90s cd)
+  - **Verdant Rebirth** — full Aether-Root heal + 50 HP shield (1/round)
+- **Aether-Root shield system:**
+  - New `run.aetherRootShield` field in DEFAULT_RUN
+  - Shield absorbs damage first before HP in the zombie-breach pipeline
+  - Shield cleared at each combat init to prevent cross-round stacking exploits
+  - Blue shield bar in the side panel (visible only when shield > 0)
+- **Spell side panel UI** (replaces Phase 7 "Coming in Phase 9" placeholder):
+  - Button per owned spell with icon, name, and cooldown overlay
+  - Click to cast; cooldown overlay dims the slot and shows seconds remaining or "1/rnd"
+  - Cast success plays a green pulse animation; denied plays a red shake
+  - Empty state shows "Open packs to find Aether-Root spells" hint
+- **Floating text** now has spell-cast flashes (e.g. "+10 HP", "NATURE'S WRATH!")
+- **CSS**: `.spell-slot`, `.spell-cooldown-overlay`, `.aether-shield-wrap`, cast success/denied animations
+
+### Changed
+- `tickCombat` now ticks aether cooldowns, active beams, and reaps zombies killed by beam DoT
+- `initCombat` clears `run.aetherRootShield` and calls `resetAetherForRound(run)`
+- `combatView.initCombatView` builds the spell panel from `run.aetherSpells`
+- Phase badge → "Phase 9 — Aether Spells", version → v0.9.0
+
+### Fixed (Phase 8 audit)
+- **Boss breach bug:** When a boss reached the Aether-Root, `_state.bossActive` wasn't cleared, so the boss banner would show stale data. The breach path now clears `bossActive` inline.
+
+### Verified
+- Headless test: Sap-Mend (+10 HP), Grove-Shield (+25 shield), Thorn-Pulse (knockback), Verdant Rebirth (full heal + 50 shield, stacking with existing shield to 75). Second Verdant Rebirth cast correctly rejected (once per round). Second Sap-Mend cast correctly rejected (15s cooldown remaining).
+
+### Notes
+- Stubbed boss abilities (R5–R10 Venom Spit, Freezing Aura, Burn-Step, Phase Shift, Blight Breath, Death's Call) are still flavor-only.
+- Beam DoT visual (Nature's Wrath laser effect) is deferred — Phase 12 polish will render a red laser line down the row.
+- Cooldowns reset at every combat init rather than carrying across rounds, so each round starts with spells fully ready.
+
+---
+
 ## v0.8.0 — 2026-04-10 — Phase 8: Rounds 1–10 Content
 
 ### Added
