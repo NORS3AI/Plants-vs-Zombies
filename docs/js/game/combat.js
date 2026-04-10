@@ -266,7 +266,7 @@ function tickPlants(dt) {
         const baseDmg = plant.card.damage + (plant.dmgBonus ?? 0);
         const finalDmg = Math.round(baseDmg * (plant.dmgMul ?? 1));
         damageZombie(target, finalDmg, plant);
-        plant.attackFlash = 0.2;
+        plant.attackFlash = 0.35;
         // Spawn a projectile visual from plant to target
         spawnProjectile(plant, target);
 
@@ -275,6 +275,56 @@ function tickPlants(dt) {
           if (ab.type === 'slow_on_hit') {
             const duration = ab.duration ?? 2.0;
             target.slowUntil = Math.max(target.slowUntil, _state.time + duration);
+          } else if (ab.type === 'stun_chance') {
+            if (Math.random() < (ab.chance ?? 0)) {
+              const dur = ab.duration ?? 1.0;
+              target.slowUntil = Math.max(target.slowUntil, _state.time + dur);
+              target.baseSpeed = 0; // freeze
+              target.speed = 0;
+              setTimeout(() => { target.baseSpeed = target.baseSpeed || target.speed; }, dur * 1000);
+            }
+          } else if (ab.type === 'execute') {
+            // Non-boss zombies below threshold % HP are instantly killed
+            const threshold = ab.threshold ?? 0.15;
+            if (!target.isBoss && target.hp > 0 && target.hp / target.maxHp <= threshold) {
+              target.hp = 0;
+            }
+          } else if (ab.type === 'beam') {
+            // Beam pierces: hit ALL zombies in the target's row (beam
+            // weapons pivot to whatever row the target is in) with the
+            // same damage. The primary target was already damaged; this
+            // pass hits everyone else in that row.
+            const range = plant.card.range ?? 12;
+            for (const z of _state.zombies) {
+              if (z === target || z.hp <= 0) continue;
+              if (z.row !== target.row) continue;
+              // Use absolute column distance — beam sweeps in both directions
+              const dCol = Math.abs(z.col - plant.col);
+              if (dCol > range) continue;
+              damageZombie(z, finalDmg, plant);
+              spawnProjectile(plant, z);
+              if (z.hp <= 0) killZombie(z);
+            }
+          } else if (ab.type === 'chain_lightning') {
+            // Lightning jumps to N additional nearby targets from the primary.
+            const maxJumps = ab.maxJumps ?? 2;
+            const jumpRadius = ab.jumpRadius ?? 2;
+            const hit = new Set([target]);
+            let lastHop = target;
+            for (let j = 0; j < maxJumps; j++) {
+              const nextHop = _state.zombies.find((z) => {
+                if (hit.has(z) || z.hp <= 0) return false;
+                const dRow = Math.abs(z.row - lastHop.row);
+                const dCol = Math.abs(z.col - lastHop.col);
+                return dRow <= jumpRadius && dCol <= jumpRadius;
+              });
+              if (!nextHop) break;
+              damageZombie(nextHop, finalDmg, plant);
+              spawnProjectile(lastHop, nextHop);
+              if (nextHop.hp <= 0) killZombie(nextHop);
+              hit.add(nextHop);
+              lastHop = nextHop;
+            }
           } else if (ab.type === 'splash') {
             // Splash: same damage to zombies in the 8 tiles adjacent
             // to the target (row ±1 within 1 tile horizontally).
@@ -359,7 +409,7 @@ function spawnProjectile(plant, zombie) {
     toRow: zombie.row,
     toCol: zombie.col,
     age: 0,
-    maxAge: 0.15,
+    maxAge: 0.25,
     color: projectileColorFor(plant.card),
   });
 }
@@ -411,10 +461,14 @@ function findTarget(plant) {
   const card = plant.card;
   const range = card.range ?? 1;
   const pattern = card.attackPattern ?? 'forward';
+  const hasBeam = (card.abilities ?? []).some((a) => a.type === 'beam');
 
   // Candidate rows this plant attacks
   const rows = new Set();
-  if (pattern === 'side') {
+  if (hasBeam) {
+    // Beam weapons can pivot to any row (Solar Archon's "beam damage")
+    for (let r = 0; r < GRID_ROWS; r++) rows.add(r);
+  } else if (pattern === 'side') {
     rows.add(plant.row);
     if (plant.row > 0) rows.add(plant.row - 1);
     if (plant.row < GRID_ROWS - 1) rows.add(plant.row + 1);
