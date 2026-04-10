@@ -72,6 +72,13 @@ html, body {
   /* Prevent double-tap zoom on iOS and pinch-zoom interfering with gameplay */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Block pull-to-refresh and horizontal swipe-back gestures on mobile */
+  overscroll-behavior: none;
+}
+
+/* Scrollable regions should not bounce into the browser's pull-to-refresh */
+.screen, .screen-scrollable {
+  overscroll-behavior-y: contain;
 }
 
 #app {
@@ -1052,9 +1059,40 @@ input, select, textarea {
   background: rgba(212, 175, 55, 0.25);
 }
 
+/* Spell-target highlight: plants glow when a spell is selected */
+.grid-tile.spell-target-valid {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -3px;
+  box-shadow: 0 0 14px rgba(96, 165, 250, 0.5);
+  animation: spellTargetPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes spellTargetPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(96, 165, 250, 0.35); }
+  50%      { box-shadow: 0 0 22px rgba(96, 165, 250, 0.7); }
+}
+
 .grid-tile.tile-has-card {
   cursor: pointer;
   padding: 2px;
+}
+
+/* Buff badge on placed plant icons */
+.grid-card-buff-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  font-size: 0.6rem;
+  line-height: 1;
+  background: var(--accent-blue);
+  color: var(--bg-base);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 6px rgba(96, 165, 250, 0.8);
 }
 
 /* ---------- Grid Card Icon (placed card on tile) ---------- */
@@ -1525,6 +1563,28 @@ input, select, textarea {
 }
 
 .plant-hp-fill.plant-hp-low { background: #eab308; }
+
+/* Plant shield bar — sits above HP bar, only visible when shield > 0 */
+.plant-shield-bar {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.plant-shield-fill {
+  height: 100%;
+  background: var(--accent-blue);
+  box-shadow: 0 0 4px rgba(96, 165, 250, 0.8);
+  transition: width 0.15s ease;
+}
+
+.grid-card.plant-has-shield {
+  box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
+}
 
 .grid-card { position: relative; }
 

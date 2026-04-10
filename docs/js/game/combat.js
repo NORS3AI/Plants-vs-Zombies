@@ -61,13 +61,14 @@ export function initCombat(run, callbacks = {}) {
 
   const diff = getDifficulty(run.difficulty) ?? {};
 
-  // Hydrate placed plants
+  // Hydrate placed plants and apply any persistent buffs from spell casts
   const plants = [];
   for (const instance of run.deck) {
     if (instance.gridRow == null || instance.gridCol == null) continue;
     const card = getCard(instance.cardId);
     if (!card) continue;
-    plants.push({
+
+    const plant = {
       instanceId: instance.instanceId,
       cardId: card.id,
       card, // direct reference for faster access
@@ -75,13 +76,43 @@ export function initCombat(run, callbacks = {}) {
       col: instance.gridCol,
       hp: card.health,
       maxHp: card.health,
-      castTimer: card.castTime, // full initial delay
+      shield: 0, // Barkskin Guard / World-Tree Seed
+      dmgBonus: 0, // Nectar Rush (+damage)
+      dmgMul: 1, // Arcane Surge (×damage)
+      castSpeedBuff: 0, // Aether Bloom (-cast time)
+      castTimer: card.castTime, // initial delay, adjusted after buffs
       targeting: instance.targeting ?? card.targetingDefault ?? 'first',
-      // Economy plants use castTimer for production instead of attacks
       isEconomy: card.category === 'economy' || !!card.economy,
-      // Attack flash timer (for render feedback)
       attackFlash: 0,
-    });
+    };
+
+    // Apply stored buffs (from pre-combat spell casts)
+    for (const buff of instance.buffs ?? []) {
+      switch (buff.type) {
+        case 'shield':
+          plant.shield += buff.value;
+          break;
+        case 'hp_boost':
+          plant.maxHp += buff.value;
+          plant.hp = plant.maxHp;
+          break;
+        case 'dmg_boost':
+          plant.dmgBonus += buff.value;
+          break;
+        case 'dmg_mul':
+          plant.dmgMul *= buff.value;
+          break;
+        case 'cast_speed':
+          plant.castSpeedBuff += buff.value;
+          break;
+      }
+    }
+    // Apply cast-speed buff to the first cast timer (negative = faster)
+    if (plant.castSpeedBuff !== 0) {
+      plant.castTimer = Math.max(0.1, plant.castTimer + plant.castSpeedBuff);
+    }
+
+    plants.push(plant);
   }
 
   _state = {
@@ -223,7 +254,9 @@ function tickPlants(dt) {
     } else if (plant.card.damage > 0) {
       const target = findTarget(plant);
       if (target) {
-        damageZombie(target, plant.card.damage, plant);
+        const baseDmg = plant.card.damage + (plant.dmgBonus ?? 0);
+        const finalDmg = Math.round(baseDmg * (plant.dmgMul ?? 1));
+        damageZombie(target, finalDmg, plant);
         plant.attackFlash = 0.2;
 
         // --- Plant abilities on attack ---
@@ -239,7 +272,7 @@ function tickPlants(dt) {
               const dRow = Math.abs(z.row - target.row);
               const dCol = Math.abs(z.col - target.col);
               if (dRow <= (ab.radius ?? 1) && dCol <= (ab.radius ?? 1)) {
-                damageZombie(z, plant.card.damage, plant);
+                damageZombie(z, finalDmg, plant);
                 if (z.hp <= 0) killZombie(z);
               }
             }
@@ -253,7 +286,7 @@ function tickPlants(dt) {
               if (Math.abs(z.row - plant.row) > halfW) continue;
               const dx = z.col - plant.col;
               if (dx < 0 || dx > depth) continue;
-              damageZombie(z, plant.card.damage, plant);
+              damageZombie(z, finalDmg, plant);
               if (z.hp <= 0) killZombie(z);
             }
           }
@@ -404,6 +437,12 @@ function tickZombies(dt) {
           dmg *= 2;
         }
 
+        // Shield absorbs damage first (from Barkskin Guard etc.)
+        if ((blocker.shield ?? 0) > 0) {
+          const absorbed = Math.min(blocker.shield, dmg);
+          blocker.shield -= absorbed;
+          dmg -= absorbed;
+        }
         blocker.hp -= dmg;
         z.attackTimer = z.attackInterval;
 

@@ -18,6 +18,8 @@ import {
   getCard,
   rollSell,
   formatCardStats,
+  getCardsByRarity,
+  getNextRarity,
 } from '../cards/index.js';
 import { renderGrid } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
@@ -106,7 +108,20 @@ function handleTileClick(run, row, col) {
   const atTile = findAtTile(run, row, col);
 
   if (_selection) {
-    // Mid-placement: empty tile = place, occupied = cancel
+    const instance = run.deck.find((d) => d.instanceId === _selection.instanceId);
+    if (!instance) {
+      clearSelection(run);
+      return;
+    }
+    const card = getCard(instance.cardId);
+
+    if (card?.type === 'spell') {
+      // Spells have a different cast path depending on their target type.
+      castSpellAtTile(run, instance, card, row, col, atTile);
+      return;
+    }
+
+    // Plant placement path: empty tile = place, occupied = cancel selection
     if (!atTile) {
       placeAt(run, row, col);
     } else {
@@ -117,6 +132,180 @@ function handleTileClick(run, row, col) {
 
   if (atTile) {
     openPlacedCardModal(run, atTile);
+  }
+}
+
+// ============================================================
+// SPELL CASTING
+// ============================================================
+
+/**
+ * Attempt to cast the selected spell at (row, col). Different spell
+ * target types use different click semantics:
+ *   - plant:        click an occupied tile (plant) to buff it
+ *   - self:         click any tile to grant self effect
+ *   - board:        click any tile; applies to all plants
+ *   - lane:         click any tile in the target row; applies to whole row
+ *   - tile:         click any tile; applies at that location
+ *   - plant_group:  not yet supported; shows a toast
+ */
+function castSpellAtTile(run, instance, card, row, col, targetPlant) {
+  const effect = card.effect;
+  if (!effect) {
+    flashError(`${card.name} has no effect.`);
+    return;
+  }
+
+  let success = false;
+  switch (card.target) {
+    case 'plant':
+      if (!targetPlant) {
+        flashError(`Cast ${card.name} on a plant (tap a plant on the grid).`);
+        return;
+      }
+      success = applyPlantSpell(effect, targetPlant, card);
+      break;
+
+    case 'self':
+      success = applySelfSpell(effect, run, card);
+      break;
+
+    case 'board':
+      success = applyBoardSpell(effect, run);
+      break;
+
+    case 'lane':
+      // Combat-only effect: only useful against zombies. We'll just
+      // confirm the lane selection and consume the card so the player
+      // knows it landed — combat engine will apply next tick if live.
+      flashError(`${card.name} is a combat spell. Cast it during a round.`);
+      return;
+
+    case 'tile':
+      flashError(`${card.name} is a combat spell. Cast it during a round.`);
+      return;
+
+    case 'plant_group':
+      flashError(`${card.name} requires the Synthesis UI (coming soon).`);
+      return;
+
+    default:
+      flashError(`${card.name}: target '${card.target}' not supported.`);
+      return;
+  }
+
+  if (!success) return;
+
+  // Consume the spell instance
+  const idx = run.deck.findIndex((d) => d.instanceId === instance.instanceId);
+  if (idx >= 0) run.deck.splice(idx, 1);
+
+  _selection = null;
+  _audio?.playSfx('go');
+  flashToast(`✨ ${card.name} cast!`);
+  _onChange?.();
+  renderPlacement(run);
+}
+
+/**
+ * Apply a plant-targeted spell to a placed instance. Stores the effect
+ * as a buff on the instance so it's persisted through save/load and
+ * re-applied to the runtime plant each combat init.
+ */
+function applyPlantSpell(effect, targetInstance, card) {
+  if (!targetInstance.buffs) targetInstance.buffs = [];
+  const targetCard = getCard(targetInstance.cardId);
+  if (!targetCard) return false;
+
+  switch (effect.type) {
+    case 'shield': {
+      const maxHp = targetCard.health ?? 0;
+      const amount = effect.valueType === 'pct_max_hp'
+        ? Math.round(maxHp * effect.value)
+        : effect.value;
+      targetInstance.buffs.push({ type: 'shield', value: amount });
+      return true;
+    }
+    case 'permanent_hp_buff':
+      targetInstance.buffs.push({ type: 'hp_boost', value: effect.value });
+      return true;
+    case 'damage_buff':
+      targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value });
+      return true;
+    case 'cast_speed_buff':
+      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value });
+      return true;
+    case 'damage_mul':
+      targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value });
+      return true;
+    case 'evolve':
+      return evolvePlantInstance(targetInstance);
+    default:
+      flashError(`Effect '${effect.type}' not implemented yet.`);
+      return false;
+  }
+}
+
+/**
+ * Magic Mushroom evolve: replace the target plant with a random card
+ * of the next rarity tier, keeping its placement.
+ */
+function evolvePlantInstance(instance) {
+  const currentCard = getCard(instance.cardId);
+  if (!currentCard) return false;
+  const nextRarity = getNextRarity(currentCard.rarity);
+  if (!nextRarity) {
+    flashError('Already at the highest rarity.');
+    return false;
+  }
+  const candidates = getCardsByRarity(nextRarity.id).filter(
+    (c) => c.type === 'plant' && c.category === 'standard',
+  );
+  if (candidates.length === 0) {
+    flashError(`No ${nextRarity.label} plants available to evolve into.`);
+    return false;
+  }
+  const newCard = candidates[Math.floor(Math.random() * candidates.length)];
+  instance.cardId = newCard.id;
+  // Reset buffs — the new plant starts fresh
+  instance.buffs = [];
+  return true;
+}
+
+function applySelfSpell(effect, run, card) {
+  switch (effect.type) {
+    case 'gold_grant':
+      run.gold += effect.value ?? 0;
+      run.lastRoundGoldEarned = (run.lastRoundGoldEarned ?? 0) + (effect.value ?? 0);
+      run.totalGoldEarned = (run.totalGoldEarned ?? 0) + (effect.value ?? 0);
+      return true;
+    default:
+      flashError(`Self spell '${effect.type}' not implemented yet.`);
+      return false;
+  }
+}
+
+function applyBoardSpell(effect, run) {
+  switch (effect.type) {
+    case 'heal_all': {
+      // World-Tree Seed: full heal + shield on all placed plants
+      const shieldAmount = effect.shield ?? 0;
+      let touched = 0;
+      for (const inst of run.deck) {
+        if (inst.gridRow == null) continue;
+        if (!inst.buffs) inst.buffs = [];
+        inst.buffs.push({ type: 'shield', value: shieldAmount });
+        touched++;
+      }
+      if (touched === 0) {
+        flashError('No plants on the grid to heal.');
+        return false;
+      }
+      return true;
+    }
+    default:
+      flashError(`Board spell '${effect.type}' not implemented yet.`);
+      return false;
   }
 }
 
@@ -336,24 +525,48 @@ function renderGridWithPlacements(run) {
     onTileClick: (row, col) => handleTileClick(run, row, col),
   });
 
-  // Mark placement-mode tiles as valid drop targets
-  const placing = !!_selection;
+  // Determine what mode we're in for highlighting purposes
+  let selectionMode = 'none'; // 'none' | 'place-plant' | 'cast-spell'
+  if (_selection) {
+    const selInstance = run.deck.find((d) => d.instanceId === _selection.instanceId);
+    const selCard = selInstance ? getCard(selInstance.cardId) : null;
+    if (selCard?.type === 'spell') {
+      selectionMode = 'cast-spell';
+    } else if (selCard?.type === 'plant') {
+      selectionMode = 'place-plant';
+    }
+  }
+
   const tiles = host.querySelectorAll('.grid-tile');
   tiles.forEach((tile) => {
     const r = Number(tile.dataset.row);
     const c = Number(tile.dataset.col);
     const placedInstance = findAtTile(run, r, c);
 
-    tile.classList.remove('placement-valid', 'tile-has-card');
+    tile.classList.remove('placement-valid', 'tile-has-card', 'spell-target-valid');
+
     if (placedInstance) {
       tile.classList.add('tile-has-card');
       const card = getCard(placedInstance.cardId);
       if (card) {
         tile.innerHTML = '';
         const icon = renderGridCardIcon(card);
+        // Buff badge if the instance has any buffs
+        if (placedInstance.buffs && placedInstance.buffs.length > 0) {
+          const badge = document.createElement('div');
+          badge.className = 'grid-card-buff-badge';
+          badge.textContent = '✨';
+          badge.title = 'Buffed';
+          icon.appendChild(badge);
+        }
         tile.appendChild(icon);
       }
-    } else if (placing) {
+      // Plant tiles glow when a spell is selected (they're valid targets)
+      if (selectionMode === 'cast-spell') {
+        tile.classList.add('spell-target-valid');
+      }
+    } else if (selectionMode === 'place-plant') {
+      // Empty tiles glow when a plant is selected
       tile.classList.add('placement-valid');
     }
   });

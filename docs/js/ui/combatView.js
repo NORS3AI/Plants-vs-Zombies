@@ -114,6 +114,15 @@ export function initCombatView(host, run) {
     tile.innerHTML = '';
     const icon = renderGridCardIcon(card);
 
+    // Shield bar (blue, shown above HP when shield > 0)
+    const shieldBar = document.createElement('div');
+    shieldBar.className = 'plant-shield-bar';
+    const shieldFill = document.createElement('div');
+    shieldFill.className = 'plant-shield-fill';
+    shieldFill.style.width = '0%';
+    shieldBar.appendChild(shieldFill);
+    icon.appendChild(shieldBar);
+
     // HP bar overlay on the plant
     const hpBar = document.createElement('div');
     hpBar.className = 'plant-hp-bar';
@@ -126,7 +135,7 @@ export function initCombatView(host, run) {
     tile.appendChild(icon);
     tile.classList.add('tile-has-card');
 
-    _plantEls.set(instance.instanceId, { el: icon, hpFill });
+    _plantEls.set(instance.instanceId, { el: icon, hpFill, shieldFill });
   }
 }
 
@@ -144,7 +153,7 @@ export function renderCombatFrame(state) {
   const { tilePx, gapPx } = readTileMetrics();
   const step = tilePx + gapPx;
 
-  // ---------- Plants: HP bars + attack flash ----------
+  // ---------- Plants: HP bars + attack flash + shield ----------
   for (const plant of state.plants) {
     const entry = _plantEls.get(plant.instanceId);
     if (!entry) continue;
@@ -154,6 +163,18 @@ export function renderCombatFrame(state) {
       entry.hpFill.classList.add('plant-hp-low');
     } else {
       entry.hpFill.classList.remove('plant-hp-low');
+    }
+    // Shield bar (blue, proportional to 50% of maxHp as a rough scale)
+    if (entry.shieldFill) {
+      const shield = plant.shield ?? 0;
+      if (shield > 0) {
+        const shieldPct = Math.min(1, shield / (plant.maxHp * 0.5));
+        entry.shieldFill.style.width = `${shieldPct * 100}%`;
+        entry.el.classList.add('plant-has-shield');
+      } else {
+        entry.shieldFill.style.width = '0%';
+        entry.el.classList.remove('plant-has-shield');
+      }
     }
     if (plant.attackFlash > 0) {
       entry.el.classList.add('plant-attacking');
