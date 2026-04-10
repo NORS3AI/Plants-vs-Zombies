@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 10 — Tutorial Mode** (Phase 9 complete)
+> **Current Phase:** **Phase 11 — Endless Mode & Leaderboard** (Phase 10 complete)
 
 ---
 
@@ -229,23 +229,26 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 10 — Tutorial Mode
+## Phase 10 — Tutorial Mode ✅
 
 **Goal:** Teach the player without an info dump.
 
-- [ ] Contextual popup framework
-- [ ] First-shop popup
-- [ ] First-purchase popup
-- [ ] First-placement popup
-- [ ] First-countdown popup
-- [ ] First-zombie-kill popup
-- [ ] First-spell popup
-- [ ] First-pack popup
-- [ ] First-boss popup
-- [ ] First-plant-death popup
-- [ ] Tutorial completion marker (so popups don't repeat)
+- [x] Contextual popup framework (slide-in from right, non-blocking, auto-dismiss after 12s)
+- [x] First-shop popup ("Welcome to the Shop")
+- [x] First-purchase popup ("First Purchase")
+- [x] First-placement popup ("Placement")
+- [x] First-countdown popup ("Round Starting")
+- [x] First-zombie-kill popup ("First Kill!")
+- [x] First-spell popup ("Aether-Root Spell Cast")
+- [x] First-pack popup ("Card Pack Opened")
+- [x] First-boss popup ("BOSS!")
+- [x] First-plant-death popup ("Plant Lost")
+- [x] Tutorial completion marker per popup (stored in `run.tutorialSeen`, reset per run)
+- [x] Only fires in Tutorial difficulty (no-op on Normal/Hard/Insane/Endless)
+- [x] Click "Got it" or auto-dismiss after 12 seconds
+- [x] Cleared on state transitions out of shop/combat to avoid stale popups
 
-**Exit Criteria:** A new player completes Tutorial mode and learns all core mechanics.
+**Exit Criteria:** A new player completes Tutorial mode and learns all core mechanics. ✅
 
 ---
 

@@ -29,12 +29,14 @@ import { showModal, confirmModal } from './modal.js';
 let _selection = null;
 let _audio = null;
 let _onChange = null;
+let _onFirstPlace = null;
 let _instanceCounter = 1;
 
 /** Initialize the placement module. Call once at boot. */
-export function initPlacement({ audio, onChange }) {
+export function initPlacement({ audio, onChange, onFirstPlace }) {
   _audio = audio;
   _onChange = onChange;
+  _onFirstPlace = onFirstPlace;
 }
 
 function freshInstanceId() {
@@ -84,6 +86,7 @@ function placeAt(run, row, col) {
 
   _selection = null;
   _audio?.playSfx('click');
+  _onFirstPlace?.();
 
   // Check for Sunflower → Gilded Rose merge
   if (instance.cardId === 'sunflower') {

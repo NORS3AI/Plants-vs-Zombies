@@ -26,18 +26,23 @@ export const REFRESH_COST = 1;
 
 let _audio = null;
 let _onChange = null;
+let _onFirstBuy = null;
+let _onFirstPack = null;
 
 /**
  * Initialize the shop module. Call once at boot.
  *
  * @param {object} deps
  *   - audio: AudioManager (for SFX)
- *   - onChange: () => void — called whenever the run mutates so the caller
- *     can save and re-render the HUD.
+ *   - onChange: () => void — called whenever the run mutates
+ *   - onFirstBuy: () => void — fired on each successful slot buy (tutorial hook)
+ *   - onFirstPack: () => void — fired on each successful pack open (tutorial hook)
  */
-export function initShop({ audio, onChange }) {
+export function initShop({ audio, onChange, onFirstBuy, onFirstPack }) {
   _audio = audio;
   _onChange = onChange;
+  _onFirstBuy = onFirstBuy;
+  _onFirstPack = onFirstPack;
 }
 
 // ============================================================
@@ -146,6 +151,7 @@ export function buyShopSlot(run, slotIndex) {
   slot.sold = true;
   addToDeck(run, card);
   _audio?.playSfx('click');
+  _onFirstBuy?.();
   _onChange?.();
   return true;
 }
@@ -228,6 +234,7 @@ export async function buyPack(run, packId) {
   }
 
   _audio?.playSfx('go');
+  _onFirstPack?.();
   _onChange?.();
 
   if (droppedCount > 0) {

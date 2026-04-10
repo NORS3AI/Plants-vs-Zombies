@@ -712,6 +712,85 @@ html, body {
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
 
+/* ---------- Tutorial Popup (Phase 10) ---------- */
+.tutorial-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--bg-elev);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow), 0 0 28px rgba(212, 175, 55, 0.3);
+  z-index: 9998;
+  transform: translateX(140%);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  pointer-events: auto;
+}
+
+.tutorial-popup.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.tutorial-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.tutorial-popup-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.tutorial-popup-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.tutorial-popup-body {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--fg-base);
+  margin-bottom: 0.85rem;
+}
+
+.tutorial-popup-btn {
+  background: var(--accent);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tutorial-popup-btn:hover {
+  background: #e5c050;
+  transform: translateY(-1px);
+}
+
+/* Mobile: full-width at bottom */
+@media (max-width: 640px) {
+  .tutorial-popup {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+}
+
 /* ---------- Shop Toast (error flash) ---------- */
 .shop-toast {
   position: fixed;

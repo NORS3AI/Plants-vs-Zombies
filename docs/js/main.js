@@ -24,6 +24,7 @@ import * as Cards from './cards/index.js';
 import * as Shop from './ui/shop.js';
 import * as Placement from './ui/placement.js';
 import * as CombatView from './ui/combatView.js';
+import * as Tutorial from './ui/tutorial.js';
 
 // Validate the card database at boot (logs errors/warnings to console)
 Cards.validateAndLog();
@@ -75,8 +76,10 @@ function onRunChange() {
   }
 }
 
-Shop.initShop({ audio, onChange: onRunChange });
-Placement.initPlacement({ audio, onChange: onRunChange });
+Shop.initShop({ audio, onChange: onRunChange, onFirstBuy: () => Tutorial.trigger('first_buy'), onFirstPack: () => Tutorial.trigger('first_pack') });
+Placement.initPlacement({ audio, onChange: onRunChange, onFirstPlace: () => Tutorial.trigger('first_place') });
+CombatView.setCombatViewAudio(audio);
+Tutorial.initTutorial({ audio });
 
 // ---------- HUD Sync ----------
 function formatRound(run) {
@@ -131,11 +134,13 @@ state.register(STATES.SHOP, {
     if (currentRun) {
       Shop.renderShop(currentRun);
       Placement.renderPlacement(currentRun);
+      Tutorial.trigger('first_shop');
     }
   },
   exit() {
     // Drop any pending placement selection when leaving the shop screen
     if (currentRun) Placement.clearSelection(currentRun);
+    Tutorial.clearPopup();
   },
 });
 
@@ -146,6 +151,7 @@ state.register(STATES.COUNTDOWN, {
     countdownTimer = 0;
     paintCountdown();
     audio.playSfx('tick');
+    Tutorial.trigger('first_countdown');
   },
   update(dt) {
     countdownTimer += dt;
@@ -175,7 +181,13 @@ state.register(STATES.COMBAT, {
         syncHUD();
         audio.playSfx('damage');
       },
-      onPlantKilled: () => syncHUD(),
+      onZombieKilled: () => Tutorial.trigger('first_zombie_kill'),
+      onPlantKilled: () => {
+        syncHUD();
+        Tutorial.trigger('first_plant_death');
+      },
+      onBossSpawn: () => Tutorial.trigger('first_boss'),
+      onSpellCast: () => Tutorial.trigger('first_spell'),
       onRoundComplete: () => endRound(),
       onGameOver: () => {
         audio.playSfx('gameover');
@@ -311,6 +323,7 @@ function startNewRun(difficultyId) {
   currentRun.aetherRootHP = d.playerHP;
   currentRun.aetherRootMaxHP = d.playerHP;
   Save.saveRun(currentRun);
+  Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
 }
 
@@ -409,6 +422,7 @@ function paintGameOver() {
 function resumeRun() {
   if (!Save.hasRun()) return;
   currentRun = Save.loadRun();
+  Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
 }
 
@@ -587,8 +601,9 @@ window.__pvz = {
   Combat,
   CombatView,
   AetherSpells,
+  Tutorial,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 9 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 10 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

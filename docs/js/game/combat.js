@@ -45,6 +45,11 @@ export function getCombatState() {
   return _state;
 }
 
+/** Fire an event callback by name. Safe no-op if no callback registered. */
+export function fireCallback(name, ...args) {
+  _callbacks?.[name]?.(...args);
+}
+
 /**
  * Initialize combat for the current round.
  * Builds runtime plants from run.deck's placed entries,
@@ -490,6 +495,7 @@ function killZombie(zombie) {
     color: 'gold',
   });
   _callbacks?.onGoldChange?.();
+  _callbacks?.onZombieKilled?.(zombie);
 }
 
 function killPlant(plant) {

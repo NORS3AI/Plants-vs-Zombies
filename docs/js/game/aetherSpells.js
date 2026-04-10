@@ -11,7 +11,7 @@
  * the effects.
  */
 
-import { getCombatState, GRID_COLS, GRID_ROWS } from './combat.js';
+import { getCombatState, fireCallback, GRID_COLS, GRID_ROWS } from './combat.js';
 import { getCard } from '../cards/index.js';
 
 // ---------- Effect implementations ----------
@@ -125,6 +125,9 @@ export function castAetherSpell(run, instanceId) {
   } else if (card.cooldown) {
     instance.cooldownRemaining = card.cooldown;
   }
+
+  // Fire onSpellCast event for tutorial popup / audio polish
+  fireCallback('onSpellCast', card, instance);
   return true;
 }
 

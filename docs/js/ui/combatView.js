@@ -18,6 +18,10 @@ import { renderGridCardIcon } from './cardView.js';
 import { GRID_ROWS, GRID_COLS } from '../game/grid.js';
 import { castAetherSpell } from '../game/aetherSpells.js';
 
+// Optional audio manager; set by main.js via setCombatViewAudio
+let _audio = null;
+export function setCombatViewAudio(audio) { _audio = audio; }
+
 // Emoji icons for each Aether-Root spell (keyed by card id)
 const SPELL_ICONS = {
   sap_mend: '💚',
@@ -314,9 +318,11 @@ function buildSpellPanel(run) {
       e.stopPropagation();
       const ok = castAetherSpell(run, instance.instanceId);
       if (ok) {
+        _audio?.playSfx('go');
         slot.classList.add('spell-just-cast');
         setTimeout(() => slot.classList.remove('spell-just-cast'), 300);
       } else {
+        _audio?.playSfx('back');
         slot.classList.add('spell-denied');
         setTimeout(() => slot.classList.remove('spell-denied'), 300);
       }

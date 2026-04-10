@@ -57,6 +57,10 @@ const DEFAULT_RUN = {
 
   // Last completed round's stats (for the round-end summary screen)
   lastRoundStats: null,
+
+  // Phase 10: set of tutorial popup ids already shown this run.
+  // Only populated when difficulty === 'tutorial'. Reset per run.
+  tutorialSeen: {},
 };
 
 const DEFAULT_META = {

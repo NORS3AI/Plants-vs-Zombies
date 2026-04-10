@@ -260,15 +260,17 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 - [ ] Victory / defeat stings
 
 ### 8.3 Tutorial Popups
-- [ ] First shop visit
-- [ ] First card purchase
-- [ ] First grid placement
-- [ ] First countdown
-- [ ] First zombie kill
-- [ ] First Aether-Root spell
-- [ ] First card pack
-- [ ] First boss
-- [ ] First plant death
+- [x] First shop visit
+- [x] First card purchase
+- [x] First grid placement
+- [x] First countdown
+- [x] First zombie kill
+- [x] First Aether-Root spell
+- [x] First card pack
+- [x] First boss
+- [x] First plant death
+- [x] Auto-dismiss after 12s
+- [x] Tutorial-only (no-op on other difficulties)
 
 ---
 

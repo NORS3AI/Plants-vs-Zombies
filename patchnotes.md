@@ -5,6 +5,45 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.10.0 — 2026-04-10 — Phase 10: Tutorial Mode
+
+### Added
+- **`docs/js/ui/tutorial.js`** — Contextual popup system with 9 first-time triggers:
+  - `first_shop` — fires on SHOP enter
+  - `first_buy` — fires on first successful `buyShopSlot`
+  - `first_place` — fires on first successful `placeAt`
+  - `first_countdown` — fires on COUNTDOWN enter
+  - `first_zombie_kill` — fires on first `killZombie`
+  - `first_spell` — fires on first `castAetherSpell`
+  - `first_pack` — fires on first successful `buyPack`
+  - `first_boss` — fires on first boss spawn (hooks into existing onBossSpawn)
+  - `first_plant_death` — fires on first `killPlant`
+- **Popup UI** — slide-in card from the right, title + body + "Got it" button, auto-dismisses after 12s
+- **Per-run tracking** — `run.tutorialSeen` map prevents repeat popups within a single Tutorial run; fresh runs get fresh popups
+- **Tutorial-only** — popups are no-ops on Normal/Hard/Insane/Endless difficulties
+- **`fireCallback(name, ...args)`** helper exported from combat.js so aetherSpells.js can fire `onSpellCast` events back to main.js
+- **`setCombatViewAudio(audio)`** in combatView.js — lets main.js inject the audio manager so spell clicks play SFX (Phase 9 audit fix)
+
+### Phase 9 audit fix
+- **Spell click SFX** — slot clicks now play `go` on success, `back` on denied. Previously `stopPropagation` was preventing the document-level click handler from firing audio.
+
+### New callbacks threaded through
+- `onZombieKilled(zombie)` — fires from `killZombie` for tutorial `first_zombie_kill`
+- `onSpellCast(card, instance)` — fires from `castAetherSpell` via `fireCallback`
+- Shop: `onFirstBuy`, `onFirstPack`
+- Placement: `onFirstPlace`
+
+### Changed
+- Phase badge → "Phase 10 — Tutorial", version → v0.10.0
+- `window.__pvz.Tutorial` exposed for debug (`__pvz.Tutorial.forceShow('first_boss')` bypasses the difficulty check)
+
+### Notes
+- Tutorial popups are NOT modal — combat keeps running while they're visible. This prevents the tutorial from being a DOS attack on the player during a boss fight.
+- The welcome popup ("first_shop") fires even on the initial DIFFICULTY→SHOP transition, so new Tutorial players see it immediately.
+- Popups are dismissed on state exits from SHOP to prevent stale popups appearing on other screens.
+
+---
+
 ## v0.9.0 — 2026-04-10 — Phase 9: Aether-Root Spells
 
 ### Added
