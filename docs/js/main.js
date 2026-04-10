@@ -226,17 +226,19 @@ state.register(STATES.GAME_OVER, {
     paintGameOver();
     audio.playSfx('gameover');
     Save.clearRun();
-    // Pre-fill name input with last-used name
+    // Pre-fill name input with last-used name and focus it
     const nameInput = document.getElementById('player-name-input');
-    if (nameInput) nameInput.value = Leaderboard.getLastName();
+    if (nameInput) {
+      nameInput.value = Leaderboard.getLastName();
+      // Wait a frame so the fade-in animation doesn't swallow focus
+      setTimeout(() => nameInput.focus({ preventScroll: true }), 250);
+    }
     // Clear rank banner from previous game-overs
     const rankEl = document.getElementById('game-over-rank');
     if (rankEl) { rankEl.hidden = true; rankEl.textContent = ''; }
     // Re-show name entry (may have been hidden after a previous submit)
     const entry = document.querySelector('#screen-game-over .name-entry');
     if (entry) entry.hidden = false;
-    // Note: keep currentRun in memory until user returns to menu so the
-    // game-over screen can read its stats; cleared on back-to-menu.
   },
 });
 
@@ -245,9 +247,11 @@ state.register(STATES.VICTORY, {
     screens.show('victory');
     paintVictory();
     audio.playSfx('go');
-    // Pre-fill name input with last-used name
     const nameInput = document.getElementById('victory-name-input');
-    if (nameInput) nameInput.value = Leaderboard.getLastName();
+    if (nameInput) {
+      nameInput.value = Leaderboard.getLastName();
+      setTimeout(() => nameInput.focus({ preventScroll: true }), 400);
+    }
     const entry = document.querySelector('#screen-victory .name-entry');
     if (entry) entry.hidden = false;
   },
@@ -383,6 +387,9 @@ function endRound() {
   currentRun.lastRoundGoldEarned = 0;
   currentRun.lastRoundKills = 0;
   currentRun.lastRoundPlantsLost = 0;
+
+  // Strip transient (per-round) buffs — Nectar Rush, Aether Bloom, etc.
+  Combat.clearTransientBuffs(currentRun);
 
   // Advance round counter for the next round
   currentRun.round += 1;
@@ -671,6 +678,16 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && state.current === STATES.SHOP && currentRun) {
     Placement.clearSelection(currentRun);
   }
+  // Enter on name inputs submits the score
+  if (e.key === 'Enter') {
+    if (e.target && e.target.id === 'player-name-input') {
+      e.preventDefault();
+      submitScore({ victory: false });
+    } else if (e.target && e.target.id === 'victory-name-input') {
+      e.preventDefault();
+      submitScore({ victory: true });
+    }
+  }
 });
 
 // Settings + leaderboard filter change handlers
@@ -751,5 +768,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 11 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.0.0 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

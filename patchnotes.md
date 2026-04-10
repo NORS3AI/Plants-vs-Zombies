@@ -5,6 +5,47 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.0.0 — 2026-04-10 — Phase 12: Polish, Audio & Release 🎉
+
+The v1.0.0 release! Phases 0–12 complete. Plants vs Zombies: Card Battler is feature-complete and live at **[nors3ai.github.io/Plants-vs-Zombies](https://nors3ai.github.io/Plants-vs-Zombies/)**.
+
+### Added
+- **Projectile visuals** — Every plant attack now fires a colored dot from the plant to its target. Color matches the plant's rarity; Legendary plants get oversized glowing projectiles.
+- **Zombie death fade-out** — Dead zombies grayscale + blur + fade over 260ms before their DOM element is removed, so kills feel weighty.
+- **Boss spawn screen-shake** — When a boss enters, the combat grid shakes for 500ms (CSS `bossShake` keyframes).
+- **Enhanced Legendary shine** — Legendary cards now have a diagonal shimmer sweep (`::after` pseudo-element with a moving gradient) layered on top of the existing pulse. Gold + red glow intensifies.
+- **Auto-focus + Enter-to-submit** on game-over and victory name entry inputs. No more fumbling with the keyboard.
+- **Per-round buff cleanup** — Nectar Rush, Aether Bloom, and Arcane Surge are now marked `permanent: false` and stripped from deck instances at round end via `Combat.clearTransientBuffs()`. Barkskin shields and Wild Growth stay permanent as specced.
+- **`Combat.clearTransientBuffs(run)`** — new export called from `endRound()` in main.js to purge expired buffs.
+- **Projectile tick pipeline** — `state.projectiles[]`, `spawnProjectile()`, `tickProjectiles()`, `nextProjectileId()`. Combat view renders via `renderProjectiles` with Map-based DOM diff.
+- **Boss-spawn shake counter** — `state.bossJustSpawned` ticks down from 0.6s; combat view toggles `.boss-shake` class on the grid while positive.
+
+### Changed
+- **Phase badge hidden** (kept in DOM as `v1.0.0` placeholder for future version pinning)
+- **Version label → v1.0.0** on the main menu
+- **Console boot log** now reads "v1.0.0 boot complete"
+
+### Fixed (Phase 11 audit)
+- **Per-round buffs persisted forever** — Nectar Rush's "+15 DMG for the round" now actually expires at round end. Same for Aether Bloom and Arcane Surge.
+- **Name input didn't auto-focus** — both the game-over `#player-name-input` and victory `#victory-name-input` get `.focus({ preventScroll: true })` after a short delay so the screen's fade-in doesn't steal focus.
+- **Enter key now submits** the name entry on both game-over and victory screens.
+
+### Deferred (for a Phase 13+ content pass)
+- Background music tracks (AudioManager API is ready; no audio files bundled)
+- Final sprite art / animations (currently emoji placeholders)
+- R5–R10 boss unique abilities still stubbed (banner text only, no gameplay effect)
+- Sound effects for spell casts, zombie deaths, attack hits
+
+### Verified
+- JS parses across all 22 modules
+- CSS braces balanced (462/462)
+- Headless combat sim confirms rounds 1-10 complete with projectile spawning, boss spawns, per-round buff cleanup on round end
+
+### Thanks
+All 12 phases shipped from design doc to release. Built iteratively with audit-after-every-phase discipline. The repo has the full history.
+
+---
+
 ## v0.11.0 — 2026-04-10 — Phase 11: Endless Mode & Leaderboard
 
 ### Added

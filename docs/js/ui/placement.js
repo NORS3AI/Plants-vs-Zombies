@@ -223,20 +223,24 @@ function applyPlantSpell(effect, targetInstance, card) {
       const amount = effect.valueType === 'pct_max_hp'
         ? Math.round(maxHp * effect.value)
         : effect.value;
-      targetInstance.buffs.push({ type: 'shield', value: amount });
+      // Shields re-apply each round (refreshed in initCombat)
+      targetInstance.buffs.push({ type: 'shield', value: amount, permanent: true });
       return true;
     }
     case 'permanent_hp_buff':
-      targetInstance.buffs.push({ type: 'hp_boost', value: effect.value });
+      targetInstance.buffs.push({ type: 'hp_boost', value: effect.value, permanent: true });
       return true;
     case 'damage_buff':
-      targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value });
+      // Nectar Rush: +15 DMG for the round only
+      targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value, permanent: false });
       return true;
     case 'cast_speed_buff':
-      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value });
+      // Aether Bloom: -0.5s cast for 10s (treat as per-round for simplicity)
+      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value, permanent: false });
       return true;
     case 'damage_mul':
-      targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value });
+      // Arcane Surge: 2× damage for 5s (treat as per-round for simplicity)
+      targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value, permanent: false });
       return true;
     case 'evolve':
       return evolvePlantInstance(targetInstance);

@@ -119,6 +119,7 @@ export function initCombat(run, callbacks = {}) {
     time: 0,
     plants,
     zombies: [],
+    projectiles: [], // { id, fromRow, fromCol, toRow, toCol, age, maxAge, color }
     spawnSchedule: generateSpawnSchedule(run.round, diff),
     spawnIndex: 0,
     floatingTexts: [],
@@ -131,6 +132,7 @@ export function initCombat(run, callbacks = {}) {
     bossName: null,
     roundNumber: run.round,
     activeBeams: [], // Nature's Wrath etc.
+    bossJustSpawned: 0, // seconds remaining on the boss-spawn shake
   };
 
   // Phase 9: clear any stale Aether-Root shield from previous rounds
@@ -177,10 +179,16 @@ export function tickCombat(dt) {
   // 5. Tick Aether-Root spell cooldowns
   tickAetherCooldowns(_run, dt);
 
-  // 6. Expire floating texts
+  // 6. Expire floating texts + projectiles
   tickFloatingTexts(dt);
+  tickProjectiles(dt);
 
-  // 7. Check end conditions
+  // 7. Decay boss-spawn shake
+  if (_state.bossJustSpawned > 0) {
+    _state.bossJustSpawned = Math.max(0, _state.bossJustSpawned - dt);
+  }
+
+  // 8. Check end conditions
   checkEndConditions();
 }
 
@@ -225,6 +233,7 @@ function spawnDue() {
     // Boss spawn: announce + apply Frenzy buff to remaining zombies
     if (zombie.isBoss) {
       _state.bossActive = zombie;
+      _state.bossJustSpawned = 0.6; // triggers CSS shake for 600ms
       for (const z of _state.zombies) {
         if (z === zombie) continue;
         // +10% speed frenzy buff per spec
@@ -258,6 +267,8 @@ function tickPlants(dt) {
         const finalDmg = Math.round(baseDmg * (plant.dmgMul ?? 1));
         damageZombie(target, finalDmg, plant);
         plant.attackFlash = 0.2;
+        // Spawn a projectile visual from plant to target
+        spawnProjectile(plant, target);
 
         // --- Plant abilities on attack ---
         for (const ab of plant.card.abilities ?? []) {
@@ -331,6 +342,41 @@ function damageZombie(zombie, amount, source) {
 let _floatingCounter = 0;
 function nextFloatingId() {
   return `ft_${++_floatingCounter}`;
+}
+
+let _projectileCounter = 0;
+function nextProjectileId() {
+  return `pj_${++_projectileCounter}`;
+}
+
+/** Spawn a projectile from (plant) to (zombie). */
+function spawnProjectile(plant, zombie) {
+  if (!_state?.projectiles) return;
+  _state.projectiles.push({
+    id: nextProjectileId(),
+    fromRow: plant.row,
+    fromCol: plant.col,
+    toRow: zombie.row,
+    toCol: zombie.col,
+    age: 0,
+    maxAge: 0.15,
+    color: projectileColorFor(plant.card),
+  });
+}
+
+function projectileColorFor(card) {
+  if (!card) return 'gold';
+  // Use rarity color as projectile tint
+  return card.rarity || 'gold';
+}
+
+function tickProjectiles(dt) {
+  if (!_state?.projectiles) return;
+  const list = _state.projectiles;
+  for (let i = list.length - 1; i >= 0; i--) {
+    list[i].age += dt;
+    if (list[i].age >= list[i].maxAge) list.splice(i, 1);
+  }
 }
 
 /** Economy plant produces gold to the run. */
@@ -587,3 +633,17 @@ function checkEndConditions() {
 // plants from card.health, so plants always start a round at full HP.
 // A dedicated healSurvivors() function will land when Phase 8+ adds
 // persistent buffs (Wild Growth, shields) that need explicit carry-over.
+
+/**
+ * Phase 12: remove per-round buffs (dmg_boost, cast_speed, dmg_mul)
+ * that should only last the duration of a single round. Permanent
+ * buffs (hp_boost, shield) are marked { permanent: true } and stay.
+ * Called from main.js endRound().
+ */
+export function clearTransientBuffs(run) {
+  if (!run?.deck) return;
+  for (const instance of run.deck) {
+    if (!instance.buffs) continue;
+    instance.buffs = instance.buffs.filter((b) => b.permanent === true);
+  }
+}

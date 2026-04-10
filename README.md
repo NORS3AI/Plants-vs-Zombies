@@ -4,9 +4,9 @@ A browser-based card battler reimagining of the classic Plants vs Zombies. Build
 
 ## Play the Game
 
-**[Play on GitHub Pages →](https://nors3ai.github.io/Plants-vs-Zombies/)**
+**[▶ Play on GitHub Pages →](https://nors3ai.github.io/Plants-vs-Zombies/)**
 
-> The game is currently in the **Planning Phase**. The link above will go live once Phase 1 (Core Engine) is complete.
+> **v1.0.0 is live.** All 12 phases complete. Runs in any modern browser; mobile-friendly.
 
 ## Overview
 
@@ -64,10 +64,10 @@ Plants vs Zombies: Card Battler turns the tower-defense classic into a strategic
 
 ## Project Status
 
-This project is in active development. See:
-- **[Phases.md](./Phases.md)** — Development roadmap
-- **[Features.md](./Features.md)** — Full feature list (planned + implemented)
-- **[patchnotes.md](./patchnotes.md)** — Version history
+**v1.0.0 shipped.** Docs:
+- **[Phases.md](./Phases.md)** — 12-phase development history (all complete)
+- **[Features.md](./Features.md)** — Full feature list with completion markers
+- **[patchnotes.md](./patchnotes.md)** — Version history from v0.0.1 → v1.0.0
 
 ## Tech Stack
 

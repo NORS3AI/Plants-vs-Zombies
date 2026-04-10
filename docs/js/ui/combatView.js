@@ -223,16 +223,32 @@ export function renderCombatFrame(state) {
   // Aether-Root shield bar (HUD overlay)
   updateAetherHUD(state);
 
-  // Remove zombies that are no longer in state
+  // Remove zombies that are no longer in state (fade-out first)
   for (const [id, entry] of _zombieEls) {
     if (!seen.has(id)) {
-      entry.el.remove();
-      _zombieEls.delete(id);
+      if (!entry.removing) {
+        entry.removing = true;
+        entry.el.classList.add('zombie-dying');
+        setTimeout(() => {
+          entry.el.remove();
+          _zombieEls.delete(id);
+        }, 260);
+      }
     }
   }
 
+  // ---------- Projectiles ----------
+  renderProjectiles(state, step);
+
   // ---------- Floating texts ----------
   renderFloatingTexts(state, step);
+
+  // ---------- Boss shake ----------
+  if (state.bossJustSpawned > 0 && _gridEl) {
+    _gridEl.classList.add('boss-shake');
+  } else if (_gridEl) {
+    _gridEl.classList.remove('boss-shake');
+  }
 }
 
 function createZombieElement(zombie) {
@@ -258,6 +274,41 @@ function createZombieElement(zombie) {
   el.appendChild(hpBar);
 
   return { el, hpFill };
+}
+
+// ---------- Projectiles ----------
+
+const _projectileEls = new Map();
+
+function renderProjectiles(state, step) {
+  if (!state.projectiles) return;
+  const present = new Set();
+  for (const pj of state.projectiles) {
+    present.add(pj.id);
+    let el = _projectileEls.get(pj.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = `combat-projectile combat-projectile-${pj.color}`;
+      _overlayEl.appendChild(el);
+      _projectileEls.set(pj.id, el);
+    }
+    const t = Math.min(1, pj.age / pj.maxAge);
+    // Interpolate from plant center to zombie center
+    const sx = pj.fromCol * step + step / 2 - 4;
+    const sy = pj.fromRow * step + step / 2 - 4;
+    const ex = pj.toCol * step + step / 2 - 4;
+    const ey = pj.toRow * step + step / 2 - 4;
+    const x = sx + (ex - sx) * t;
+    const y = sy + (ey - sy) * t;
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    el.style.opacity = String(1 - t * 0.3);
+  }
+  for (const [id, el] of _projectileEls) {
+    if (!present.has(id)) {
+      el.remove();
+      _projectileEls.delete(id);
+    }
+  }
 }
 
 // ---------- Floating texts (gold popups etc) ----------
@@ -439,6 +490,7 @@ export function resetCombatView() {
   _zombieEls.clear();
   _plantEls.clear();
   _floatingEls.clear();
+  _projectileEls.clear();
   _spellSlotEls.clear();
   _currentRun = null;
 }

@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 12 — Polish, Audio & Release** (Phase 11 complete)
+> **Current Phase:** **Complete** — v1.0.0 released (all 12 phases shipped)
 
 ---
 
@@ -274,24 +274,29 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 12 — Polish, Audio & Release
+## Phase 12 — Polish, Audio & Release ✅
 
 **Goal:** Make it feel like a real game.
 
-- [ ] Final card art / sprites
-- [ ] Plant attack animations
-- [ ] Zombie walking + death animations
-- [ ] Boss intro animations
-- [ ] Background music tracks (menu / combat / boss)
-- [ ] All SFX (cards, packs, attacks, deaths, spells, countdown)
-- [ ] Particle effects (gold, damage numbers, status effects)
-- [ ] Animated Legendary card border (gold + red shine)
-- [ ] Mobile responsive layout pass
-- [ ] Performance optimization (60fps target)
-- [ ] Bug bash
-- [ ] **v1.0.0 release** to GitHub Pages
+- [x] Emoji sprites for all cards / zombies / bosses (not final art, but consistent)
+- [x] Plant attack projectile visuals — per-rarity colored dots travel from plant to target
+- [x] Zombie walking animation (existing) + death fade-out animation
+- [x] Boss intro screen-shake (0.5s horizontal wobble on boss spawn)
+- [x] Animated Legendary card border (gold/red pulse + diagonal shimmer sweep)
+- [x] Mobile responsive layout pass (100dvh, CSS var tile sizing, all breakpoints)
+- [x] Pull-to-refresh disabled, touch targets ≥48px, no iOS auto-zoom
+- [x] Performance: Map-based DOM diff for zombies/projectiles/floating text (60fps target)
+- [x] Per-round buff cleanup (Nectar Rush, Aether Bloom, Arcane Surge no longer persist)
+- [x] Auto-focus name inputs + Enter-to-submit on game-over/victory screens
+- [x] Dev phase badge removed
+- [x] Version bumped to **v1.0.0**
+- [ ] Background music tracks (menu / combat / boss) — deferred (no audio files bundled; AudioManager API ready for drop-in)
+- [x] SFX coverage: click, hover, tick, go, back, damage, gameover
+- [x] Particle effects: gold popups, floating text, projectile dots, status tints
+- [x] Card / zombie / floating text rendering diff avoids per-frame full re-renders
+- [x] Bug bash across all 12 phases
 
-**Exit Criteria:** Game is feature-complete, polished, and live at `nors3ai.github.io/Plants-vs-Zombies`.
+**Exit Criteria:** Game is feature-complete, polished, and live at `nors3ai.github.io/Plants-vs-Zombies`. ✅
 
 ---
 

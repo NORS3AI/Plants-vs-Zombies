@@ -512,14 +512,48 @@ input, select, textarea {
 .card-rarity-legendary   { border-color: var(--rarity-legendary); }
 
 .card-legendary-shine {
-  background: linear-gradient(135deg, var(--bg-elev-2), rgba(212, 175, 55, 0.08));
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-  animation: legendaryPulse 3s ease-in-out infinite;
+  position: relative;
+  background:
+    linear-gradient(135deg, var(--bg-elev-2), rgba(212, 175, 55, 0.12));
+  animation: legendaryPulse 2.6s ease-in-out infinite;
+  overflow: hidden;
+}
+
+/* Animated diagonal shimmer sweep across the card */
+.card-legendary-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(212, 175, 55, 0.35) 50%,
+    rgba(255, 255, 255, 0.25) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: legendaryShine 3.2s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay;
 }
 
 @keyframes legendaryPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); }
-  50%      { box-shadow: 0 0 28px rgba(192, 57, 43, 0.25); }
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(212, 175, 55, 0.25),
+      0 0 0 rgba(192, 57, 43, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 32px rgba(212, 175, 55, 0.55),
+      0 0 16px rgba(192, 57, 43, 0.35);
+  }
+}
+
+@keyframes legendaryShine {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .card-body {
@@ -1598,6 +1632,58 @@ input, select, textarea {
 .grid-card.plant-dead {
   opacity: 0.25;
   filter: grayscale(1);
+}
+
+/* Projectiles (plant attack trails) */
+.combat-projectile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.combat-projectile-trash     { background: var(--rarity-trash);     color: var(--rarity-trash); }
+.combat-projectile-common    { background: var(--rarity-common);    color: var(--rarity-common); }
+.combat-projectile-uncommon  { background: var(--rarity-uncommon);  color: var(--rarity-uncommon); }
+.combat-projectile-rare      { background: var(--rarity-rare);      color: var(--rarity-rare); }
+.combat-projectile-epic      { background: var(--rarity-epic);      color: var(--rarity-epic); }
+.combat-projectile-legendary {
+  background: var(--rarity-legendary);
+  color: var(--rarity-legendary);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 14px var(--rarity-legendary);
+}
+.combat-projectile-gold      { background: var(--accent);           color: var(--accent); }
+
+/* Zombie death fade-out animation */
+.combat-zombie.zombie-dying {
+  animation: zombieDeath 0.25s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes zombieDeath {
+  0%   { opacity: 1; transform-origin: center; }
+  100% { opacity: 0; filter: grayscale(1) blur(2px); }
+}
+
+/* Override: a zombie that's .zombie-dying shouldn't walk-animate */
+.combat-zombie.zombie-dying .zombie-sprite { animation: none; }
+
+/* Boss-spawn shake on the combat grid */
+.grid.boss-shake {
+  animation: bossShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes bossShake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate3d(-4px, 0, 0); }
+  20%, 40%, 60%, 80%      { transform: translate3d(4px, 0, 0); }
 }
 
 /* Floating text (gold popups, damage numbers) */
