@@ -80,7 +80,10 @@ export function initCombat(run, callbacks = {}) {
       dmgBonus: 0, // Nectar Rush (+damage)
       dmgMul: 1, // Arcane Surge (×damage)
       castSpeedBuff: 0, // Aether Bloom (-cast time)
-      castTimer: card.castTime, // initial delay, adjusted after buffs
+      // Balance: plants start ready to fire, not after a full 2s delay.
+      // A small initial delay (0.4s) lets the player see the grid before
+      // everything starts firing.
+      castTimer: 0.4,
       targeting: instance.targeting ?? card.targetingDefault ?? 'first',
       isEconomy: card.category === 'economy' || !!card.economy,
       attackFlash: 0,
@@ -459,7 +462,12 @@ function produceGold(plant) {
  */
 function findTarget(plant) {
   const card = plant.card;
-  const range = card.range ?? 1;
+  // Balance: every plant gets a minimum engagement range of 5 tiles
+  // so melee plants (Seedling Scrubber, Ironroot Sentry, Bramble-Whip
+  // Vine) get ~5 cast cycles of free fire before the zombie blocks
+  // them. Commons can now handle rounds 1-3 solo; Rares+ are needed
+  // by round 5+ when zombie HP outpaces their 5-dmg ceiling.
+  const range = Math.max(5, card.range ?? 1);
   const pattern = card.attackPattern ?? 'forward';
   const hasBeam = (card.abilities ?? []).some((a) => a.type === 'beam');
 

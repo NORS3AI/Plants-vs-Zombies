@@ -194,7 +194,10 @@ function bossDefForRound(round) {
 // TYPE CONSTRUCTION
 // ============================================================
 
-const BASE_SPEED = 0.5; // tiles per second
+// Balance: zombies walk at 0.4 tiles/sec (was 0.5). This gives melee
+// plants more free-fire time before zombies reach them. Speed multipliers
+// per type still apply on top of this base.
+const BASE_SPEED = 0.4;
 
 export function makeZombieType(round, diff = {}, typeOverrideIdx) {
   // If an explicit type index is provided (endless mixed waves), use it.
@@ -203,8 +206,16 @@ export function makeZombieType(round, diff = {}, typeOverrideIdx) {
     typeof typeOverrideIdx === 'number'
       ? ZOMBIE_TYPES[typeOverrideIdx % ZOMBIE_TYPES.length]
       : zombieTypeDefForRound(round);
-  const baseHp = 10 + round * 10;
-  const baseDmg = 2 + round * 3;
+  // Balance: softened zombie stats for a more forgiving early game.
+  // Original spec: HP = 10 + round*10, DMG = 2 + round*3.
+  // Tuned:        HP = 8  + round*7,  DMG = 2 + round*2.
+  //   R1  → 15 HP / 4 DMG (was 20/5)
+  //   R3  → 29 HP / 8 DMG (was 40/11)
+  //   R5  → 43 HP / 12 DMG (was 60/17)
+  //   R10 → 78 HP / 22 DMG (was 110/32)
+  // Commons now win Rounds 1-3 reliably; upgrades matter by round 5+.
+  const baseHp = 8 + round * 7;
+  const baseDmg = 2 + round * 2;
   const hpMul = diff.enemyHPMul ?? 1;
   const dmgMul = diff.enemyDmgMul ?? 1;
   return {
@@ -214,7 +225,9 @@ export function makeZombieType(round, diff = {}, typeOverrideIdx) {
     maxHp: Math.max(1, Math.round(baseHp * hpMul)),
     dmg: Math.max(1, Math.round(baseDmg * dmgMul)),
     speed: BASE_SPEED * (def.speedMul ?? 1),
-    attackInterval: 1.0,
+    // Balance: zombies attack every 1.5s (was 1.0s) so melee plants have
+    // time to fire a full cast cycle between melee hits.
+    attackInterval: 1.5,
     gold: 1,
     armor: def.armor ?? 0,
     isBoss: false,
@@ -232,7 +245,8 @@ export function makeBossType(round, diff = {}) {
     maxHp: Math.max(1, Math.round(def.hp * hpMul)),
     dmg: Math.max(1, Math.round(def.dmg * dmgMul)),
     speed: BASE_SPEED * (def.speedMul ?? 1),
-    attackInterval: 1.2,
+    // Boss melee interval slightly longer than standard zombies
+    attackInterval: 1.8,
     gold: 10 + round * 2, // bosses drop more gold
     armor: def.armor ?? 0,
     scale: def.scale ?? 1.5,
