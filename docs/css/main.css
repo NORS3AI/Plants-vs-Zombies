@@ -1754,8 +1754,10 @@ input, select, textarea {
   will-change: transform, opacity;
 }
 
-.floating-text-gold { color: var(--accent); }
-.floating-text-red  { color: var(--accent-red); }
+.floating-text-gold  { color: var(--accent); }
+.floating-text-red   { color: var(--accent-red); }
+.floating-text-green { color: var(--accent-green); }
+.floating-text-blue  { color: var(--accent-blue); }
 
 .combat-status {
   position: absolute;

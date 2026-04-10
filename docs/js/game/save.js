@@ -61,6 +61,10 @@ const DEFAULT_RUN = {
   // Phase 10: set of tutorial popup ids already shown this run.
   // Only populated when difficulty === 'tutorial'. Reset per run.
   tutorialSeen: {},
+
+  // Lane/tile spells cast in shop mode that will fire at the start
+  // of the next combat round. { type, row, col?, value, ... }
+  pendingSpellEffects: [],
 };
 
 const DEFAULT_META = {

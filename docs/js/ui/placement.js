@@ -175,15 +175,12 @@ function castSpellAtTile(run, instance, card, row, col, targetPlant) {
       break;
 
     case 'lane':
-      // Combat-only effect: only useful against zombies. We'll just
-      // confirm the lane selection and consume the card so the player
-      // knows it landed — combat engine will apply next tick if live.
-      flashError(`${card.name} is a combat spell. Cast it during a round.`);
-      return;
+      success = applyLaneSpell(effect, run, row, card);
+      break;
 
     case 'tile':
-      flashError(`${card.name} is a combat spell. Cast it during a round.`);
-      return;
+      success = applyTileSpell(effect, run, row, col, card);
+      break;
 
     case 'plant_group':
       flashError(`${card.name} requires the Synthesis UI (coming soon).`);
@@ -309,6 +306,80 @@ function applyBoardSpell(effect, run) {
     }
     default:
       flashError(`Board spell '${effect.type}' not implemented yet.`);
+      return false;
+  }
+}
+
+/**
+ * Lane-targeted spell: applies an effect to all plants currently
+ * placed in the clicked row. Cast in shop mode, effect persists as a
+ * per-round buff on each plant instance and is hydrated in combat.
+ */
+function applyLaneSpell(effect, run, row, card) {
+  switch (effect.type) {
+    case 'reset_cooldowns_lane': {
+      // Chrono-Bloom: slash cast time for all plants in the lane.
+      // Spec: "Resets the cast time of all plants in a specific lane
+      // for 5 seconds" — since we can't easily do a 5-second timed
+      // effect in the buff system, we interpret this as a strong
+      // per-round castSpeed reduction on every plant in the lane.
+      const plantsInRow = run.deck.filter(
+        (d) => d.gridRow === row && d.gridCol != null,
+      );
+      if (plantsInRow.length === 0) {
+        flashError(`No plants in row ${row + 1}. Cast Chrono-Bloom on a row with plants.`);
+        return false;
+      }
+      for (const inst of plantsInRow) {
+        if (!inst.buffs) inst.buffs = [];
+        // -1.5s cast time (combat.js clamps final castTimer to 0.1 min)
+        inst.buffs.push({ type: 'cast_speed', value: -1.5, permanent: false });
+      }
+      flashToast(`⏱ ${card.name} — row ${row + 1} cast time slashed`);
+      return true;
+    }
+    case 'damage_lane': {
+      // Solar Flare: no zombies in shop mode, so store a pending
+      // effect that triggers on the first tick of combat against all
+      // zombies in the chosen row.
+      if (!run.pendingSpellEffects) run.pendingSpellEffects = [];
+      run.pendingSpellEffects.push({
+        type: 'damage_lane',
+        row,
+        value: effect.value ?? 50,
+        spellName: card.name,
+      });
+      flashToast(`🔥 ${card.name} — row ${row + 1} will burn at round start`);
+      return true;
+    }
+    default:
+      flashError(`Lane spell '${effect.type}' not implemented yet.`);
+      return false;
+  }
+}
+
+/**
+ * Tile-targeted spell: stores a pending effect that triggers at the
+ * clicked tile on the first tick of combat.
+ */
+function applyTileSpell(effect, run, row, col, card) {
+  switch (effect.type) {
+    case 'damage_area': {
+      // Spore-Burst: pending AoE damage at this tile
+      if (!run.pendingSpellEffects) run.pendingSpellEffects = [];
+      run.pendingSpellEffects.push({
+        type: 'damage_area',
+        row,
+        col,
+        value: effect.value ?? 5,
+        radius: effect.radius ?? 1,
+        spellName: card.name,
+      });
+      flashToast(`💨 ${card.name} — tile (${row + 1},${col + 1}) primed`);
+      return true;
+    }
+    default:
+      flashError(`Tile spell '${effect.type}' not implemented yet.`);
       return false;
   }
 }

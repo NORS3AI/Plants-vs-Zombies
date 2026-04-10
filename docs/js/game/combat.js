@@ -155,7 +155,18 @@ export function initCombat(run, callbacks = {}) {
     roundNumber: run.round,
     activeBeams: [], // Nature's Wrath etc.
     bossJustSpawned: 0, // seconds remaining on the boss-spawn shake
+    // Spells cast in shop mode that trigger during combat:
+    // Solar Flare (damage_lane) / Spore-Burst (damage_area) etc.
+    // Format: { type, row, col?, value, radius?, triggerAt }
+    // triggerAt = absolute combat time to fire; default 1.5s so the
+    // player sees the effect once a few zombies have entered.
+    pendingEffects: (run.pendingSpellEffects ?? []).map((e) => ({
+      ...e,
+      triggerAt: 1.5,
+    })),
   };
+  // Consume pending spell effects from the run (they only fire this round)
+  run.pendingSpellEffects = [];
 
   // Phase 9: clear any stale Aether-Root shield from previous rounds
   // and reset once-per-round spell flags + cooldowns.
@@ -195,6 +206,8 @@ export function tickCombat(dt) {
 
   // 3. Active beam effects (Nature's Wrath) — apply DoT to rows, mark kills
   tickActiveBeams(_state, dt);
+  // Fire any pending lane/tile spell effects whose trigger time has come
+  tickPendingEffects();
   // Beam damage happens inline; reap any zombies that died from it
   for (const z of _state.zombies) {
     if (z.hp <= 0 && !z._counted) killZombie(z);
@@ -399,8 +412,11 @@ function tickPlants(dt) {
       }
     }
 
-    // Reset cast timer to the plant's base cast time
-    plant.castTimer = plant.card.castTime > 0 ? plant.card.castTime : 1.0;
+    // Reset cast timer to the plant's base cast time (respecting any
+    // cast-speed buffs so Aether Bloom / Chrono-Bloom affect every
+    // subsequent cast, not just the first one)
+    const base = plant.card.castTime > 0 ? plant.card.castTime : 1.0;
+    plant.castTimer = Math.max(0.1, base + (plant.castSpeedBuff ?? 0));
   }
 }
 
@@ -448,6 +464,76 @@ function tickProjectiles(dt) {
   for (let i = list.length - 1; i >= 0; i--) {
     list[i].age += dt;
     if (list[i].age >= list[i].maxAge) list.splice(i, 1);
+  }
+}
+
+/**
+ * Fire any pending lane / tile spell effects whose trigger time has
+ * come. Each effect is consumed (spliced) after firing so it only
+ * hits once per round.
+ */
+function tickPendingEffects() {
+  if (!_state?.pendingEffects) return;
+  const list = _state.pendingEffects;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const e = list[i];
+    if (_state.time < e.triggerAt) continue;
+    if (e.type === 'damage_lane') {
+      // Solar Flare: 50 damage to all zombies in the chosen row
+      for (const z of _state.zombies) {
+        if (z.hp <= 0) continue;
+        if (z.row !== e.row) continue;
+        z.hp -= e.value;
+        _state.floatingTexts.push({
+          id: nextFloatingId(),
+          text: `-${e.value}`,
+          row: z.row,
+          col: z.col,
+          age: 0,
+          maxAge: 1.0,
+          color: 'red',
+        });
+      }
+      // Announce banner
+      _state.floatingTexts.push({
+        id: nextFloatingId(),
+        text: `☀ ${e.spellName}`,
+        row: e.row,
+        col: 6,
+        age: 0,
+        maxAge: 1.8,
+        color: 'gold',
+      });
+    } else if (e.type === 'damage_area') {
+      // Spore-Burst: damage in a square radius around (row, col)
+      const r = e.radius ?? 1;
+      for (const z of _state.zombies) {
+        if (z.hp <= 0) continue;
+        const dRow = Math.abs(z.row - e.row);
+        const dCol = Math.abs(z.col - e.col);
+        if (dRow > r || dCol > r) continue;
+        z.hp -= e.value;
+        _state.floatingTexts.push({
+          id: nextFloatingId(),
+          text: `-${e.value}`,
+          row: z.row,
+          col: z.col,
+          age: 0,
+          maxAge: 1.0,
+          color: 'red',
+        });
+      }
+      _state.floatingTexts.push({
+        id: nextFloatingId(),
+        text: `✦ ${e.spellName}`,
+        row: e.row,
+        col: e.col,
+        age: 0,
+        maxAge: 1.8,
+        color: 'gold',
+      });
+    }
+    list.splice(i, 1);
   }
 }
 
