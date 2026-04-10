@@ -22,8 +22,14 @@ export class ScreenManager {
       return;
     }
     this.screens.forEach((el, key) => {
-      el.hidden = key !== name;
+      const isTarget = key === name;
+      el.hidden = !isTarget;
+      el.classList.remove('is-active');
     });
+    const target = this.screens.get(name);
+    // Force reflow so re-adding the class restarts the CSS animation
+    void target.offsetWidth;
+    target.classList.add('is-active');
     this.current = name;
   }
 

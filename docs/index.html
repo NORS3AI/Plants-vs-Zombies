@@ -30,32 +30,7 @@
     <section id="screen-difficulty" class="screen" data-screen="difficulty" hidden>
       <div class="menu-stack">
         <h2 class="title-sm">Choose Difficulty</h2>
-        <div class="difficulty-grid">
-          <button class="diff-card" data-difficulty="tutorial">
-            <span class="diff-name">Tutorial</span>
-            <span class="diff-meta">100 HP · 10 Gold</span>
-          </button>
-          <button class="diff-card" data-difficulty="easy">
-            <span class="diff-name">Easy</span>
-            <span class="diff-meta">150 HP · 10 Gold</span>
-          </button>
-          <button class="diff-card" data-difficulty="normal">
-            <span class="diff-name">Normal</span>
-            <span class="diff-meta">100 HP · 5 Gold</span>
-          </button>
-          <button class="diff-card" data-difficulty="hard">
-            <span class="diff-name">Hard</span>
-            <span class="diff-meta">50 HP · 3 Gold</span>
-          </button>
-          <button class="diff-card" data-difficulty="insane">
-            <span class="diff-name">Insane</span>
-            <span class="diff-meta">25 HP · 1 Gold</span>
-          </button>
-          <button class="diff-card locked" data-difficulty="endless" disabled>
-            <span class="diff-name">Endless</span>
-            <span class="diff-meta">🔒 Beat Round 10</span>
-          </button>
-        </div>
+        <div class="difficulty-grid" id="difficulty-grid"></div>
         <button class="btn" data-action="back-to-menu">← Back</button>
       </div>
     </section>

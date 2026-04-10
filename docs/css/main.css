@@ -100,10 +100,12 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  animation: fadeIn 0.3s ease;
 }
 
 .screen[hidden] { display: none; }
+
+/* Fade-in is applied by ScreenManager via .is-active so it re-runs on every show */
+.screen.is-active { animation: fadeIn 0.3s ease; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -355,7 +357,6 @@ html, body {
 .grid-tile {
   width: 56px;
   height: 56px;
-  background: var(--grid-tile);
   border: 1px solid var(--grid-border);
   border-radius: 6px;
   display: flex;
@@ -366,7 +367,8 @@ html, body {
   transition: all 0.1s ease;
 }
 
-.grid-tile:nth-child(even) { background: var(--grid-tile-alt); }
+.grid-tile.tile-a { background: var(--grid-tile); }
+.grid-tile.tile-b { background: var(--grid-tile-alt); }
 
 .grid-tile:hover {
   border-color: var(--accent);
@@ -387,6 +389,10 @@ html, body {
   font-weight: 800;
   color: var(--accent);
   text-shadow: 0 0 30px var(--accent);
+  opacity: 0;
+}
+
+.countdown-number.ticking {
   animation: countdownZoom 1s ease-out forwards;
 }
 

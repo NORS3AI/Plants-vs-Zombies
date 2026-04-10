@@ -67,7 +67,8 @@ export function renderGrid(host, { onTileClick } = {}) {
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let c = 0; c < GRID_COLS; c++) {
       const tile = document.createElement('div');
-      tile.className = 'grid-tile';
+      const parity = (r + c) % 2 === 0 ? 'tile-a' : 'tile-b';
+      tile.className = `grid-tile ${parity}`;
       tile.dataset.row = String(r);
       tile.dataset.col = String(c);
       tile.setAttribute('role', 'gridcell');

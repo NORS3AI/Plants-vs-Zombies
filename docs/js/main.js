@@ -62,16 +62,41 @@ state.register(STATES.MENU, {
 state.register(STATES.DIFFICULTY, {
   enter() {
     screens.show('difficulty');
-    // Reflect Endless lock state from meta
-    const meta = Save.loadMeta();
-    const endlessBtn = document.querySelector('[data-difficulty="endless"]');
-    if (endlessBtn && meta.endlessUnlocked) {
-      endlessBtn.disabled = false;
-      endlessBtn.classList.remove('locked');
-      endlessBtn.querySelector('.diff-meta').textContent = '100 HP · 5 Gold';
-    }
+    buildDifficultyCards();
   },
 });
+
+/**
+ * Build difficulty cards from DIFFICULTIES (single source of truth).
+ * Called on every DIFFICULTY enter so unlock state stays in sync with meta.
+ */
+function buildDifficultyCards() {
+  const host = document.getElementById('difficulty-grid');
+  if (!host) return;
+  const meta = Save.loadMeta();
+  host.innerHTML = '';
+  for (const d of Object.values(DIFFICULTIES)) {
+    const isLocked = d.locked && !(d.id === 'endless' && meta.endlessUnlocked);
+    const btn = document.createElement('button');
+    btn.className = 'diff-card' + (isLocked ? ' locked' : '');
+    btn.dataset.difficulty = d.id;
+    btn.disabled = isLocked;
+
+    const name = document.createElement('span');
+    name.className = 'diff-name';
+    name.textContent = d.label;
+
+    const metaEl = document.createElement('span');
+    metaEl.className = 'diff-meta';
+    metaEl.textContent = isLocked
+      ? '🔒 Beat Round 10'
+      : `${d.playerHP} HP · ${d.startGold} Gold`;
+
+    btn.appendChild(name);
+    btn.appendChild(metaEl);
+    host.appendChild(btn);
+  }
+}
 
 state.register(STATES.SHOP, {
   enter() {
@@ -93,7 +118,8 @@ state.register(STATES.COUNTDOWN, {
     if (countdownTimer >= 1) {
       countdownTimer = 0;
       countdownValue--;
-      if (countdownValue < 0) {
+      if (countdownValue <= 0) {
+        // 5,4,3,2,1 each shown for 1s, then transition at t=5s
         state.transition(STATES.COMBAT);
       } else {
         paintCountdown();
@@ -137,17 +163,22 @@ state.register(STATES.SETTINGS, {
 function paintCountdown() {
   const el = document.getElementById('countdown-number');
   if (!el) return;
-  el.textContent = countdownValue === 0 ? 'GO!' : countdownValue;
-  // Re-trigger the zoom animation by toggling a class
-  el.style.animation = 'none';
-  void el.offsetWidth; // force reflow
-  el.style.animation = '';
+  el.textContent = countdownValue;
+  // Re-trigger the zoom animation by removing and re-adding the class
+  el.classList.remove('ticking');
+  void el.offsetWidth; // force reflow so the class re-add restarts the animation
+  el.classList.add('ticking');
 }
 
 // ---------- Run Lifecycle ----------
 function startNewRun(difficultyId) {
   const d = getDifficulty(difficultyId);
-  if (!d || d.locked) return;
+  if (!d) return;
+  // Endless is the only meta-gated difficulty
+  if (d.locked) {
+    const meta = Save.loadMeta();
+    if (!(d.id === 'endless' && meta.endlessUnlocked)) return;
+  }
   currentRun = {
     difficulty: d.id,
     round: 1,
