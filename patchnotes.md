@@ -5,6 +5,55 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.8.0 — 2026-04-10 — Phase 8: Rounds 1–10 Content
+
+### Added
+- **Full zombie roster** (`docs/js/game/zombies.js`):
+  - 10 named standard types: Shambling Husk, Rotted Squire, Grave-Bound Wight, Blighted Archer, Plague-Knight, Crypt Ghoul, Fallen Paladin, Bone-Grit Colossus, Lich Apprentice, Abyssal Revenant
+  - Each with unique sprite and optional speed multiplier / armor
+  - `zombieTypeForRound(round)` looks up the specific type; endless mode cycles through them
+- **Full boss roster** — 10 bosses one per round, stats matching spec (`HP = 3× avg, DMG = 2× avg`):
+  - R1 The Grave-Warden (Heavy Thump) — 60H/10D, scale 1.5
+  - R2 Rot-Hoof Centaur (Trample) — 90H/16D, scale 1.5, +20% speed
+  - R3 Cursed Harvester (Soul Reap) — 120H/22D, scale 1.6
+  - R4 Iron-Bound Ogre (Armor Plating) — 150H/28D, scale 1.8, armor 3
+  - R5 The Blight-Widow (Venom Spit stub) — 180H/34D, scale 1.6
+  - R6 Frost-Lich Overseer (Freezing Aura stub) — 210H/40D, scale 1.7
+  - R7 Infernal Juggernaut (Burn-Step stub) — 240H/46D, scale 1.8
+  - R8 Shadow-Stalker Wraith (Phase Shift stub) — 270H/52D, scale 1.7
+  - R9 Necro-Dragon Fledgling (Blight Breath stub) — 300H/58D, scale 1.9
+  - R10 **The Arch-Lich Malakor** (Death's Call stub) — 500H/80D, scale 2.0 — defeating triggers Endless unlock
+- **Implemented boss abilities:**
+  - `heavyThump` — Grave-Warden deals 2× damage on every 3rd attack
+  - `trample` — Rot-Hoof Centaur gets +20% speed baked into spawn stats
+  - `soulReap` — Cursed Harvester heals 5 HP whenever it kills a plant
+  - `armor` — Iron-Bound Ogre (and armored standard zombies) reduce incoming damage by their armor value (minimum 1)
+- **Stubbed boss abilities** (declared in data, show on boss banner, no gameplay effect yet): Venom Spit, Freezing Aura, Burn-Step, Phase Shift, Blight Breath, Death's Call. Will be specialized in a later pass.
+- **Boss spawn hook** — when a boss spawns, all remaining standard zombies get a +10% speed Frenzy buff per spec; `_callbacks.onBossSpawn` fires.
+- **Plant abilities wired into combat:**
+  - `slow_on_hit` — Frost-Bite Willow, Bramble-Whip Vine halve zombie speed for 2s on hit
+  - `splash` — Void-Petal Bloom deals the same damage to zombies in an adjacent 3×3 area
+  - `cone_damage` — Dragon-Breath Snapdragon hits multiple rows in a cone forward
+  - `heal_adjacent` — Solar Archon restores 5 HP to adjacent plants on each cast
+- **Zombie armor** — flat incoming damage reduction respecting a 1-dmg floor (Plague-Knight, Fallen Paladin, Bone-Grit Colossus, Abyssal Revenant, Iron-Bound Ogre)
+- **Boss banner UI** — red-gradient banner with boss name, ability text, and HP bar, visible only while the boss is alive. Fades in on spawn.
+- **CSS** for boss scaling (larger sprite via `--boss-scale` custom property), slowed-zombie blue tint, red boss glow.
+
+### Fixed (Phase 7 audit follow-ups)
+- **Floating text key bug** — keys were array-index-based, so expiring a text forced recreation of all surviving texts' DOM elements every frame. Each floating text now gets a stable unique id at creation (`_floatingCounter`), and the renderer keys off `ft.id`.
+- **Amber Grain `goldPerLaneKill` dead feature** — combat engine now grants bonus gold from any plant in the zombie's row that has `economy.goldPerLaneKill`. Amber Grain finally produces gold as designed.
+- **Dead `healSurvivors` helper removed** — plants always start rounds at full HP via `initCombat` hydration from `card.health`. A proper between-round persistence helper will land when permanent HP buffs (Wild Growth, shields) are wired in Phase 8+.
+
+### Verified
+- Headless simulation: round 1 with Solar Archon + Frost-Bite Willow + Ironroot Sentry completes in 25s sim time. Boss (The Grave-Warden) spawns at ~21s, dies. 3 total kills, 14 gold earned (including boss bonus), 0 plants lost, 5 HP damage. End state: VICTORY.
+
+### Notes
+- Zombie/boss stats follow the design doc exactly.
+- Stubbed boss abilities (R5–R10) show their ability name on the boss banner but don't yet have combat effects. A future content pass can specialize each.
+- The boss banner is visible from combat screen only; hidden elsewhere.
+
+---
+
 ## v0.7.0 — 2026-04-10 — Phase 7: Combat Engine
 
 ### Added

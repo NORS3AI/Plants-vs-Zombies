@@ -100,11 +100,14 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ### 3.2 Zombie System
 - [x] Wave spawner with scaling formulas (HP = 10 + round×10; DMG = 2 + round×3)
 - [x] Sub-wave logic (time-spread spawning window)
-- [~] Round-by-round zombie roster — generic "Shambling Husk" for all rounds in Phase 7; Phase 8 adds named types
-- [ ] Boss spawn after wave completion (Phase 8)
-- [ ] Frenzy buff for remaining zombies during boss phase (Phase 8)
+- [x] Round-by-round zombie roster — 10 named types (Shambling Husk → Abyssal Revenant)
+- [x] Boss spawn after wave completion (all 10 bosses)
+- [x] Frenzy buff for remaining zombies during boss phase (+10% speed)
+- [x] Boss visual scaling (1.5×–2×)
+- [x] Boss banner UI with HP, name, ability
 - [x] Zombie attack animations (CSS walk + attack keyframes)
 - [x] Gold drop popup on zombie death
+- [x] Zombie armor (Plague-Knight, Fallen Paladin, Bone-Grit Colossus, Abyssal Revenant)
 
 ### 3.3 Aether-Root (Mother Plant)
 - [x] HP scales by difficulty
@@ -176,35 +179,35 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 5. Zombies & Bosses
 
 ### 5.1 Standard Zombies (Rounds 1–10)
-- [ ] Round 1: Shambling Husk × 3
-- [ ] Round 2: Rotted Squire × 6
-- [ ] Round 3: Grave-Bound Wight × 10
-- [ ] Round 4: Blighted Archer × 15
-- [ ] Round 5: Plague-Knight × 21
-- [ ] Round 6: Crypt Ghoul × 28
-- [ ] Round 7: Fallen Paladin × 35
-- [ ] Round 8: Bone-Grit Colossus × 42
-- [ ] Round 9: Lich Apprentice × 46
-- [ ] Round 10: Abyssal Revenant × 50
-- [ ] HP formula: 10 + (Round × 10)
-- [ ] DMG formula: 2 + (Round × 3)
+- [x] Round 1: Shambling Husk × 3
+- [x] Round 2: Rotted Squire × 6
+- [x] Round 3: Grave-Bound Wight × 10
+- [x] Round 4: Blighted Archer × 15
+- [x] Round 5: Plague-Knight × 21 (armor 2)
+- [x] Round 6: Crypt Ghoul × 28 (faster)
+- [x] Round 7: Fallen Paladin × 35 (armor 3)
+- [x] Round 8: Bone-Grit Colossus × 42 (armor 5, slow)
+- [x] Round 9: Lich Apprentice × 46 (faster)
+- [x] Round 10: Abyssal Revenant × 50 (armor 4)
+- [x] HP formula: 10 + (Round × 10)
+- [x] DMG formula: 2 + (Round × 3)
 
 ### 5.2 Bosses
-- [ ] **The Grave-Warden** (R1) — Heavy Thump
-- [ ] **Rot-Hoof Centaur** (R2) — Trample (+20% speed)
-- [ ] **Cursed Harvester** (R3) — Soul Reap (+5 HP per kill)
-- [ ] **Iron-Bound Ogre** (R4) — Armor Plating (-3 dmg taken)
-- [ ] **The Blight-Widow** (R5) — Venom Spit (slow attacks)
-- [ ] **Frost-Lich Overseer** (R6) — Freezing Aura
-- [ ] **Infernal Juggernaut** (R7) — Burn-Step DOT
-- [ ] **Shadow-Stalker Wraith** (R8) — Phase Shift invuln
-- [ ] **Necro-Dragon Fledgling** (R9) — Blight Breath (3-row hit)
-- [ ] **The Arch-Lich Malakor** (R10) — Death's Call resurrection
-- [ ] Boss HP = 3× round avg
-- [ ] Boss DMG = 2× round avg
-- [ ] Boss visual scaling 1.5×–2×
-- [ ] Boss-phase music swap
-- [ ] Frenzy buff to remaining zombies
+- [x] **The Grave-Warden** (R1) — Heavy Thump (2× damage every 3rd attack)
+- [x] **Rot-Hoof Centaur** (R2) — Trample (+20% speed baked in)
+- [x] **Cursed Harvester** (R3) — Soul Reap (+5 HP per plant kill)
+- [x] **Iron-Bound Ogre** (R4) — Armor Plating (-3 damage taken, floor 1)
+- [~] **The Blight-Widow** (R5) — Venom Spit (declared, stub)
+- [~] **Frost-Lich Overseer** (R6) — Freezing Aura (declared, stub)
+- [~] **Infernal Juggernaut** (R7) — Burn-Step DOT (declared, stub)
+- [~] **Shadow-Stalker Wraith** (R8) — Phase Shift invuln (declared, stub)
+- [~] **Necro-Dragon Fledgling** (R9) — Blight Breath (declared, stub)
+- [~] **The Arch-Lich Malakor** (R10) — Death's Call resurrection (declared, stub; killing still unlocks Endless)
+- [x] Boss HP = 3× round avg (hardcoded per boss)
+- [x] Boss DMG = 2× round avg (hardcoded per boss)
+- [x] Boss visual scaling 1.5×–2×
+- [ ] Boss-phase music swap (Phase 12)
+- [x] Frenzy buff to remaining zombies (+10% speed on boss spawn)
 
 ---
 

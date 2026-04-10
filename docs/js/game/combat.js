@@ -80,12 +80,15 @@ export function initCombat(run, callbacks = {}) {
     zombies: [],
     spawnSchedule: generateSpawnSchedule(run.round, diff),
     spawnIndex: 0,
-    floatingTexts: [], // { text, row, col, age, maxAge, color }
+    floatingTexts: [],
     goldEarned: 0,
     kills: 0,
     plantsLost: 0,
-    phase: 'spawning', // 'spawning' | 'clearing' | 'done'
-    endReason: null, // 'victory' | 'defeat'
+    phase: 'spawning',
+    endReason: null,
+    bossActive: null, // reference to the currently-live boss zombie, if any
+    bossName: null,
+    roundNumber: run.round,
   };
 
   return _state;
@@ -132,23 +135,47 @@ function spawnDue() {
     _state.spawnSchedule[_state.spawnIndex].time <= _state.time
   ) {
     const entry = _state.spawnSchedule[_state.spawnIndex++];
-    _state.zombies.push({
+    const type = entry.type;
+    const zombie = {
       id: `zombie_${_state.time.toFixed(2)}_${_state.spawnIndex}`,
-      typeId: entry.type.id,
-      name: entry.type.name,
-      sprite: entry.type.sprite,
+      typeId: type.id,
+      name: type.name,
+      sprite: type.sprite,
       row: entry.row,
       col: GRID_COLS, // spawn at right edge (col 12)
-      hp: entry.type.maxHp,
-      maxHp: entry.type.maxHp,
-      dmg: entry.type.dmg,
-      speed: entry.type.speed,
-      attackInterval: entry.type.attackInterval,
+      hp: type.maxHp,
+      maxHp: type.maxHp,
+      dmg: type.dmg,
+      baseSpeed: type.speed,
+      speed: type.speed,
+      attackInterval: type.attackInterval,
       attackTimer: 0,
-      gold: entry.type.gold,
-      state: 'walking', // 'walking' | 'attacking'
-      blockedBy: null, // instanceId of plant blocking it
-    });
+      gold: type.gold,
+      armor: type.armor ?? 0,
+      state: 'walking',
+      blockedBy: null,
+      // Status effects (each: { expiresAt } pointing to _state.time)
+      slowUntil: 0, // speed halved while _state.time < slowUntil
+      // Boss-only
+      isBoss: !!type.isBoss,
+      scale: type.scale ?? 1,
+      ability: type.ability,
+      abilityKey: type.abilityKey,
+      attackCount: 0, // used by Heavy Thump
+    };
+    _state.zombies.push(zombie);
+
+    // Boss spawn: announce + apply Frenzy buff to remaining zombies
+    if (zombie.isBoss) {
+      _state.bossActive = zombie;
+      for (const z of _state.zombies) {
+        if (z === zombie) continue;
+        // +10% speed frenzy buff per spec
+        z.baseSpeed *= 1.1;
+        z.speed *= 1.1;
+      }
+      _callbacks?.onBossSpawn?.(zombie);
+    }
   }
 }
 
@@ -170,10 +197,57 @@ function tickPlants(dt) {
     } else if (plant.card.damage > 0) {
       const target = findTarget(plant);
       if (target) {
-        target.hp -= plant.card.damage;
+        damageZombie(target, plant.card.damage, plant);
         plant.attackFlash = 0.2;
-        if (target.hp <= 0) {
-          killZombie(target);
+
+        // --- Plant abilities on attack ---
+        for (const ab of plant.card.abilities ?? []) {
+          if (ab.type === 'slow_on_hit') {
+            const duration = ab.duration ?? 2.0;
+            target.slowUntil = Math.max(target.slowUntil, _state.time + duration);
+          } else if (ab.type === 'splash') {
+            // Splash: same damage to zombies in the 8 tiles adjacent
+            // to the target (row ±1 within 1 tile horizontally).
+            for (const z of _state.zombies) {
+              if (z === target || z.hp <= 0) continue;
+              const dRow = Math.abs(z.row - target.row);
+              const dCol = Math.abs(z.col - target.col);
+              if (dRow <= (ab.radius ?? 1) && dCol <= (ab.radius ?? 1)) {
+                damageZombie(z, plant.card.damage, plant);
+                if (z.hp <= 0) killZombie(z);
+              }
+            }
+          } else if (ab.type === 'cone_damage') {
+            // 3-row wide cone hitting zombies ahead of the plant
+            const width = ab.width ?? 3;
+            const depth = ab.depth ?? 6;
+            const halfW = Math.floor(width / 2);
+            for (const z of _state.zombies) {
+              if (z === target || z.hp <= 0) continue;
+              if (Math.abs(z.row - plant.row) > halfW) continue;
+              const dx = z.col - plant.col;
+              if (dx < 0 || dx > depth) continue;
+              damageZombie(z, plant.card.damage, plant);
+              if (z.hp <= 0) killZombie(z);
+            }
+          }
+        }
+
+        if (target.hp <= 0) killZombie(target);
+
+        // --- Passive abilities: heal adjacent on every cast ---
+        for (const ab of plant.card.abilities ?? []) {
+          if (ab.type === 'heal_adjacent') {
+            for (const ally of _state.plants) {
+              if (ally === plant || ally.hp <= 0) continue;
+              if (ally.hp >= ally.maxHp) continue;
+              const dRow = Math.abs(ally.row - plant.row);
+              const dCol = Math.abs(ally.col - plant.col);
+              if (dRow + dCol <= 1) {
+                ally.hp = Math.min(ally.maxHp, ally.hp + (ab.value ?? 5));
+              }
+            }
+          }
         }
       } else {
         // No target in range — partial cooldown recovery so we can
@@ -188,6 +262,18 @@ function tickPlants(dt) {
   }
 }
 
+/** Apply damage to a zombie, respecting armor. */
+function damageZombie(zombie, amount, source) {
+  const armor = zombie.armor ?? 0;
+  const net = Math.max(1, amount - armor);
+  zombie.hp -= net;
+}
+
+let _floatingCounter = 0;
+function nextFloatingId() {
+  return `ft_${++_floatingCounter}`;
+}
+
 /** Economy plant produces gold to the run. */
 function produceGold(plant) {
   const amount = plant.card.economy?.goldPerCast ?? 0;
@@ -199,6 +285,7 @@ function produceGold(plant) {
   _run.lastRoundGoldEarned = (_run.lastRoundGoldEarned ?? 0) + amount;
   _run.totalGoldEarned = (_run.totalGoldEarned ?? 0) + amount;
   _state.floatingTexts.push({
+    id: nextFloatingId(),
     text: `+${amount}g`,
     row: plant.row,
     col: plant.col,
@@ -264,7 +351,6 @@ function findTarget(plant) {
 // ---------- Zombie behavior ----------
 
 function tickZombies(dt) {
-  // Iterate a copy because we may splice during iteration
   const zombies = _state.zombies;
   for (let i = zombies.length - 1; i >= 0; i--) {
     const z = zombies[i];
@@ -273,7 +359,10 @@ function tickZombies(dt) {
       continue;
     }
 
-    // Check if blocked by a plant at the next tile
+    // Apply slow status (halves speed while active)
+    const slowed = _state.time < (z.slowUntil ?? 0);
+    z.speed = slowed ? z.baseSpeed * 0.5 : z.baseSpeed;
+
     const blocker = findBlockingPlant(z);
 
     if (blocker) {
@@ -281,9 +370,22 @@ function tickZombies(dt) {
       z.blockedBy = blocker.instanceId;
       z.attackTimer -= dt;
       if (z.attackTimer <= 0) {
-        blocker.hp -= z.dmg;
+        z.attackCount = (z.attackCount ?? 0) + 1;
+        let dmg = z.dmg;
+
+        // Boss: Heavy Thump — every 3rd attack does 2× damage
+        if (z.abilityKey === 'heavyThump' && z.attackCount % 3 === 0) {
+          dmg *= 2;
+        }
+
+        blocker.hp -= dmg;
         z.attackTimer = z.attackInterval;
+
         if (blocker.hp <= 0) {
+          // Boss: Soul Reap — heals 5 HP on plant kill
+          if (z.abilityKey === 'soulReap') {
+            z.hp = Math.min(z.maxHp, z.hp + 5);
+          }
           killPlant(blocker);
         }
       }
@@ -322,18 +424,35 @@ function findBlockingPlant(zombie) {
 // ---------- Death ----------
 
 function killZombie(zombie) {
+  if (zombie.hp <= 0 && zombie._counted) return;
   zombie.hp = 0;
-  _run.gold += zombie.gold;
-  _state.goldEarned += zombie.gold;
+  zombie._counted = true;
+  if (_state.bossActive === zombie) {
+    _state.bossActive = null;
+  }
+  let goldGained = zombie.gold;
+
+  // Amber Grain / similar: each plant with economy.goldPerLaneKill in the
+  // zombie's row grants extra gold on the kill.
+  for (const p of _state.plants) {
+    if (p.hp <= 0) continue;
+    if (p.row !== zombie.row) continue;
+    const bonus = p.card.economy?.goldPerLaneKill ?? 0;
+    if (bonus > 0) goldGained += bonus;
+  }
+
+  _run.gold += goldGained;
+  _state.goldEarned += goldGained;
   _state.kills += 1;
   // Write to BOTH lastRoundX (for the round-end summary) AND totalX (so
   // game-over mid-round still shows accurate totals).
-  _run.lastRoundGoldEarned = (_run.lastRoundGoldEarned ?? 0) + zombie.gold;
+  _run.lastRoundGoldEarned = (_run.lastRoundGoldEarned ?? 0) + goldGained;
   _run.lastRoundKills = (_run.lastRoundKills ?? 0) + 1;
-  _run.totalGoldEarned = (_run.totalGoldEarned ?? 0) + zombie.gold;
+  _run.totalGoldEarned = (_run.totalGoldEarned ?? 0) + goldGained;
   _run.totalKills = (_run.totalKills ?? 0) + 1;
   _state.floatingTexts.push({
-    text: `+${zombie.gold}g`,
+    id: nextFloatingId(),
+    text: `+${goldGained}g`,
     row: zombie.row,
     col: zombie.col,
     age: 0,
@@ -389,17 +508,7 @@ function checkEndConditions() {
   }
 }
 
-/**
- * After a round ends, restore surviving plants' HP to full so the
- * player doesn't enter the next round with half-dead defenders.
- */
-export function healSurvivors() {
-  if (!_run) return;
-  for (const instance of _run.deck) {
-    if (instance.gridRow == null) continue;
-    const card = getCard(instance.cardId);
-    if (card && card.health != null) {
-      instance.hp = card.health;
-    }
-  }
-}
+// Note: between-round healing is implicit — initCombat always hydrates
+// plants from card.health, so plants always start a round at full HP.
+// A dedicated healSurvivors() function will land when Phase 8+ adds
+// persistent buffs (Wild Growth, shields) that need explicit carry-over.

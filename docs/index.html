@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 7 — Combat</div>
+    <div id="phase-badge">Phase 8 — Content</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.7.0 — Phase 7</p>
+        <p class="version">v0.8.0 — Phase 8</p>
       </div>
     </section>
 
@@ -97,6 +97,15 @@
         <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp-combat">100</span></div>
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
+      <!-- Boss banner (only visible while a boss is alive) -->
+      <div id="boss-banner" class="boss-banner">
+        <div class="boss-banner-label">BOSS</div>
+        <div class="boss-banner-main">
+          <div class="boss-banner-name">Boss Name</div>
+          <div class="boss-banner-ability">Ability</div>
+        </div>
+        <div class="boss-banner-hp-bar"><div class="boss-banner-hp-fill"></div></div>
+      </div>
       <main class="combat-main">
         <aside class="spell-panel">
           <h4>Aether-Root Spells</h4>

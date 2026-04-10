@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 8 — Rounds 1–10 Content** (Phase 7 complete)
+> **Current Phase:** **Phase 9 — Aether-Root Spells** (Phase 8 complete)
 
 ---
 
@@ -182,20 +182,26 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 8 — Rounds 1–10 Content
+## Phase 8 — Rounds 1–10 Content ✅
 
 **Goal:** Implement all 10 standard rounds and their unique bosses.
 
-- [ ] Standard zombie roster (Shambling Husk → Abyssal Revenant)
-- [ ] HP/DMG scaling formulas
-- [ ] Wave & sub-wave compositions per round
-- [ ] All 10 boss encounters with unique abilities
-- [ ] Boss visual scaling (1.5×–2×)
-- [ ] Frenzy buff to remaining zombies on boss spawn
-- [ ] Boss music swap
-- [ ] Round 10 victory trigger → Endless unlock + achievement popup
+- [x] Standard zombie roster (Shambling Husk → Abyssal Revenant) — 10 named types with unique sprites and optional speedMul / armor modifiers
+- [x] HP/DMG scaling formulas (`HP = 10 + round×10`, `DMG = 2 + round×3`)
+- [x] Wave compositions per round (count progression [3, 6, …, 50])
+- [x] All 10 boss encounters with stat-correct HP/DMG and signature abilities declared
+- [x] Boss visual scaling (1.5×–2× via CSS custom property)
+- [x] Frenzy buff to remaining zombies on boss spawn (+10% speed per spec)
+- [ ] Boss music swap — deferred to Phase 12 (audio polish)
+- [x] Round 10 victory trigger → Endless unlock + menu return (existing Phase 3 handler works with the new boss-based round completion)
+- [x] Boss banner UI (red gradient banner with HP bar, name, ability, visible only while boss alive)
+- [x] Plant abilities wired: `slow_on_hit` (Frost-Bite Willow, Bramble-Whip Vine), `splash` (Void-Petal Bloom), `cone_damage` (Dragon-Breath Snapdragon), `heal_adjacent` (Solar Archon)
+- [x] Zombie armor (flat incoming damage reduction, minimum 1 dmg)
+- [x] Slow status (halves zombie speed while active) with blue visual tint
+- [x] Fully-implemented boss abilities: `heavyThump` (R1, 2× damage every 3rd attack), `trample` (R2, +20% speed via speedMul), `soulReap` (R3, boss heals on plant kill), `armor` (R4+, flat damage reduction)
+- [~] Stubbed boss abilities: Venom Spit (R5), Freezing Aura (R6), Burn-Step (R7), Phase Shift (R8), Blight Breath (R9), Death's Call (R10) — declared in data but not yet wired into combat
 
-**Exit Criteria:** Player can complete a full Normal-mode run from Round 1 to Round 10 and trigger the win state.
+**Exit Criteria:** Player can complete a full Normal-mode run from Round 1 to Round 10 and trigger the win state. ✅
 
 ---
 

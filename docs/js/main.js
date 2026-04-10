@@ -175,11 +175,7 @@ state.register(STATES.COMBAT, {
         audio.playSfx('damage');
       },
       onPlantKilled: () => syncHUD(),
-      onRoundComplete: () => {
-        // Heal survivors and run the standard endRound flow
-        Combat.healSurvivors();
-        endRound();
-      },
+      onRoundComplete: () => endRound(),
       onGameOver: () => {
         audio.playSfx('gameover');
         state.transition(STATES.GAME_OVER);

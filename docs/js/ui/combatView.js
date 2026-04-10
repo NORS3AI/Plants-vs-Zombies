@@ -154,24 +154,25 @@ export function renderCombatFrame(state) {
       _zombieEls.set(zombie.id, entry);
       _overlayEl.appendChild(entry.el);
     }
-    // Position: col 0 = rightmost plant tile area, col 12 = right edge
-    // Zombies enter at col 12 (offscreen-ish) and walk toward col 0.
     const x = zombie.col * step;
     const y = zombie.row * step;
     entry.el.style.transform = `translate(${x}px, ${y}px)`;
     const pct = Math.max(0, Math.min(1, zombie.hp / zombie.maxHp));
     entry.hpFill.style.width = `${pct * 100}%`;
-    if (pct < 0.3) {
-      entry.hpFill.classList.add('zombie-hp-low');
-    } else {
-      entry.hpFill.classList.remove('zombie-hp-low');
-    }
-    if (zombie.state === 'attacking') {
-      entry.el.classList.add('zombie-attacking');
-    } else {
-      entry.el.classList.remove('zombie-attacking');
-    }
+    if (pct < 0.3) entry.hpFill.classList.add('zombie-hp-low');
+    else entry.hpFill.classList.remove('zombie-hp-low');
+
+    if (zombie.state === 'attacking') entry.el.classList.add('zombie-attacking');
+    else entry.el.classList.remove('zombie-attacking');
+
+    // Slow status indicator
+    const slowed = state.time < (zombie.slowUntil ?? 0);
+    if (slowed) entry.el.classList.add('zombie-slowed');
+    else entry.el.classList.remove('zombie-slowed');
   }
+
+  // Boss banner
+  updateBossBanner(state);
 
   // Remove zombies that are no longer in state
   for (const [id, entry] of _zombieEls) {
@@ -188,6 +189,10 @@ export function renderCombatFrame(state) {
 function createZombieElement(zombie) {
   const el = document.createElement('div');
   el.className = 'combat-zombie';
+  if (zombie.isBoss) {
+    el.classList.add('combat-boss');
+    el.style.setProperty('--boss-scale', String(zombie.scale ?? 1.5));
+  }
   el.dataset.id = zombie.id;
 
   const sprite = document.createElement('div');
@@ -212,9 +217,9 @@ const _floatingEls = new Map();
 
 function renderFloatingTexts(state, step) {
   const present = new Set();
-  for (let i = 0; i < state.floatingTexts.length; i++) {
-    const ft = state.floatingTexts[i];
-    const key = `ft_${i}_${ft.text}_${ft.row}_${ft.col.toFixed(1)}`;
+  for (const ft of state.floatingTexts) {
+    // Use the stable id assigned by combat.js; fallback for older entries
+    const key = ft.id ?? `anon_${ft.row}_${ft.col}`;
     present.add(key);
     let el = _floatingEls.get(key);
     if (!el) {
@@ -239,9 +244,33 @@ function renderFloatingTexts(state, step) {
   }
 }
 
+// ---------- Boss banner ----------
+
+function updateBossBanner(state) {
+  const banner = document.getElementById('boss-banner');
+  if (!banner) return;
+  const boss = state.bossActive;
+  if (!boss || boss.hp <= 0) {
+    banner.classList.remove('is-active');
+    return;
+  }
+  banner.classList.add('is-active');
+  const nameEl = banner.querySelector('.boss-banner-name');
+  const hpEl = banner.querySelector('.boss-banner-hp-fill');
+  const abilityEl = banner.querySelector('.boss-banner-ability');
+  if (nameEl) nameEl.textContent = boss.name;
+  if (abilityEl) abilityEl.textContent = boss.ability ? `${boss.ability}` : '';
+  if (hpEl) {
+    const pct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
+    hpEl.style.width = `${pct * 100}%`;
+  }
+}
+
 /** Tear down combat DOM on exit. */
 export function resetCombatView() {
   if (_hostEl) _hostEl.innerHTML = '';
+  const banner = document.getElementById('boss-banner');
+  if (banner) banner.classList.remove('is-active');
   _hostEl = null;
   _gridEl = null;
   _overlayEl = null;
