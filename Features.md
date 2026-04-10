@@ -8,36 +8,37 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 1. Core Game Systems
 
 ### 1.1 Main Menu
-- [ ] Animated title screen
-- [ ] **Start Game** button (animated)
-- [ ] **Settings** button
-- [ ] **Leaderboard** button (visible after Endless unlock)
+- [~] Animated title screen — basic title, no animation yet
+- [x] **Start Game** button
+- [x] **Settings** button
+- [~] **Leaderboard** button (visible after Endless unlock) — present but locked
 - [ ] Background music
 - [ ] Hover/click sound effects
 
 ### 1.2 Settings
-- [ ] Save Game (saves everything: deck, gold, round, unlocks, leaderboard)
-- [ ] Load Game
-- [ ] Dark Mode toggle
-- [ ] Light Mode toggle
-- [ ] Reset Game (with confirmation)
-- [ ] Music On/Off toggle
-- [ ] Sounds On/Off toggle
+- [~] Save Game (saves everything: deck, gold, round, unlocks, leaderboard) — skeleton in place
+- [~] Load Game — skeleton in place
+- [x] Dark Mode toggle
+- [x] Light Mode toggle
+- [~] Reset Game (with confirmation) — basic version live
+- [~] Music On/Off toggle — UI only, no audio yet
+- [~] Sounds On/Off toggle — UI only, no audio yet
 - [ ] Volume sliders (music & sfx)
 
 ### 1.3 Difficulty Selection
-- [ ] **Tutorial Mode** — Contextual popup tooltips during play
-- [ ] **Easy Mode** — Reduced enemies, buffed player, 10 starting gold
-- [ ] **Normal Mode** — Baseline (100 HP, 5 gold)
-- [ ] **Hard Mode** — 200% enemy HP, 150% damage, 50 player HP, 3 gold
-- [ ] **Insane Mode** — 350% enemy HP, 300% damage, 25 player HP, 1 gold
-- [ ] **Endless Mode** — Locked until Round 10 boss kill; appears under Insane
+- [x] Difficulty selection screen UI
+- [~] **Tutorial Mode** — selectable; tooltip system in Phase 10
+- [x] **Easy Mode** — Reduced enemies, buffed player, 10 starting gold (config done)
+- [x] **Normal Mode** — Baseline (100 HP, 5 gold) (config done)
+- [x] **Hard Mode** — 200% enemy HP, 150% damage, 50 player HP, 3 gold (config done)
+- [x] **Insane Mode** — 350% enemy HP, 300% damage, 25 player HP, 1 gold (config done)
+- [x] **Endless Mode** — Locked until Round 10 boss kill; appears under Insane (locked-state working)
 
 ### 1.4 Round Flow
-- [ ] Shop Mode → Countdown → Combat → Round End loop
+- [x] Shop Mode → Countdown → Combat → Round End loop (skeleton)
 - [ ] First-ever shop has no countdown
-- [ ] Animated 5-second countdown (small → zoom-in → fade)
-- [ ] Round counter UI
+- [x] Animated 5-second countdown (small → zoom-in → fade)
+- [x] Round counter UI
 - [ ] Round-end summary (gold earned, kills, plants lost)
 
 ---
@@ -257,11 +258,11 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 
 ## 9. Persistence
 
-- [ ] localStorage save format
-- [ ] Auto-save every round end
-- [ ] Manual save via Settings
+- [x] localStorage save format (`pvz:settings`, `pvz:run`, `pvz:meta`)
+- [x] Auto-save every round end (skeleton)
+- [x] Manual save via Settings
 - [ ] Save migration logic for future updates
-- [ ] Reset game wipes all keys
+- [x] Reset game wipes all keys
 
 ---
 

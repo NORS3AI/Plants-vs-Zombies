@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 0 — Planning**
+> **Current Phase:** **Phase 2 — Main Menu & Settings** (Phase 1 complete)
 
 ---
 
@@ -23,22 +23,22 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 1 — Project Skeleton & Core Engine
+## Phase 1 — Project Skeleton & Core Engine ✅
 
 **Goal:** Stand up the browser project with a renderable game loop, served from `/docs` on `main`.
 
-- [ ] Create `/docs/index.html` entry point (GitHub Pages root)
-- [ ] Create `/docs/css/`, `/docs/js/`, `/docs/assets/` folder structure
-- [ ] Create `/docs/js/game/`, `/docs/js/cards/`, `/docs/js/ui/` subfolders
-- [ ] Set up CSS reset + theme variables (dark/light mode foundations) in `/docs/css/`
-- [ ] Implement core game loop (`requestAnimationFrame`) in `/docs/js/game/`
-- [ ] Implement state machine: `MENU → DIFFICULTY → SHOP → COUNTDOWN → COMBAT → ROUND_END`
-- [ ] Render the 5×12 grid (placeholder tiles)
-- [ ] Render the Aether-Root sprite (placeholder)
-- [ ] Set up localStorage save/load skeleton
-- [ ] Verify GitHub Pages serves `/docs` on `main` correctly
+- [x] Create `/docs/index.html` entry point (GitHub Pages root)
+- [x] Create `/docs/css/`, `/docs/js/`, `/docs/assets/` folder structure
+- [x] Create `/docs/js/game/`, `/docs/js/cards/`, `/docs/js/ui/` subfolders
+- [x] Set up CSS reset + theme variables (dark/light mode foundations) in `/docs/css/`
+- [x] Implement core game loop (`requestAnimationFrame`) in `/docs/js/game/loop.js`
+- [x] Implement state machine: `MENU → DIFFICULTY → SHOP → COUNTDOWN → COMBAT → ROUND_END`
+- [x] Render the 5×12 grid (placeholder tiles)
+- [x] Render the Aether-Root sprite (placeholder)
+- [x] Set up localStorage save/load skeleton
+- [x] Verify GitHub Pages serves `/docs` on `main` correctly
 
-**Exit Criteria:** A blank game shell loads at `nors3ai.github.io/plants-vs-zombies`, transitions between states, and saves to localStorage.
+**Exit Criteria:** A blank game shell loads at `nors3ai.github.io/plants-vs-zombies`, transitions between states, and saves to localStorage. ✅
 
 ---
 

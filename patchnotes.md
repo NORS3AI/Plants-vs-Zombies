@@ -5,6 +5,30 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.1.0 — 2026-04-10 — Phase 1: Core Engine
+
+### Added
+- **State machine** (`docs/js/game/state.js`) — `MENU → DIFFICULTY → SHOP → COUNTDOWN → COMBAT → ROUND_END → GAME_OVER` with `enter`/`exit`/`update`/`render` lifecycle hooks
+- **Game loop** (`docs/js/game/loop.js`) — `requestAnimationFrame` driver with delta-time clamping
+- **Save system** (`docs/js/game/save.js`) — localStorage persistence for `pvz:settings`, `pvz:run`, `pvz:meta` with safe parse/write fallbacks
+- **5×12 grid** (`docs/js/game/grid.js`) — model + DOM renderer with Aether-Root anchor
+- **Difficulty config** (`docs/js/game/difficulty.js`) — Tutorial/Easy/Normal/Hard/Insane/Endless stat sources
+- **Screen manager** (`docs/js/ui/screens.js`) — section toggle by `data-screen`
+- **Bootstrap** (`docs/js/main.js`) — wires DOM events, settings sync, HUD updates, run lifecycle
+- **Real `index.html`** — replaces placeholder; contains all 8 screens (menu, difficulty, shop, countdown, combat, round_end, game_over, settings)
+- **`docs/css/main.css`** — reset, dark + light theme variables, full layout for all Phase 1 screens, animated countdown, responsive breakpoint
+
+### Changed
+- Phase badge in header now reads "Phase 1 — Core Engine"
+- `Phases.md` Phase 1 marked complete; current phase advanced to Phase 2
+
+### Notes
+- Combat is not yet implemented — the "End Round (debug)" button manually advances state
+- Card data, shop logic, and combat engine arrive in Phases 4–7
+- Use `window.__pvz` in browser dev console to inspect state/save
+
+---
+
 ## v0.0.2 — 2026-04-10 — GitHub Pages Setup
 
 ### Added

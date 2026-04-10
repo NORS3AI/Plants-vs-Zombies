@@ -1,75 +1,153 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Plants vs Zombies: Card Battler — a browser-based card battler reimagining of the classic.">
   <title>Plants vs Zombies: Card Battler</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --fg: #e6edf3;
-      --accent: #d4af37;
-      --accent-red: #c0392b;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at center, #1a2332 0%, var(--bg) 100%);
-      color: var(--fg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-    }
-    .container { max-width: 640px; }
-    h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
-      background: linear-gradient(45deg, var(--accent), var(--accent-red));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 1rem;
-    }
-    .tagline { font-size: 1.1rem; opacity: 0.85; margin-bottom: 2rem; }
-    .badge {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      border: 2px solid var(--accent);
-      border-radius: 999px;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-      margin-bottom: 2rem;
-    }
-    .links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .links a {
-      color: var(--fg);
-      text-decoration: none;
-      padding: 0.6rem 1.2rem;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    .links a:hover {
-      border-color: var(--accent);
-      background: rgba(212, 175, 55, 0.1);
-    }
-    footer { margin-top: 3rem; opacity: 0.5; font-size: 0.85rem; }
-  </style>
+  <link rel="stylesheet" href="./css/main.css">
 </head>
 <body>
-  <div class="container">
-    <div class="badge">Phase 0 — Planning</div>
-    <h1>Plants vs Zombies: Card Battler</h1>
-    <p class="tagline">A browser-based card battler reimagining of the classic. Defend the Aether-Root.</p>
-    <div class="links">
-      <a href="https://github.com/nors3ai/plants-vs-zombies">GitHub</a>
-      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/Phases.md">Roadmap</a>
-      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/Features.md">Features</a>
-      <a href="https://github.com/nors3ai/plants-vs-zombies/blob/main/patchnotes.md">Patch Notes</a>
-    </div>
-    <footer>The game is currently in development. Check back soon!</footer>
+  <div id="app">
+    <!-- Phase Badge -->
+    <div id="phase-badge">Phase 1 — Core Engine</div>
+
+    <!-- Screen: Menu -->
+    <section id="screen-menu" class="screen" data-screen="menu" hidden>
+      <div class="menu-stack">
+        <h1 class="title">Plants vs Zombies</h1>
+        <h2 class="subtitle">Card Battler</h2>
+        <div class="menu-buttons">
+          <button class="btn btn-primary" data-action="start-game">Start Game</button>
+          <button class="btn" data-action="open-settings">Settings</button>
+          <button class="btn" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
+        </div>
+        <p class="version">v0.1.0 — Phase 1 Skeleton</p>
+      </div>
+    </section>
+
+    <!-- Screen: Difficulty -->
+    <section id="screen-difficulty" class="screen" data-screen="difficulty" hidden>
+      <div class="menu-stack">
+        <h2 class="title-sm">Choose Difficulty</h2>
+        <div class="difficulty-grid">
+          <button class="diff-card" data-difficulty="tutorial">
+            <span class="diff-name">Tutorial</span>
+            <span class="diff-meta">100 HP · 10 Gold</span>
+          </button>
+          <button class="diff-card" data-difficulty="easy">
+            <span class="diff-name">Easy</span>
+            <span class="diff-meta">150 HP · 10 Gold</span>
+          </button>
+          <button class="diff-card" data-difficulty="normal">
+            <span class="diff-name">Normal</span>
+            <span class="diff-meta">100 HP · 5 Gold</span>
+          </button>
+          <button class="diff-card" data-difficulty="hard">
+            <span class="diff-name">Hard</span>
+            <span class="diff-meta">50 HP · 3 Gold</span>
+          </button>
+          <button class="diff-card" data-difficulty="insane">
+            <span class="diff-name">Insane</span>
+            <span class="diff-meta">25 HP · 1 Gold</span>
+          </button>
+          <button class="diff-card locked" data-difficulty="endless" disabled>
+            <span class="diff-name">Endless</span>
+            <span class="diff-meta">🔒 Beat Round 10</span>
+          </button>
+        </div>
+        <button class="btn" data-action="back-to-menu">← Back</button>
+      </div>
+    </section>
+
+    <!-- Screen: Shop -->
+    <section id="screen-shop" class="screen" data-screen="shop" hidden>
+      <header class="game-header">
+        <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round">1</span></div>
+        <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold">5</span></div>
+        <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp">100</span></div>
+        <div class="hud-item"><span class="hud-label">Difficulty</span><span id="hud-difficulty">Normal</span></div>
+      </header>
+      <main class="shop-main">
+        <div class="shop-placeholder">
+          <h3>Shop Mode</h3>
+          <p class="muted">Card shop will be implemented in Phase 5. Place cards on the grid in Phase 6.</p>
+          <button class="btn btn-primary" data-action="start-countdown">Start Round</button>
+        </div>
+        <div id="grid-container" class="grid-wrap"></div>
+      </main>
+    </section>
+
+    <!-- Screen: Countdown -->
+    <section id="screen-countdown" class="screen" data-screen="countdown" hidden>
+      <div class="countdown-stage">
+        <div id="countdown-number" class="countdown-number">5</div>
+      </div>
+    </section>
+
+    <!-- Screen: Combat -->
+    <section id="screen-combat" class="screen" data-screen="combat" hidden>
+      <header class="game-header">
+        <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round-combat">1</span></div>
+        <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold-combat">5</span></div>
+        <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp-combat">100</span></div>
+      </header>
+      <main class="combat-main">
+        <aside class="spell-panel">
+          <h4>Aether-Root Spells</h4>
+          <p class="muted">Coming in Phase 9</p>
+        </aside>
+        <div id="grid-container-combat" class="grid-wrap"></div>
+      </main>
+      <button class="btn" data-action="end-round">End Round (debug)</button>
+    </section>
+
+    <!-- Screen: Round End -->
+    <section id="screen-round-end" class="screen" data-screen="round_end" hidden>
+      <div class="menu-stack">
+        <h2 class="title-sm">Round Complete</h2>
+        <p class="muted">Round summary will be implemented in Phase 8.</p>
+        <button class="btn btn-primary" data-action="next-round">Next Round →</button>
+      </div>
+    </section>
+
+    <!-- Screen: Game Over -->
+    <section id="screen-game-over" class="screen" data-screen="game_over" hidden>
+      <div class="menu-stack">
+        <h2 class="title-sm">The Aether-Root has fallen</h2>
+        <p class="muted">You survived <span id="game-over-round">0</span> rounds.</p>
+        <button class="btn btn-primary" data-action="back-to-menu">Return to Menu</button>
+      </div>
+    </section>
+
+    <!-- Screen: Settings -->
+    <section id="screen-settings" class="screen" data-screen="settings" hidden>
+      <div class="menu-stack">
+        <h2 class="title-sm">Settings</h2>
+        <div class="settings-list">
+          <label class="setting-row">
+            <span>Theme</span>
+            <select id="setting-theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </label>
+          <label class="setting-row">
+            <span>Music</span>
+            <input type="checkbox" id="setting-music" checked>
+          </label>
+          <label class="setting-row">
+            <span>Sounds</span>
+            <input type="checkbox" id="setting-sounds" checked>
+          </label>
+          <button class="btn" data-action="save-game">Save Game</button>
+          <button class="btn btn-danger" data-action="reset-game">Reset Game</button>
+        </div>
+        <button class="btn" data-action="back-to-menu">← Back</button>
+      </div>
+    </section>
   </div>
+
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
