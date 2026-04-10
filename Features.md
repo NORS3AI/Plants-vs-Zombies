@@ -121,50 +121,50 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 4. Card Roster
 
 ### 4.1 Standard Plants
-- [ ] **Seedling Scrubber** (Trash) — 5H/1D
-- [ ] **Ironroot Sentry** (Common) — 15H/5D
-- [ ] **Cinder-Fern** (Uncommon) — 25H/10D
-- [ ] **Frost-Bite Willow** (Rare) — 50H/25D, slow effect
-- [ ] **Void-Petal Bloom** (Epic) — 120H/60D, splash damage
-- [ ] **Solar Archon** (Legendary) — 300H/150D, beam + heal aura
+- [x] **Seedling Scrubber** (Trash) — 5H/1D
+- [x] **Ironroot Sentry** (Common) — 15H/5D
+- [x] **Cinder-Fern** (Uncommon) — 25H/10D
+- [x] **Frost-Bite Willow** (Rare) — 50H/25D, slow effect
+- [x] **Void-Petal Bloom** (Epic) — 120H/60D, splash damage
+- [x] **Solar Archon** (Legendary) — 300H/150D, beam + heal aura
 
 ### 4.2 Standard Spells
-- [ ] **Barkskin Guard** — Shield = 50% Max HP
-- [ ] **Aether Bloom** — -0.5s cast time for 10s
-- [ ] **Wild Growth** — Permanent +20 HP
-- [ ] **Nectar Rush** — +15 DMG for round
-- [ ] **Magic Mushroom** — Evolve to next rarity tier
-- [ ] **Solar Flare** — 50 dmg to all zombies in lane
+- [x] **Barkskin Guard** — Shield = 50% Max HP
+- [x] **Aether Bloom** — -0.5s cast time for 10s
+- [x] **Wild Growth** — Permanent +20 HP
+- [x] **Nectar Rush** — +15 DMG for round
+- [x] **Magic Mushroom** — Evolve to next rarity tier
+- [x] **Solar Flare** — 50 dmg to all zombies in lane
 
 ### 4.3 Mythic Pack Exclusives
-- [ ] **Bramble-Whip Vine** (Common) — Slow on hit
-- [ ] **Glimmer-Spore** (Uncommon) — Reveal invisibles
-- [ ] **Stone-Root Bulwark** (Rare) — Reflect 10%
-- [ ] **Spore-Burst** (Spell, Common) — 3x3 cloud, 5 dmg
-- [ ] **Nature's Bounty** (Spell) — +10 gold
-- [ ] **Amber Grain** (Common Economy) — +1 gold per lane kill
+- [x] **Bramble-Whip Vine** (Common) — Slow on hit
+- [x] **Glimmer-Spore** (Uncommon) — Reveal invisibles
+- [x] **Stone-Root Bulwark** (Rare) — Reflect 10%
+- [x] **Spore-Burst** (Spell, Common) — 3x3 cloud, 5 dmg
+- [x] **Nature's Bounty** (Spell) — +10 gold
+- [x] **Amber Grain** (Common Economy) — +1 gold per lane kill
 
 ### 4.4 Arcane Pack Exclusives
-- [ ] **Storm-Caster Orchid** (Uncommon) — Chain lightning
-- [ ] **Frost-Thistle** (Rare) — 5% stun chance
-- [ ] **Elder Oak Aegis** (Epic) — Rear shield aura
-- [ ] **Arcane Surge** (Spell, Rare) — Double damage 5s
-- [ ] **Chrono-Bloom** (Spell) — Reset lane cooldowns 5s
-- [ ] **Crystal Fern** (Rare Economy) — +5 gold + self-shield
-- [ ] **Synthesis** (Spell) — Merge 3 same-name plants
+- [x] **Storm-Caster Orchid** (Uncommon) — Chain lightning
+- [x] **Frost-Thistle** (Rare) — 5% stun chance
+- [x] **Elder Oak Aegis** (Epic) — Rear shield aura
+- [x] **Arcane Surge** (Spell, Rare) — Double damage 5s
+- [x] **Chrono-Bloom** (Spell) — Reset lane cooldowns 5s
+- [x] **Crystal Fern** (Rare Economy) — +5 gold + self-shield
+- [x] **Synthesis** (Spell) — Merge 3 same-name plants
 
 ### 4.5 Frenzy Pack Exclusives
-- [ ] **Magma-Core Calla** (Rare) — Fire DOT trail
-- [ ] **Void-Reaper Lily** (Epic) — Execute <15% HP
-- [ ] **Dragon-Breath Snapdragon** (Legendary) — 3-lane cone
-- [ ] **World-Tree Seed** (Spell, Legendary) — Full heal + 50 shield all plants
-- [ ] **Mycelium Network** (Spell) — Link 3 plants, share HP, +20% dmg
-- [ ] **Midas Mandrake** (Legendary Economy) — Gold = round number per kill
+- [x] **Magma-Core Calla** (Rare) — Fire DOT trail
+- [x] **Void-Reaper Lily** (Epic) — Execute <15% HP
+- [x] **Dragon-Breath Snapdragon** (Legendary) — 3-lane cone
+- [x] **World-Tree Seed** (Spell, Legendary) — Full heal + 50 shield all plants
+- [x] **Mycelium Network** (Spell) — Link 3 plants, share HP, +20% dmg
+- [x] **Midas Mandrake** (Legendary Economy) — Gold = round number per kill
 
 ### 4.6 Economy Plants
-- [ ] **Sunflower** (Uncommon) — 2 gold / 10s
-- [ ] **Gilded Rose** (Epic) — Auto-evolve from 3 Sunflowers; 30 gold / 25s
-- [ ] Auto-merge logic when 3 Sunflowers placed
+- [x] **Sunflower** (Uncommon) — 2 gold / 10s
+- [x] **Gilded Rose** (Epic) — Auto-evolve from 3 Sunflowers; 30 gold / 25s
+- [ ] Auto-merge logic when 3 Sunflowers placed (Phase 6 placement work)
 
 ---
 

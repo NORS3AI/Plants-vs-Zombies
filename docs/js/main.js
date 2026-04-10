@@ -19,6 +19,10 @@ import { getDifficulty, DIFFICULTIES } from './game/difficulty.js';
 import { AudioManager } from './game/audio.js';
 import { ScreenManager } from './ui/screens.js';
 import { confirmModal } from './ui/modal.js';
+import * as Cards from './cards/index.js';
+
+// Validate the card database at boot (logs errors/warnings to console)
+Cards.validateAndLog();
 
 // ---------- Boot ----------
 const screens = new ScreenManager('#app');
@@ -540,5 +544,13 @@ state.transition(STATES.MENU);
 loop.start();
 
 // Expose for dev console debugging (remove in v1.0)
-window.__pvz = { state, Save, audio, currentRun: () => currentRun, DIFFICULTIES };
-console.log('[pvz] Phase 2 boot complete. Use window.__pvz for debug.');
+window.__pvz = {
+  state,
+  Save,
+  audio,
+  Cards,
+  currentRun: () => currentRun,
+  DIFFICULTIES,
+};
+console.log('[pvz] Phase 4 boot complete. Use window.__pvz for debug.');
+console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

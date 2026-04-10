@@ -5,6 +5,43 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.4.0 — 2026-04-10 — Phase 4: Card Data Model
+
+### Added
+- **39 cards** defined as data, ready for the Phase 5 shop to consume:
+  - **14 standard cards**: 6 plants (Seedling Scrubber → Solar Archon), 6 spells (Barkskin Guard → Solar Flare), 2 standard economy plants (Sunflower, Gilded Rose)
+  - **19 pack-exclusive cards**: 6 Mythic, 7 Arcane, 6 Frenzy — including pack-tier economy plants (Amber Grain, Crystal Fern, Midas Mandrake)
+  - **6 Aether-Root spells**: Sap-Mend, Grove-Shield, Thorn-Pulse, Photosynthetic Burst, Nature's Wrath, Verdant Rebirth
+- **`docs/js/cards/rarities.js`** — 6 rarity tiers with colors, drop weights, cost/sell ranges
+- **`docs/js/cards/packs.js`** — 3 pack tiers with cost, card count, drop weights, pity rules
+- **`docs/js/cards/standard.js`** — Standard shop pool (14 cards)
+- **`docs/js/cards/packExclusives.js`** — All Mythic/Arcane/Frenzy cards (19 cards)
+- **`docs/js/cards/aetherRoot.js`** — 6 player-active side-panel spells
+- **`docs/js/cards/validate.js`** — Sanity-checks at boot (duplicate IDs, missing fields, invalid rarity/category, pack weight sums, missing legendaries for pity)
+- **`docs/js/cards/index.js`** — Public API:
+  - Query: `getCard(id)`, `getCardsByRarity(r)`, `getCardsByCategory(c)`, `getCardsByPack(p)`, `getShopEligibleCards()`, `getAetherRootSpells()`
+  - Random: `rollShopCard()`, `rollShopCards(n)`, `rollPackCards(packId, pityState)`, `rollCost(card)`, `rollSell(card)`
+  - Format: `formatCardStats(card)`, `formatCardLabel(card)`
+  - Pity: Frenzy pack guarantees one Epic+; every 5th Frenzy guarantees a Legendary
+
+### Validated
+- 1000 sample shop rolls match configured rarity weights within ~1.5%
+- Frenzy pack pity reliably drops a Legendary on the 5th open
+- Every Frenzy pack contains at least one Epic+ card
+- All 39 cards have unique IDs, valid rarities, and complete required fields
+
+### Changed
+- Phase badge advances to "Phase 4 — Card Data"
+- Version label bumped to v0.4.0
+- `window.__pvz` debug object now exposes the entire `Cards` namespace
+
+### Notes
+- Pack-exclusive cards have `cost: null` since they're never directly purchasable from the regular shop
+- Aether-Root spells use `cooldown` (or `oncePerRound`) instead of cost since they're cast for free during combat
+- Card abilities are stored as semi-structured descriptors (e.g., `{ type: 'slow_on_hit', percent: 0.5, duration: 2.0 }`) for the Phase 7 combat engine to interpret
+
+---
+
 ## v0.3.0 — 2026-04-10 — Phase 3: Round Flow & Game Over
 
 ### Added

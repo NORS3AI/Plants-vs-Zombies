@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 4 — Card Data Model** (Phase 3 complete)
+> **Current Phase:** **Phase 5 — Shop Mode** (Phase 4 complete)
 
 ---
 
@@ -88,22 +88,25 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 4 — Card Data Model
+## Phase 4 — Card Data Model ✅
 
 **Goal:** Define the data layer for all cards before any combat is wired up.
 
-- [ ] Card schema (id, name, rarity, type, cost, sell, stats, ability, attack pattern)
-- [ ] Rarity config (colors, drop weights, cost ranges, sell ranges)
-- [ ] Standard plant roster (6 cards: Trash → Legendary)
-- [ ] Standard spell roster (6 spells)
-- [ ] Mythic pack-exclusive roster
-- [ ] Arcane pack-exclusive roster
-- [ ] Frenzy pack-exclusive roster
-- [ ] Economy plants (Sunflower, Gilded Rose, Amber Grain, Crystal Fern, Midas Mandrake)
-- [ ] Aether-Root spell roster (6 spells)
-- [ ] Card data validation tests
+- [x] Card schema (id, name, rarity, type, cost, sell, stats, ability, attack pattern)
+- [x] Rarity config (colors, drop weights, cost ranges, sell ranges)
+- [x] Pack config (Mythic/Arcane/Frenzy with pity rules)
+- [x] Standard plant roster (6 cards: Trash → Legendary)
+- [x] Standard spell roster (6 spells)
+- [x] Mythic pack-exclusive roster (6 cards)
+- [x] Arcane pack-exclusive roster (7 cards)
+- [x] Frenzy pack-exclusive roster (6 cards)
+- [x] Economy plants (Sunflower, Gilded Rose, Amber Grain, Crystal Fern, Midas Mandrake)
+- [x] Aether-Root spell roster (6 spells)
+- [x] Query API: getCard, getCardsByRarity, getCardsByCategory, getCardsByPack
+- [x] Random helpers: rollShopCard(s), rollPackCards (with Frenzy pity)
+- [x] Card data validation (validateCards / validateAndLog at boot)
 
-**Exit Criteria:** All cards exist as data and can be queried by id/rarity/pack.
+**Exit Criteria:** All 39 cards exist as data and can be queried by id/rarity/pack. Validation passes cleanly. Sample shop rolls and pack rolls produce expected distributions. ✅
 
 ---
 
