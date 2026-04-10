@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 5 — Shop Mode</div>
+    <div id="phase-badge">Phase 6 — Placement</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.5.0 — Phase 5</p>
+        <p class="version">v0.6.0 — Phase 6</p>
       </div>
     </section>
 
@@ -68,14 +68,14 @@
         <section class="shop-section">
           <h3 class="shop-section-title">Your Deck (<span id="deck-count">0</span> / 10)</h3>
           <div class="deck-inventory" id="deck-inventory"></div>
-          <p class="shop-hint">Tap a deck card to sell it.</p>
+          <p class="shop-hint">Tap a card to select it for placement. Tap the "Sell" pill to sell.</p>
         </section>
 
         <!-- Battlefield grid -->
         <section class="shop-section">
           <h3 class="shop-section-title">Battlefield</h3>
           <div id="grid-container" class="grid-wrap"></div>
-          <p class="shop-hint">Phase 6 will let you drag deck cards onto the grid.</p>
+          <p class="shop-hint">Tap an empty tile while a card is selected to place it. Tap a placed card to set targeting or remove.</p>
         </section>
 
         <button class="btn btn-primary btn-pulse start-round-btn" data-action="start-countdown">Start Round →</button>

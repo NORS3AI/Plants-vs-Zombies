@@ -21,7 +21,10 @@ import { RARITIES, formatCardStats } from '../cards/index.js';
  *   - sellValue?: number — show "Sell: X" tag (deck inventory)
  *   - sold?: boolean — gray out, mark sold
  *   - small?: boolean — compact mode for deck inventory
- *   - onClick?: (card) => void — click handler
+ *   - isSelected?: boolean — visual "currently selected for placement"
+ *   - isPlaced?: boolean — visual "already placed on grid"
+ *   - onClick?: (card) => void — main card body click
+ *   - onSell?: (card) => void — "Sell" pill click (stops propagation)
  * @returns {HTMLElement}
  */
 export function renderCard(card, options = {}) {
@@ -29,6 +32,8 @@ export function renderCard(card, options = {}) {
   el.className = `card card-rarity-${card.rarity}`;
   if (options.small) el.classList.add('card-small');
   if (options.sold) el.classList.add('card-sold');
+  if (options.isSelected) el.classList.add('card-selected');
+  if (options.isPlaced) el.classList.add('card-placed');
   if (card.rarity === 'legendary') el.classList.add('card-legendary-shine');
   el.dataset.cardId = card.id;
 
@@ -50,7 +55,9 @@ export function renderCard(card, options = {}) {
   typeRow.className = 'card-type-row';
   const rarityLabel = RARITIES[card.rarity]?.label ?? card.rarity;
   const typeIcon = card.type === 'plant' ? '🌱' : '✨';
-  typeRow.innerHTML = `<span>${typeIcon} ${rarityLabel}</span>`;
+  const typeSpan = document.createElement('span');
+  typeSpan.textContent = `${typeIcon} ${rarityLabel}`;
+  typeRow.appendChild(typeSpan);
   body.appendChild(typeRow);
 
   if (!options.small) {
@@ -67,7 +74,7 @@ export function renderCard(card, options = {}) {
 
   el.appendChild(body);
 
-  // Footer (cost / sell value)
+  // Footer (cost / sell value / sell button)
   if (options.cost != null || options.sellValue != null) {
     const footer = document.createElement('div');
     footer.className = 'card-footer';
@@ -77,10 +84,22 @@ export function renderCard(card, options = {}) {
       tag.textContent = options.sold ? 'SOLD' : `${options.cost} gold`;
       footer.appendChild(tag);
     } else if (options.sellValue != null) {
-      const tag = document.createElement('span');
-      tag.className = 'card-sell';
-      tag.textContent = `Sell: ${options.sellValue}g`;
-      footer.appendChild(tag);
+      if (options.onSell) {
+        // Interactive sell pill
+        const sellBtn = document.createElement('button');
+        sellBtn.className = 'card-sell-btn';
+        sellBtn.textContent = `Sell ${options.sellValue}g`;
+        sellBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          options.onSell(card);
+        });
+        footer.appendChild(sellBtn);
+      } else {
+        const tag = document.createElement('span');
+        tag.className = 'card-sell';
+        tag.textContent = `Sell: ${options.sellValue}g`;
+        footer.appendChild(tag);
+      }
     }
     el.appendChild(footer);
   }
@@ -90,6 +109,24 @@ export function renderCard(card, options = {}) {
     el.addEventListener('click', () => options.onClick(card, el));
   }
 
+  return el;
+}
+
+/**
+ * Build a tiny card icon suitable for rendering inside a grid tile.
+ * Just shows the first letter + rarity border.
+ */
+export function renderGridCardIcon(card) {
+  const el = document.createElement('div');
+  el.className = `grid-card grid-card-rarity-${card.rarity}`;
+  const icon = document.createElement('div');
+  icon.className = 'grid-card-icon';
+  icon.textContent = card.type === 'plant' ? '🌱' : '✨';
+  el.appendChild(icon);
+  const label = document.createElement('div');
+  label.className = 'grid-card-label';
+  label.textContent = card.name.split(' ')[0]; // First word
+  el.appendChild(label);
   return el;
 }
 

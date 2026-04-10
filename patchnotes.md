@@ -5,6 +5,47 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.6.0 — 2026-04-10 — Phase 6: Grid Placement
+
+### Added
+- **`docs/js/ui/placement.js`** — Full placement module:
+  - Module-scoped selection state (`_selection`)
+  - Click deck card → select for placement (highlight)
+  - Click same deck card / press Escape / leave shop → deselect
+  - Click empty grid tile while selected → place card, clear selection
+  - Click placed grid card → opens a modal with:
+    - Full stats + description
+    - Targeting buttons (🎯 First / 💪 Strongest / 🩸 Weakest) — only for damage-dealing plants
+    - Remove button (returns card to deck inventory)
+    - Close button
+  - **Sunflower → Gilded Rose auto-merge** when a 3rd Sunflower is placed. Removes all 3 sunflower instances, creates a fresh Gilded Rose instance at the anchor tile, plays `go` SFX + success toast.
+  - Sell-pill button added to each deck card (separate from the main click-to-select handler).
+- **Grid rendering upgrades** (`docs/js/game/grid.js` via placement module):
+  - Placed cards are painted as small icons on their tiles
+  - Valid-placement tiles get a dashed gold outline when in selection mode
+  - Tile click callback delegates to placement logic
+- **`renderGridCardIcon(card)`** helper in `cardView.js` — compact icon for in-tile rendering.
+- **Deck inventory** now shows **only unplaced cards**. Placed cards are visible on their grid tiles instead. An empty deck shows a friendly "all cards placed" hint.
+- **Escape key handler** on the SHOP state clears placement selection without leaving the screen.
+- **SHOP.exit** lifecycle hook clears placement selection when leaving the shop (prevents stale selection on re-entry).
+
+### Fixed (Phase 5 audit follow-ups)
+- **Bug 1:** `startNewRun` now deep-copies `DEFAULT_RUN` so all schema fields (shopRoll, shopRollRound, aetherSpells, packsOpened) are initialized on fresh runs. Previously only Phase 3 fields were set; Phase 5 fields existed only by defensive init.
+- **Bug 2:** `buyPack` no longer pre-flight-blocks when deck is full. Aether-Root spells routed to their own inventory always get saved. Regular cards that would overflow are dropped with a warning toast so the player knows to sell first.
+- **Dead code:** Removed unused `added` tracker variable in `buyPack`.
+
+### Changed
+- `renderCard` gains `isSelected`, `isPlaced`, `onSell` options.
+- `shop.renderShop()` no longer renders the deck inventory (moved to `placement.renderPlacement()`).
+- Phase badge advances to "Phase 6 — Placement". Version bumped to v0.6.0.
+
+### Notes
+- Sunflower merge picks the most recently placed Sunflower as the anchor (where the Gilded Rose appears). The other two Sunflower tiles become empty.
+- Drag-and-drop placement was deferred — click-to-place covers both mobile and desktop cleanly.
+- Targeting is only editable via the placed-card modal (per-card, post-placement). The spec suggested pre-placement targeting; this approach feels more natural and matches card-game patterns.
+
+---
+
 ## v0.5.0 — 2026-04-10 — Phase 5: Shop Mode
 
 ### Added

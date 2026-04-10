@@ -729,6 +729,130 @@ html, body {
   animation: fadeIn 0.2s ease;
 }
 
+.shop-toast-success {
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+/* ---------- Card Sell Button (Phase 6) ---------- */
+.card-sell-btn {
+  background: transparent;
+  border: 1px solid var(--accent-green);
+  color: var(--accent-green);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-sell-btn:hover {
+  background: var(--accent-green);
+  color: var(--bg-base);
+}
+
+/* ---------- Selected deck card (Phase 6 placement) ---------- */
+.card-selected {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  transform: translateY(-4px);
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.4);
+}
+
+.card-placed { opacity: 0.5; pointer-events: none; }
+
+/* ---------- Valid placement tile highlight ---------- */
+.grid-tile.placement-valid {
+  outline: 2px dashed var(--accent);
+  outline-offset: -3px;
+  background: rgba(212, 175, 55, 0.1);
+  cursor: pointer;
+}
+
+.grid-tile.placement-valid:hover {
+  background: rgba(212, 175, 55, 0.25);
+}
+
+.grid-tile.tile-has-card {
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* ---------- Grid Card Icon (placed card on tile) ---------- */
+.grid-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--bg-elev);
+  border-radius: 4px;
+  overflow: hidden;
+  border-top: 3px solid var(--border);
+}
+
+.grid-card-rarity-trash     { border-top-color: var(--rarity-trash); }
+.grid-card-rarity-common    { border-top-color: var(--rarity-common); }
+.grid-card-rarity-uncommon  { border-top-color: var(--rarity-uncommon); }
+.grid-card-rarity-rare      { border-top-color: var(--rarity-rare); }
+.grid-card-rarity-epic      { border-top-color: var(--rarity-epic); }
+.grid-card-rarity-legendary {
+  border-top-color: var(--rarity-legendary);
+  background: linear-gradient(135deg, var(--bg-elev), rgba(212, 175, 55, 0.15));
+}
+
+.grid-card-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.grid-card-label {
+  font-size: 0.55rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Placed Card Modal ---------- */
+.placed-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-bottom: 0.5rem;
+}
+
+.placed-modal-stats {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.placed-modal-desc {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.placed-modal-targeting {
+  color: var(--fg-base);
+  font-size: 0.9rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* The targeting modal buttons are a 3x3 (ish) grid for tighter layout */
+.placed-modal-body + .modal-actions {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* ---------- Grid (5x12) ---------- */
 .grid-wrap {
   display: flex;

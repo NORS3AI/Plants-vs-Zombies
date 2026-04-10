@@ -74,14 +74,15 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 - [x] Aether-Root spells from packs go to separate inventory
 
 ### 2.3 Grid Placement
-- [ ] 5×12 grid renderer
-- [ ] Drag-and-drop card placement
-- [ ] Tap-to-select then tap-to-place
-- [ ] Highlight valid placement tiles
-- [ ] Aether-Root pinned to far-left column
-- [ ] Per-card targeting dropdown (First / Strongest / Weakest)
-- [ ] Move/remove placed cards before countdown
-- [ ] Confirm placement button → starts countdown
+- [x] 5×12 grid renderer
+- [ ] Drag-and-drop card placement (deferred — click-to-place covers both)
+- [x] Tap-to-select then tap-to-place
+- [x] Highlight valid placement tiles
+- [x] Aether-Root pinned to far-left column
+- [x] Per-card targeting buttons (First / Strongest / Weakest) via modal
+- [x] Move/remove placed cards before countdown (via placed-card modal)
+- [x] Confirm placement button → starts countdown (existing "Start Round" flow)
+- [x] Auto-merge 3 Sunflowers → Gilded Rose
 
 ---
 

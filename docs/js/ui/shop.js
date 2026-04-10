@@ -193,14 +193,9 @@ export async function buyPack(run, packId) {
     return false;
   }
 
-  // Note: pack contents may include Aether-Root spells, which go to a
-  // separate inventory and don't count toward MAX_DECK_SIZE. We still
-  // require at least 1 deck slot free as a safety check.
-  if (run.deck.length >= MAX_DECK_SIZE) {
-    flashError(`Deck full (${MAX_DECK_SIZE} max)`);
-    _audio?.playSfx('back');
-    return false;
-  }
+  // No pre-flight deck-full check: pack contents may be all Aether-Root
+  // spells (which go to a separate inventory). We distribute carefully
+  // below and warn if deck overflow causes drops.
 
   // Pre-increment the pity counter, then roll
   run.gold -= pack.cost;
@@ -220,23 +215,24 @@ export async function buyPack(run, packId) {
   }
 
   // Distribute: deck cards capped at MAX_DECK_SIZE, Aether-Root spells go
-  // to the side panel inventory. If deck would overflow, drop extras
-  // (this is rare; the safety check above usually prevents it).
-  const added = { deck: [], aether: [] };
+  // to the side panel inventory. Track overflow drops to warn the player.
+  let droppedCount = 0;
   for (const card of cards) {
     if (card.category === 'aether_root') {
       addToAetherSpells(run, card);
-      added.aether.push(card);
     } else if (run.deck.length < MAX_DECK_SIZE) {
       addToDeck(run, card);
-      added.deck.push(card);
     } else {
-      // Deck full, can't fit — leave the card out (rare edge case)
+      droppedCount++;
     }
   }
 
   _audio?.playSfx('go');
   _onChange?.();
+
+  if (droppedCount > 0) {
+    flashError(`Deck full — ${droppedCount} card${droppedCount > 1 ? 's' : ''} lost. Sell some cards first.`);
+  }
 
   // Show pack-opening modal
   await showPackRevealModal(pack, cards);
@@ -278,14 +274,13 @@ function escapeHtml(s) {
 // ============================================================
 
 /**
- * Render the entire shop UI into its host elements.
- * Called whenever the run changes (after buy/sell/refresh/etc).
+ * Render the shop UI (cards + pack chests + refresh button).
+ * Deck inventory + grid are rendered by placement.js since Phase 6.
  */
 export function renderShop(run) {
   ensureShopRollForRound(run);
   renderShopCards(run);
   renderPackRow(run);
-  renderDeckInventory(run);
   updateRefreshButton(run);
 }
 
@@ -316,33 +311,6 @@ function renderPackRow(run) {
       opened,
       disabled: run.gold < pack.cost,
       onClick: () => buyPack(run, id),
-    });
-    host.appendChild(el);
-  }
-}
-
-function renderDeckInventory(run) {
-  const host = document.getElementById('deck-inventory');
-  const countEl = document.getElementById('deck-count');
-  if (countEl) countEl.textContent = String(run.deck.length);
-  if (!host) return;
-  host.innerHTML = '';
-
-  if (run.deck.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'deck-empty';
-    empty.textContent = 'Deck empty — buy cards above to start building';
-    host.appendChild(empty);
-    return;
-  }
-
-  for (const instance of run.deck) {
-    const card = getCard(instance.cardId);
-    if (!card) continue;
-    const el = renderCard(card, {
-      sellValue: instance.sellValue,
-      small: true,
-      onClick: () => sellDeckCard(run, instance.instanceId),
     });
     host.appendChild(el);
   }

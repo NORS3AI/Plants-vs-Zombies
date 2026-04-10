@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 6 — Grid Placement** (Phase 5 complete)
+> **Current Phase:** **Phase 7 — Combat Engine** (Phase 6 complete)
 
 ---
 
@@ -135,20 +135,23 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 6 — Grid Placement
+## Phase 6 — Grid Placement ✅
 
 **Goal:** Player can place cards on the 5×12 grid before combat begins.
 
-- [ ] Drag-and-drop placement
-- [ ] Tap-select then tap-place (touch-friendly fallback)
-- [ ] Valid-tile highlighting
-- [ ] Aether-Root anchor (far-left column locked)
-- [ ] Per-card targeting dropdown (First / Strongest / Weakest)
-- [ ] Move/remove placed cards before countdown
-- [ ] Confirm Placement → Start Game button
-- [ ] Auto-merge logic for 3 Sunflowers → Gilded Rose
+- [ ] Drag-and-drop placement (deferred — click-to-place covers mobile + desktop)
+- [x] Tap-select then tap-place (touch-friendly)
+- [x] Valid-tile highlighting when a card is selected
+- [x] Aether-Root anchor (far-left, not part of the 60 tiles)
+- [x] Per-card targeting buttons (First / Strongest / Weakest) via placed-card modal
+- [x] Move/remove placed cards before countdown (via placed-card modal)
+- [x] Confirm Placement → Start Game button (already wired to countdown)
+- [x] Auto-merge logic for 3 Sunflowers → Gilded Rose
+- [x] Escape key clears pending selection
+- [x] Placed cards show as icons on their tiles with rarity-colored borders
+- [x] Sunflower merge plays `go` SFX + shows success toast
 
-**Exit Criteria:** Player can build a board, set targeting, and trigger the countdown.
+**Exit Criteria:** Player can build a board, set targeting, and trigger the countdown. ✅
 
 ---
 

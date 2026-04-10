@@ -13,7 +13,7 @@ const ROUNDS_TOTAL = 10; // Standard mode runs to round 10; Endless ignores this
 
 import { StateMachine, STATES } from './game/state.js';
 import { GameLoop } from './game/loop.js';
-import { Save } from './game/save.js';
+import { Save, DEFAULT_RUN } from './game/save.js';
 import { renderGrid } from './game/grid.js';
 import { getDifficulty, DIFFICULTIES } from './game/difficulty.js';
 import { AudioManager } from './game/audio.js';
@@ -21,6 +21,7 @@ import { ScreenManager } from './ui/screens.js';
 import { confirmModal } from './ui/modal.js';
 import * as Cards from './cards/index.js';
 import * as Shop from './ui/shop.js';
+import * as Placement from './ui/placement.js';
 
 // Validate the card database at boot (logs errors/warnings to console)
 Cards.validateAndLog();
@@ -62,15 +63,18 @@ function applySettings(settings) {
 const settings = Save.loadSettings();
 applySettings(settings);
 
-// Initialize shop module with audio + run-mutation callback
-Shop.initShop({
-  audio,
-  onChange: () => {
-    if (currentRun) Save.saveRun(currentRun);
-    syncHUD();
-    if (state.current === STATES.SHOP) Shop.renderShop(currentRun);
-  },
-});
+// Initialize shop + placement with audio + run-mutation callback
+function onRunChange() {
+  if (currentRun) Save.saveRun(currentRun);
+  syncHUD();
+  if (state.current === STATES.SHOP) {
+    Shop.renderShop(currentRun);
+    Placement.renderPlacement(currentRun);
+  }
+}
+
+Shop.initShop({ audio, onChange: onRunChange });
+Placement.initPlacement({ audio, onChange: onRunChange });
 
 // ---------- HUD Sync ----------
 function formatRound(run) {
@@ -122,8 +126,14 @@ state.register(STATES.SHOP, {
   enter() {
     screens.show('shop');
     syncHUD();
-    renderGrid(document.getElementById('grid-container'));
-    if (currentRun) Shop.renderShop(currentRun);
+    if (currentRun) {
+      Shop.renderShop(currentRun);
+      Placement.renderPlacement(currentRun);
+    }
+  },
+  exit() {
+    // Drop any pending placement selection when leaving the shop screen
+    if (currentRun) Placement.clearSelection(currentRun);
   },
 });
 
@@ -264,19 +274,12 @@ function startNewRun(difficultyId) {
     const meta = Save.loadMeta();
     if (!(d.id === 'endless' && meta.endlessUnlocked)) return;
   }
-  currentRun = {
-    difficulty: d.id,
-    round: 1,
-    gold: d.startGold,
-    aetherRootHP: d.playerHP,
-    aetherRootMaxHP: d.playerHP,
-    deck: [],
-    grid: [],
-    totalKills: 0,
-    totalGoldEarned: 0,
-    totalPlantsLost: 0,
-    lastRoundStats: null,
-  };
+  // Deep-copy DEFAULT_RUN so nested objects/arrays aren't shared across runs
+  currentRun = JSON.parse(JSON.stringify(DEFAULT_RUN));
+  currentRun.difficulty = d.id;
+  currentRun.gold = d.startGold;
+  currentRun.aetherRootHP = d.playerHP;
+  currentRun.aetherRootMaxHP = d.playerHP;
   Save.saveRun(currentRun);
   state.transition(STATES.SHOP);
 }
@@ -499,6 +502,13 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Escape clears placement selection (if in shop)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.current === STATES.SHOP && currentRun) {
+    Placement.clearSelection(currentRun);
+  }
+});
+
 // Settings change handlers
 document.addEventListener('change', (e) => {
   if (e.target.id === 'setting-theme') {
@@ -565,8 +575,9 @@ window.__pvz = {
   audio,
   Cards,
   Shop,
+  Placement,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 5 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 6 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
