@@ -32,10 +32,19 @@ const SPELL_ICONS = {
   verdant_rebirth: '🌱',
 };
 
-// Pixel sizing (must match main.css .grid-tile size)
-const TILE_PX = 56;
-const TILE_GAP_PX = 4;
-const MOBILE_TILE_PX = 40;
+// Pixel sizing — read live from the CSS custom properties so a single
+// breakpoint in main.css drives all grid layout math.
+function readTileMetrics() {
+  const styles = getComputedStyle(document.documentElement);
+  const parse = (v, fallback) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  return {
+    tilePx: parse(styles.getPropertyValue('--tile-size'), 56),
+    gapPx: parse(styles.getPropertyValue('--tile-gap'), 4),
+  };
+}
 
 let _hostEl = null;
 let _gridEl = null;
@@ -126,19 +135,14 @@ function findTile(row, col) {
   return _gridEl.querySelector(`.grid-tile[data-row="${row}"][data-col="${col}"]`);
 }
 
-/** Figure out the current tile pixel size (handles mobile). */
-function currentTileSize() {
-  return window.innerWidth <= 900 ? MOBILE_TILE_PX : TILE_PX;
-}
-
 /**
  * Render one frame based on the current combat state.
  * Called from the game loop every frame while in COMBAT.
  */
 export function renderCombatFrame(state) {
   if (!state || !_overlayEl) return;
-  const tilePx = currentTileSize();
-  const step = tilePx + TILE_GAP_PX;
+  const { tilePx, gapPx } = readTileMetrics();
+  const step = tilePx + gapPx;
 
   // ---------- Plants: HP bars + attack flash ----------
   for (const plant of state.plants) {

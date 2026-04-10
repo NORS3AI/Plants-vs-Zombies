@@ -36,6 +36,11 @@ ul, ol { list-style: none; }
   --rarity-rare: #60a5fa;
   --rarity-epic: #a855f7;
   --rarity-legendary: #d4af37;
+
+  /* Tile sizing — single source of truth, overridden on mobile */
+  --tile-size: 56px;
+  --tile-gap: 4px;
+  --aether-width: 80px;
 }
 
 /* ---------- Theme: Light ---------- */
@@ -64,15 +69,31 @@ html, body {
   color: var(--fg-base);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  /* Prevent double-tap zoom on iOS and pinch-zoom interfering with gameplay */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
   position: relative;
   width: 100vw;
   height: 100vh;
+  /* Use dynamic viewport height on mobile browsers that support it so
+     the address bar doesn't clip the layout. Falls back to 100vh. */
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Global touch-target minimum for all buttons */
+button {
+  min-height: 44px;
+}
+
+/* Inputs should inherit readable sizing + prevent iOS zoom on focus */
+input, select, textarea {
+  font-size: 16px; /* Prevents iOS auto-zoom on focus */
 }
 
 /* ---------- Phase Badge (dev indicator) ---------- */
@@ -970,16 +991,6 @@ html, body {
   transform: translateY(-1px);
 }
 
-/* Mobile: full-width at bottom */
-@media (max-width: 640px) {
-  .tutorial-popup {
-    right: 16px;
-    left: 16px;
-    bottom: 16px;
-    width: auto;
-  }
-}
-
 /* ---------- Shop Toast (error flash) ---------- */
 .shop-toast {
   position: fixed;
@@ -1141,9 +1152,9 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  width: 80px;
-  min-width: 80px;
-  height: calc(5 * 56px + 4 * 4px);
+  width: var(--aether-width);
+  min-width: var(--aether-width);
+  height: calc(5 * var(--tile-size) + 4 * var(--tile-gap));
   background: radial-gradient(circle, rgba(74, 222, 128, 0.2), transparent);
   border: 2px solid var(--accent-green);
   border-radius: 12px;
@@ -1166,14 +1177,14 @@ html, body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(12, 56px);
-  grid-template-rows: repeat(5, 56px);
-  gap: 4px;
+  grid-template-columns: repeat(12, var(--tile-size));
+  grid-template-rows: repeat(5, var(--tile-size));
+  gap: var(--tile-gap);
 }
 
 .grid-tile {
-  width: 56px;
-  height: 56px;
+  width: var(--tile-size);
+  height: var(--tile-size);
   border: 1px solid var(--grid-border);
   border-radius: 6px;
   display: flex;
@@ -1638,16 +1649,14 @@ html, body {
   box-shadow: 0 0 8px rgba(192, 57, 43, 0.8);
 }
 
+/* Mid-width: boss banner shrinks + combat zombie sprites use the
+   responsive tile variables (no hardcoded sizes needed). */
 @media (max-width: 900px) {
   .boss-banner { min-width: 260px; padding: 0.4rem 0.6rem; gap: 0.5rem; }
   .boss-banner-hp-bar { width: 80px; }
-}
-
-/* Mobile: smaller tile sizes */
-@media (max-width: 900px) {
-  .combat-zombie { width: 40px; height: 40px; }
+  .combat-zombie { width: var(--tile-size); height: var(--tile-size); }
   .zombie-sprite { font-size: 1.5rem; }
-  .floating-text { width: 40px; height: 40px; font-size: 0.75rem; }
+  .floating-text { width: var(--tile-size); height: var(--tile-size); font-size: 0.75rem; }
 }
 
 /* ---------- Settings ---------- */
@@ -1812,12 +1821,267 @@ html, body {
   justify-content: flex-end;
 }
 
-/* ---------- Responsive ---------- */
+/* ============================================
+   RESPONSIVE / MOBILE
+   ============================================ */
+
+/* Tablets + small laptops: shrink tiles */
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(12, 40px); grid-template-rows: repeat(5, 40px); }
-  .grid-tile { width: 40px; height: 40px; }
-  .aether-root { width: 60px; min-width: 60px; height: calc(5 * 40px + 4 * 4px); }
+  :root {
+    --tile-size: 44px;
+    --aether-width: 64px;
+  }
   .aether-root::before { font-size: 2rem; }
-  .combat-main { flex-direction: column; }
-  .spell-panel { width: 100%; max-width: 400px; }
+  .combat-main { flex-direction: column; gap: 0.75rem; }
+  .spell-panel { width: 100%; max-width: 520px; }
+  .shop-main { padding: 0 0.5rem; }
+  .shop-cards { grid-template-columns: repeat(2, 1fr); }
+  .pack-chests { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  :root {
+    --tile-size: 32px;
+    --tile-gap: 3px;
+    --aether-width: 48px;
+  }
+  #app { padding: 0; }
+  /* All screens become scrollable on phones so game-over, victory, and
+     combat content never clips when it grows past viewport height. */
+  .screen {
+    padding: 1rem 0.75rem;
+    justify-content: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 3.5rem;
+    padding-bottom: 1rem;
+  }
+  .screen.screen-scrollable {
+    padding-top: 3.5rem;
+    padding-bottom: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  /* Menu and countdown stay centered */
+  #screen-menu, #screen-countdown {
+    justify-content: center;
+  }
+
+  /* Hide the dev phase badge on phones — it clutters the top corner */
+  #phase-badge { display: none; }
+
+  /* ----- Menu ----- */
+  .menu-stack { gap: 1rem; padding: 1rem 0; max-width: 100%; }
+  .menu-hero { gap: 1.25rem; }
+  .menu-buttons { min-width: 0; width: 100%; }
+  .menu-buttons .btn { width: 100%; }
+  .title { font-size: clamp(2rem, 9vw, 3rem); }
+  .subtitle { font-size: 1rem; letter-spacing: 0.1em; }
+  .title-sm { font-size: clamp(1.25rem, 5vw, 1.75rem); }
+
+  /* ----- Buttons ----- */
+  .btn {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    min-height: 48px; /* Larger touch target on phones */
+  }
+  .btn-small { padding: 0.5rem 0.9rem; font-size: 0.8rem; min-height: 40px; }
+
+  /* ----- Difficulty selection ----- */
+  .difficulty-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    max-width: 100%;
+  }
+  .diff-card { padding: 0.9rem 1rem; min-height: 72px; }
+  .diff-name { font-size: 1.1rem; }
+  .diff-meta { font-size: 0.8rem; }
+  .diff-mods { font-size: 0.65rem; }
+
+  /* ----- Shop ----- */
+  .shop-main {
+    max-width: 100%;
+    padding: 0;
+    gap: 1rem;
+  }
+  .shop-section { padding: 0.75rem 0.85rem; border-radius: 10px; }
+  .shop-section-title { font-size: 0.8rem; }
+  .shop-cards {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .shop-section-head { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .shop-section-head .btn { width: 100%; }
+  .card { min-height: 0; }
+  .card-body { padding: 0.6rem 0.75rem; }
+  .card-desc { font-size: 0.7rem; }
+  .card-footer { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
+  /* Packs: 3 columns but tighter */
+  .pack-chests { gap: 0.5rem; }
+  .pack-chest { padding: 0.85rem 0.5rem; gap: 0.3rem; }
+  .pack-icon { font-size: 1.8rem; }
+  .pack-name { font-size: 0.8rem; }
+  .pack-cost { font-size: 0.75rem; }
+  .pack-pity { font-size: 0.6rem; }
+
+  /* Deck inventory: 2 columns */
+  .deck-inventory {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  /* ----- Grid + Aether-Root (horizontal scroll safety) ----- */
+  .grid-wrap {
+    padding: 0.5rem;
+    gap: 0.4rem;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+  }
+  .aether-root::before { font-size: 1.5rem; }
+  .aether-label { font-size: 0.55rem; }
+
+  /* ----- Game header (HUD) ----- */
+  .game-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+  }
+  .hud-item .hud-label { font-size: 0.6rem; }
+  .hud-item span:last-child { font-size: 0.95rem; }
+  .pause-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 1rem; min-height: 34px; }
+
+  /* ----- Combat ----- */
+  .combat-main {
+    margin-top: 3rem;
+    padding: 0 0.25rem;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .spell-panel {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.6rem;
+    order: 2; /* spell panel below grid on mobile for thumb reach */
+  }
+  .spell-panel h4 { font-size: 0.75rem; margin-bottom: 0.35rem; }
+  .spell-slots {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .spell-slot {
+    flex: 1 1 calc(50% - 0.2rem);
+    min-width: 120px;
+    padding: 0.55rem;
+    min-height: 52px;
+  }
+  .spell-name { font-size: 0.72rem; }
+  .spell-icon { font-size: 1.2rem; }
+
+  .grid-wrap { order: 1; }
+  .combat-status { position: static; padding-top: 0.75rem; }
+
+  /* ----- Boss banner ----- */
+  .boss-banner {
+    min-width: 0;
+    width: calc(100% - 1.5rem);
+    max-width: none;
+    left: 0.75rem;
+    right: 0.75rem;
+    transform: translateY(-10px);
+    padding: 0.5rem 0.7rem;
+  }
+  .boss-banner.is-active { transform: translateY(0); }
+  .boss-banner-name { font-size: 0.85rem; }
+  .boss-banner-ability { font-size: 0.65rem; }
+  .boss-banner-hp-bar { width: 70px; }
+
+  /* ----- Round summary / Game over / Victory ----- */
+  .round-summary {
+    min-width: 0;
+    width: 100%;
+    padding: 1rem 1.25rem;
+  }
+  .summary-row { font-size: 0.9rem; }
+  .summary-value { font-size: 1rem; }
+  .summary-label { font-size: 0.7rem; }
+  .name-entry {
+    min-width: 0;
+    width: 100%;
+    padding: 0.85rem;
+  }
+
+  /* ----- Leaderboard ----- */
+  .leaderboard-stack { max-width: 100%; gap: 0.85rem; }
+  .leaderboard-table-wrap { padding: 0.5rem; }
+  .leaderboard-table { font-size: 0.8rem; }
+  .leaderboard-table thead th,
+  .leaderboard-table tbody td { padding: 0.45rem 0.4rem; }
+  /* Hide gold column on phones to save space */
+  .leaderboard-table .col-gold { display: none; }
+  .leaderboard-table .col-diff { font-size: 0.65rem; }
+
+  /* ----- Modals ----- */
+  .modal-dialog {
+    width: calc(100% - 1rem);
+    max-width: 420px;
+    padding: 1.25rem;
+  }
+  .modal-dialog-wide { max-width: calc(100% - 1rem); }
+  .modal-actions { flex-wrap: wrap; gap: 0.5rem; }
+  .modal-actions .btn { flex: 1 1 auto; min-width: 45%; }
+  .reveal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  /* ----- Combat zombie sprites ----- */
+  .combat-zombie { width: var(--tile-size); height: var(--tile-size); }
+  .zombie-sprite { font-size: 1.1rem; }
+  .combat-zombie.combat-boss { width: calc(var(--tile-size) * 1.3); height: calc(var(--tile-size) * 1.3); }
+
+  /* ----- Floating text ----- */
+  .floating-text { width: var(--tile-size); height: var(--tile-size); font-size: 0.65rem; }
+
+  /* ----- Grid card icon ----- */
+  .grid-card-icon { font-size: 0.85rem; }
+  .grid-card-label { font-size: 0.45rem; }
+
+  /* ----- Tutorial popup ----- */
+  .tutorial-popup { bottom: 12px; right: 12px; left: 12px; width: auto; padding: 0.85rem 1rem; }
+  .tutorial-popup-title { font-size: 0.85rem; }
+  .tutorial-popup-body { font-size: 0.78rem; }
+
+  /* ----- Shop toast ----- */
+  .shop-toast { bottom: 12px; left: 12px; right: 12px; transform: none; text-align: center; }
+
+  /* ----- Settings ----- */
+  .settings-list { min-width: 0; width: 100%; padding: 1rem; }
+  .setting-row { font-size: 0.9rem; }
+
+  /* ----- Countdown ----- */
+  @keyframes countdownZoom {
+    0% { font-size: 2rem; opacity: 0; transform: scale(0.5); }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { font-size: 8rem; opacity: 0; transform: scale(1.1); }
+  }
+}
+
+/* Very small phones (iPhone SE, etc.) */
+@media (max-width: 380px) {
+  :root {
+    --tile-size: 26px;
+    --tile-gap: 2px;
+    --aether-width: 40px;
+  }
+  .shop-section-title { font-size: 0.75rem; }
+  .card-name { font-size: 0.9rem; }
+  .pack-chest { padding: 0.6rem 0.3rem; }
+  .pack-icon { font-size: 1.5rem; }
+  .pack-name { font-size: 0.7rem; }
 }
