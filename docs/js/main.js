@@ -175,6 +175,10 @@ state.register(STATES.COMBAT, {
   enter() {
     screens.show('combat');
     syncHUD();
+    // Reset fast-forward speed to 1× at the start of every round so
+    // the button state matches the game state.
+    Combat.setSpeedMultiplier(1);
+    updateSpeedButton();
     if (!currentRun) return;
     Combat.initCombat(currentRun, {
       onGoldChange: () => syncHUD(),
@@ -210,8 +214,21 @@ state.register(STATES.COMBAT, {
   exit() {
     Combat.resetCombat();
     CombatView.resetCombatView();
+    Combat.setSpeedMultiplier(1);
   },
 });
+
+/**
+ * Sync the fast-forward button label to the current speed multiplier.
+ * Only meaningful while the combat screen is visible.
+ */
+function updateSpeedButton() {
+  const btn = document.getElementById('speed-btn');
+  if (!btn) return;
+  const speed = Combat.getSpeedMultiplier();
+  btn.textContent = speed === 1 ? '▶ 1×' : speed === 2 ? '▶▶ 2×' : '▶▶▶ 3×';
+  btn.classList.toggle('speed-active', speed > 1);
+}
 
 state.register(STATES.ROUND_END, {
   enter() {
@@ -642,6 +659,13 @@ document.addEventListener('click', (e) => {
       break;
     case 'refresh-shop':
       if (currentRun) Shop.refreshShop(currentRun);
+      break;
+    case 'toggle-speed':
+      // Only meaningful during idle combat, not countdown / shop
+      if (state.current === STATES.COMBAT) {
+        Combat.cycleSpeedMultiplier();
+        updateSpeedButton();
+      }
       break;
     case 'start-countdown':
       state.transition(STATES.COUNTDOWN);

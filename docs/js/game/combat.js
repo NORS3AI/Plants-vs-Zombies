@@ -39,10 +39,29 @@ export const GRID_ROWS = 5;
 let _state = null;
 let _run = null;
 let _callbacks = null;
+let _speedMultiplier = 1; // Player-controlled fast-forward (1x / 2x / 3x)
 
 /** Read-only accessor for the current combat state (used by combatView). */
 export function getCombatState() {
   return _state;
+}
+
+/** Get the current fast-forward multiplier (1, 2, or 3). */
+export function getSpeedMultiplier() {
+  return _speedMultiplier;
+}
+
+/** Set the fast-forward multiplier. Only values 1-5 are honored. */
+export function setSpeedMultiplier(n) {
+  const clamped = Math.max(1, Math.min(5, Math.floor(n)));
+  _speedMultiplier = clamped;
+  return _speedMultiplier;
+}
+
+/** Cycle 1 → 2 → 3 → 1. Returns the new multiplier. */
+export function cycleSpeedMultiplier() {
+  _speedMultiplier = _speedMultiplier >= 3 ? 1 : _speedMultiplier + 1;
+  return _speedMultiplier;
 }
 
 /** Fire an event callback by name. Safe no-op if no callback registered. */
@@ -160,6 +179,11 @@ export function resetCombat() {
 export function tickCombat(dt) {
   if (!_state || !_run) return;
   if (_state.phase === 'done') return;
+
+  // Apply fast-forward multiplier. All downstream ticks (plants, zombies,
+  // projectiles, floating text, aether cooldowns, beams) read from this
+  // scaled dt, so the whole simulation speeds up uniformly.
+  dt = dt * _speedMultiplier;
 
   _state.time += dt;
 

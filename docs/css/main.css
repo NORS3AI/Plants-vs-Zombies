@@ -310,6 +310,41 @@ input, select, textarea {
   transform: rotate(45deg);
 }
 
+/* Fast-forward button — sits just left of the pause button on combat */
+.speed-btn {
+  position: absolute;
+  top: 12px;
+  right: 58px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 0.75rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 11;
+  letter-spacing: 0.04em;
+}
+
+.speed-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.speed-btn.speed-active {
+  background: var(--accent);
+  color: var(--bg-base);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
+}
+
 .btn-danger {
   border-color: var(--accent-red);
   color: var(--accent-red);
@@ -2114,6 +2149,7 @@ input, select, textarea {
   .hud-item .hud-label { font-size: 0.6rem; }
   .hud-item span:last-child { font-size: 0.95rem; }
   .pause-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 1rem; min-height: 34px; }
+  .speed-btn { top: 6px; right: 48px; height: 34px; min-height: 34px; padding: 0 0.6rem; font-size: 0.7rem; }
 
   /* ----- Combat ----- */
   .combat-main {
