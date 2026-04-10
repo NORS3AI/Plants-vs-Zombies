@@ -5,6 +5,64 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.7.0 — 2026-04-10 — Phase 7: Combat Engine
+
+### Added
+- **`docs/js/game/combat.js`** — Full tick-based combat engine:
+  - Hydrates runtime plant state from `run.deck` placements
+  - Generates a spawn schedule via `zombies.js`
+  - Per-frame tick: spawns, plant casts, zombie movement, death handling, end checks
+  - Plant targeting: `first` / `strongest` / `weakest` priorities
+  - Attack patterns: forward (Phase 7), cone (3-row), side (falls back to forward for now)
+  - Plant–zombie melee: zombies block when adjacent, plants take damage on interval
+  - Aether-Root damage when a zombie reaches col 0
+  - Game-over / round-complete callbacks
+  - Economy plants (Sunflower) generate gold on cast during combat
+  - `healSurvivors()` restores plants to full HP between rounds
+- **`docs/js/game/zombies.js`** — Generic zombie type + spawn schedule:
+  - `zombieCountForRound` uses the planned [3, 6, 10, 15, 21, 28, 35, 42, 46, 50] progression
+  - `makeZombieType` applies difficulty multipliers (enemyHPMul / enemyDmgMul)
+  - `generateSpawnSchedule` round-robin rows, time-spread, sorted by spawn time
+  - Phase 8 will replace the generic "Shambling Husk" with round-specific named types and boss fights
+- **`docs/js/ui/combatView.js`** — Per-frame combat renderer:
+  - Builds static grid DOM once per COMBAT enter
+  - Places plant icons with HP bar overlays
+  - Creates/updates/removes zombie elements via a Map-based diff (no full re-render per frame)
+  - Absolute-positioned zombie sprites with `translate(col * tilePx, row * tilePx)`
+  - Floating gold text drifts upward and fades
+  - Plant attack flash (CSS class toggle on cast)
+  - Zombie walk animation (CSS keyframes) + attacking state visuals
+- **COMBAT state handler** in `main.js` now runs the engine:
+  - enter → `initCombat` + `initCombatView` with callbacks for HUD sync, damage SFX, round complete, game over
+  - update → `tickCombat(dt)`
+  - render → `renderCombatFrame(state)`
+  - exit → `resetCombat` + `resetCombatView`
+- **Damage SFX on Aether-Root hit**, **gameover SFX** on defeat
+- **CSS**: combat overlay, zombie sprites with walk/attack keyframes, plant HP bars, floating text drift animation, responsive mobile tile sizing
+
+### Removed
+- Debug "End Round" and "Take 10 Damage" buttons from combat screen — combat now ends rounds naturally via zombie depletion or Aether-Root death
+- `damageAetherRoot` helper in main.js — combat engine handles damage directly
+
+### Changed
+- `endRound` no longer accumulates totals into `totalKills`/`totalGoldEarned`/`totalPlantsLost` — combat engine writes directly to those fields during the round so mid-round game-overs show accurate totals
+- Phase badge advances to "Phase 7 — Combat". Version bumped to v0.7.0
+
+### Fixed (Phase 6 audit follow-ups)
+- Dead imports `GRID_ROWS`/`GRID_COLS` removed from `placement.js`
+- Dead export `onGlobalEscape` removed from `placement.js`
+
+### Verified
+- Headless simulation of round 1 with 3 plants (Ironroot, Cinder-Fern, Sunflower) completes in 45s sim time: 3 zombies spawn, 1 killed by plant fire, 1 plant killed by melee, Aether-Root takes 10 damage, Sunflower produces 8 gold across 4 casts. End state: VICTORY.
+
+### Notes
+- Phase 7 uses a single generic "Shambling Husk" zombie. Phase 8 adds all 10 round-specific types and bosses with unique abilities.
+- Status effects (slow, freeze, burn, stun, shields) are stubs — Phase 8 wires the plant ability descriptors into the combat pipeline.
+- Attack patterns for side / diagonal / backward currently fall back to forward. Phase 8 will specialize them when the bosses and splash plants arrive.
+- The combat view uses a Map-based DOM diff so only changing elements re-render per frame (60fps target).
+
+---
+
 ## v0.6.0 — 2026-04-10 — Phase 6: Grid Placement
 
 ### Added

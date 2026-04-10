@@ -19,11 +19,7 @@ import {
   rollSell,
   formatCardStats,
 } from '../cards/index.js';
-import {
-  renderGrid,
-  GRID_ROWS,
-  GRID_COLS,
-} from '../game/grid.js';
+import { renderGrid } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
 import { showModal, confirmModal } from './modal.js';
 
@@ -366,9 +362,4 @@ function renderGridWithPlacements(run) {
 
 export function getSelection() {
   return _selection;
-}
-
-/** Global click handler wires Escape/outside clicks to clearSelection. */
-export function onGlobalEscape(run) {
-  clearSelection(run);
 }

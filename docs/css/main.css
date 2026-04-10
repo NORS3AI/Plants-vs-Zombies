@@ -982,6 +982,148 @@ html, body {
   margin-bottom: 0.5rem;
 }
 
+/* Combat grid wrapper (static grid + absolute overlay for zombies) */
+.combat-grid-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.combat-grid { position: relative; z-index: 0; }
+
+.combat-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Zombie sprite (absolute-positioned within overlay) */
+.combat-zombie {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s linear;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.zombie-sprite {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  animation: zombieWalk 0.5s ease-in-out infinite alternate;
+}
+
+.combat-zombie.zombie-attacking .zombie-sprite {
+  animation: zombieAttack 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes zombieWalk {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-2px) rotate(2deg); }
+}
+
+@keyframes zombieAttack {
+  from { transform: scale(1) translateX(0); }
+  to   { transform: scale(1.05) translateX(-3px); }
+}
+
+.zombie-hp-bar {
+  width: 80%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.zombie-hp-fill {
+  height: 100%;
+  background: var(--accent-red);
+  transition: width 0.15s ease;
+}
+
+.zombie-hp-fill.zombie-hp-low { background: #7f1d1d; }
+
+/* Plant HP bar (inside grid-card) */
+.plant-hp-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.plant-hp-fill {
+  height: 100%;
+  background: var(--accent-green);
+  transition: width 0.15s ease;
+}
+
+.plant-hp-fill.plant-hp-low { background: #eab308; }
+
+.grid-card { position: relative; }
+
+/* Plant attack flash (when casting) */
+.grid-card.plant-attacking {
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);
+  transform: scale(1.08);
+  transition: all 0.1s ease;
+}
+
+.grid-card.plant-dead {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+/* Floating text (gold popups, damage numbers) */
+.floating-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  transition: transform 0.08s linear, opacity 0.08s linear;
+  will-change: transform, opacity;
+}
+
+.floating-text-gold { color: var(--accent); }
+.floating-text-red  { color: var(--accent-red); }
+
+.combat-status {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Mobile: smaller tile sizes */
+@media (max-width: 900px) {
+  .combat-zombie { width: 40px; height: 40px; }
+  .zombie-sprite { font-size: 1.5rem; }
+  .floating-text { width: 40px; height: 40px; font-size: 0.75rem; }
+}
+
 /* ---------- Settings ---------- */
 .settings-list {
   display: flex;

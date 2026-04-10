@@ -89,27 +89,28 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 3. Combat System
 
 ### 3.1 Auto-Combat Engine
-- [ ] Plant cast timer system (base 2.0s)
-- [ ] Per-card attack patterns (forward / backward / side / diagonal)
-- [ ] Multiple plants can focus-fire one zombie
-- [ ] Targeting priority logic (First / Strongest / Weakest)
-- [ ] Plant death removal
-- [ ] Health bars for plants (green) + shield bars (blue)
+- [x] Plant cast timer system (base 2.0s, uses `card.castTime`)
+- [~] Per-card attack patterns — forward + cone live; side/diagonal/backward fall back to forward in Phase 7
+- [x] Multiple plants can focus-fire one zombie
+- [x] Targeting priority logic (First / Strongest / Weakest)
+- [x] Plant death removal (combat state + deck placement)
+- [x] Health bars for plants (green/yellow threshold)
+- [ ] Shield bars (blue) — deferred to Phase 8 with status effects
 
 ### 3.2 Zombie System
-- [ ] Wave spawner with scaling formulas
-- [ ] Sub-wave logic (e.g., 5 zombies every 10s on later rounds)
-- [ ] Round-by-round zombie roster (Rounds 1–10)
-- [ ] Boss spawn after wave completion
-- [ ] Frenzy buff for remaining zombies during boss phase
-- [ ] Zombie attack animations
-- [ ] Gold drop popup on zombie death
+- [x] Wave spawner with scaling formulas (HP = 10 + round×10; DMG = 2 + round×3)
+- [x] Sub-wave logic (time-spread spawning window)
+- [~] Round-by-round zombie roster — generic "Shambling Husk" for all rounds in Phase 7; Phase 8 adds named types
+- [ ] Boss spawn after wave completion (Phase 8)
+- [ ] Frenzy buff for remaining zombies during boss phase (Phase 8)
+- [x] Zombie attack animations (CSS walk + attack keyframes)
+- [x] Gold drop popup on zombie death
 
 ### 3.3 Aether-Root (Mother Plant)
-- [ ] HP scales by difficulty
-- [ ] Damage taken when zombies reach left edge
-- [ ] Death = Game Over
-- [ ] Health UI prominently displayed
+- [x] HP scales by difficulty
+- [x] Damage taken when zombies reach left edge
+- [x] Death = Game Over
+- [x] Health UI prominently displayed (HUD with color thresholds)
 
 ### 3.4 Side-Panel Spells (Player Active)
 - [ ] **Sap-Mend** — Heal 10 HP (15s cooldown)

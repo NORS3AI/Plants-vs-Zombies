@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 6 — Placement</div>
+    <div id="phase-badge">Phase 7 — Combat</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
@@ -25,7 +25,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version">v0.6.0 — Phase 6</p>
+        <p class="version">v0.7.0 — Phase 7</p>
       </div>
     </section>
 
@@ -104,10 +104,7 @@
         </aside>
         <div id="grid-container-combat" class="grid-wrap"></div>
       </main>
-      <div class="combat-debug">
-        <button class="btn" data-action="end-round">End Round (debug)</button>
-        <button class="btn btn-danger" data-action="debug-damage">Take 10 Damage (debug)</button>
-      </div>
+      <div class="combat-status" id="combat-status"></div>
     </section>
 
     <!-- Screen: Round End -->

@@ -14,14 +14,15 @@ const ROUNDS_TOTAL = 10; // Standard mode runs to round 10; Endless ignores this
 import { StateMachine, STATES } from './game/state.js';
 import { GameLoop } from './game/loop.js';
 import { Save, DEFAULT_RUN } from './game/save.js';
-import { renderGrid } from './game/grid.js';
 import { getDifficulty, DIFFICULTIES } from './game/difficulty.js';
 import { AudioManager } from './game/audio.js';
+import * as Combat from './game/combat.js';
 import { ScreenManager } from './ui/screens.js';
 import { confirmModal } from './ui/modal.js';
 import * as Cards from './cards/index.js';
 import * as Shop from './ui/shop.js';
 import * as Placement from './ui/placement.js';
+import * as CombatView from './ui/combatView.js';
 
 // Validate the card database at boot (logs errors/warnings to console)
 Cards.validateAndLog();
@@ -166,7 +167,39 @@ state.register(STATES.COMBAT, {
   enter() {
     screens.show('combat');
     syncHUD();
-    renderGrid(document.getElementById('grid-container-combat'));
+    if (!currentRun) return;
+    Combat.initCombat(currentRun, {
+      onGoldChange: () => syncHUD(),
+      onAetherHit: () => {
+        syncHUD();
+        audio.playSfx('damage');
+      },
+      onPlantKilled: () => syncHUD(),
+      onRoundComplete: () => {
+        // Heal survivors and run the standard endRound flow
+        Combat.healSurvivors();
+        endRound();
+      },
+      onGameOver: () => {
+        audio.playSfx('gameover');
+        state.transition(STATES.GAME_OVER);
+      },
+    });
+    CombatView.initCombatView(
+      document.getElementById('grid-container-combat'),
+      currentRun,
+    );
+  },
+  update(dt) {
+    Combat.tickCombat(dt);
+  },
+  render() {
+    const s = Combat.getCombatState();
+    if (s) CombatView.renderCombatFrame(s);
+  },
+  exit() {
+    Combat.resetCombat();
+    CombatView.resetCombatView();
   },
 });
 
@@ -285,18 +318,17 @@ function startNewRun(difficultyId) {
 }
 
 /**
- * End the current round. Records lastRoundStats, increments round counter,
- * and either advances to ROUND_END or — if this was the final round on a
- * non-endless run — to GAME_OVER (treated as a victory in Phase 8+).
+ * End the current round. Snapshots the accumulated per-round stats
+ * (already populated by combat.js during the round) into lastRoundStats,
+ * resets per-round accumulators, increments round counter.
  *
- * Phase 3 has no real combat, so the per-round stats are zeros. The data
- * pipeline is in place for Phase 7's combat engine to populate.
+ * Totals (totalKills/totalGoldEarned/totalPlantsLost) are written
+ * directly by combat.js on each kill/death so that game-over mid-round
+ * still shows accurate totals.
  */
 function endRound() {
   if (!currentRun) return;
 
-  // Build the per-round summary from accumulators (zeros for now)
-  // In Phase 7+, the combat engine will populate these on the live run.
   const stats = {
     round: currentRun.round,
     goldEarned: currentRun.lastRoundGoldEarned ?? 0,
@@ -304,11 +336,8 @@ function endRound() {
     plantsLost: currentRun.lastRoundPlantsLost ?? 0,
   };
   currentRun.lastRoundStats = stats;
-  currentRun.totalGoldEarned += stats.goldEarned;
-  currentRun.totalKills += stats.kills;
-  currentRun.totalPlantsLost += stats.plantsLost;
 
-  // Reset per-round accumulators (Phase 7 will use these)
+  // Reset per-round accumulators
   currentRun.lastRoundGoldEarned = 0;
   currentRun.lastRoundKills = 0;
   currentRun.lastRoundPlantsLost = 0;
@@ -318,18 +347,6 @@ function endRound() {
   Save.saveRun(currentRun);
 
   state.transition(STATES.ROUND_END);
-}
-
-/** Apply damage to the Aether-Root. Triggers GAME_OVER at HP <= 0. */
-function damageAetherRoot(amount) {
-  if (!currentRun) return;
-  currentRun.aetherRootHP = Math.max(0, currentRun.aetherRootHP - amount);
-  Save.saveRun(currentRun);
-  syncHUD();
-  audio.playSfx('damage');
-  if (currentRun.aetherRootHP <= 0) {
-    state.transition(STATES.GAME_OVER);
-  }
 }
 
 function paintRoundSummary() {
@@ -469,12 +486,6 @@ document.addEventListener('click', (e) => {
     case 'start-countdown':
       state.transition(STATES.COUNTDOWN);
       break;
-    case 'end-round':
-      endRound();
-      break;
-    case 'debug-damage':
-      damageAetherRoot(10);
-      break;
     case 'next-round':
       // Round 10 victory check (Phase 3 stub — Phase 8 adds full victory screen)
       if (currentRun && currentRun.difficulty !== 'endless' && currentRun.round > ROUNDS_TOTAL) {
@@ -576,8 +587,10 @@ window.__pvz = {
   Cards,
   Shop,
   Placement,
+  Combat,
+  CombatView,
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] Phase 6 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] Phase 7 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

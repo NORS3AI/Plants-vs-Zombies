@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 7 — Combat Engine** (Phase 6 complete)
+> **Current Phase:** **Phase 8 — Rounds 1–10 Content** (Phase 7 complete)
 
 ---
 
@@ -155,24 +155,30 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 7 — Combat Engine (Auto-Combat)
+## Phase 7 — Combat Engine (Auto-Combat) ✅
 
 **Goal:** Plants and zombies fight automatically once the round starts.
 
-- [ ] Plant cast timer system (base 2.0s)
-- [ ] Per-card attack pattern (forward/backward/side/diagonal)
-- [ ] Targeting priority resolution (First / Strongest / Weakest)
-- [ ] Zombie spawn system with sub-wave timing
-- [ ] Zombie movement along lanes
-- [ ] Zombie melee on plants
-- [ ] Plant death (remove from grid)
-- [ ] Zombie death (gold popup, +gold)
-- [ ] Damage / heal / shield application pipeline
-- [ ] Status effects (slow, freeze, burn, stun, shield)
-- [ ] Aether-Root damage when zombies reach far-left
-- [ ] Game over on Aether-Root death
+- [x] Plant cast timer system (base 2.0s, respects `card.castTime`)
+- [x] Per-card attack pattern (forward implemented; cone uses 3-row target set; side falls back to forward for Phase 7; full patterns in Phase 8+)
+- [x] Targeting priority resolution (First / Strongest / Weakest)
+- [x] Zombie spawn system with per-round scaling and time-spread scheduling
+- [x] Zombie movement along lanes (continuous column position, tile-interpolated)
+- [x] Zombie melee on plants (blocked at tile-adjacency, periodic attacks)
+- [x] Plant death (remove from grid + deck placement)
+- [x] Zombie death (gold popup + gold gain)
+- [x] Damage pipeline (plants → zombies and zombies → plants)
+- [ ] Status effects (slow, freeze, burn, stun, shield) — deferred to Phase 8
+- [x] Aether-Root damage when zombies reach col 0
+- [x] Game over on Aether-Root death
+- [x] Economy plants (Sunflower) generate gold on cast during combat
+- [x] Plant HP bars + zombie HP bars
+- [x] Floating gold text on zombie kill and Sunflower cast
+- [x] Plant attack flash + zombie walk/attack animations
+- [x] Round end on all zombies cleared; plant HP restored between rounds
+- [x] Mid-round game-over preserves total kills/gold for the summary screen
 
-**Exit Criteria:** A full round can play out automatically with kills, gold, and death states working.
+**Exit Criteria:** A full round can play out automatically with kills, gold, and death states working. ✅
 
 ---
 
