@@ -2,7 +2,7 @@
 
 This document is the **master roadmap** for **Plants vs Zombies: Card Battler**. Each phase is a self-contained milestone with clear deliverables. Work proceeds top-to-bottom; later phases depend on earlier ones.
 
-> **Current Phase:** **Phase 2 — Main Menu & Settings** (Phase 1 complete)
+> **Current Phase:** **Phase 3 — Difficulty Selection & Round Flow** (Phase 2 complete)
 
 ---
 
@@ -42,22 +42,25 @@ This document is the **master roadmap** for **Plants vs Zombies: Card Battler**.
 
 ---
 
-## Phase 2 — Main Menu & Settings
+## Phase 2 — Main Menu & Settings ✅
 
 **Goal:** Player can launch the game and configure preferences.
 
-- [ ] Animated title screen
-- [ ] Start Game button (animated)
-- [ ] Settings panel UI
-- [ ] Dark/Light mode toggle (CSS variable swap)
-- [ ] Music On/Off toggle
-- [ ] Sounds On/Off toggle
-- [ ] Volume sliders
-- [ ] Save Game / Load Game / Reset Game buttons
-- [ ] Reset confirmation modal
-- [ ] Persist settings to localStorage
+- [x] Animated title screen (gradient shimmer + bob)
+- [x] Start Game button (pulsing animation)
+- [x] Settings panel UI
+- [x] Dark/Light mode toggle (CSS variable swap)
+- [x] Music On/Off toggle (wired to AudioManager)
+- [x] Sounds On/Off toggle (wired to AudioManager)
+- [x] Volume sliders (music + SFX, live updates)
+- [x] Save Game / Load Game (Resume) / Reset Game buttons
+- [x] Reset confirmation modal (custom modal system)
+- [x] Persist settings to localStorage
+- [x] Resume Game button (visible when save exists)
+- [x] In-game pause button → Settings (with Quit Run option)
+- [x] AudioManager with Web Audio API synthesized SFX (click, hover, tick, go, back)
 
-**Exit Criteria:** Settings persist across page reloads. Theme switches live.
+**Exit Criteria:** Settings persist across page reloads. Theme switches live. Audio toggles produce audible changes. ✅
 
 ---
 

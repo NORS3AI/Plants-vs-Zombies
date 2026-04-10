@@ -132,6 +132,43 @@ html, body {
   letter-spacing: -0.02em;
 }
 
+/* Animated title — gradient shimmer + gentle bob */
+.title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: titleBob 4s ease-in-out infinite;
+}
+
+.title-animated {
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    #f4d76e 25%,
+    var(--accent-red) 50%,
+    #f4d76e 75%,
+    var(--accent) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: titleShimmer 6s linear infinite;
+  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+}
+
+@keyframes titleShimmer {
+  to { background-position: 200% center; }
+}
+
+@keyframes titleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Hero spacing for menu */
+.menu-hero { gap: 2rem; }
+
 .subtitle {
   font-size: clamp(1.25rem, 3vw, 1.75rem);
   font-weight: 400;
@@ -196,6 +233,45 @@ html, body {
 
 .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #e5c050, var(--accent));
+}
+
+/* Pulsing call-to-action button */
+.btn-pulse {
+  position: relative;
+  box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
+  animation: btnPulse 2.4s ease-out infinite;
+}
+
+@keyframes btnPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+/* Pause button — top-right corner of in-game header */
+.pause-btn {
+  position: absolute;
+  top: 12px;
+  right: 64px;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 1.1rem;
+  color: var(--fg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 11;
+}
+
+.pause-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: rotate(45deg);
 }
 
 .btn-danger {
@@ -468,6 +544,77 @@ html, body {
   width: 1.25rem;
   height: 1.25rem;
   accent-color: var(--accent);
+}
+
+.setting-row-slider {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.setting-row-slider span {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+}
+
+.setting-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.5rem 0;
+}
+
+/* ---------- Modal ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.modal-backdrop.is-open { opacity: 1; }
+
+.modal-dialog {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  box-shadow: var(--shadow);
+  transform: translateY(8px);
+  transition: transform 0.2s ease;
+}
+
+.modal-backdrop.is-open .modal-dialog { transform: translateY(0); }
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
+.modal-message {
+  color: var(--fg-base);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }
 
 /* ---------- Responsive ---------- */

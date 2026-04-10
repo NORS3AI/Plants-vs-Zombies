@@ -10,19 +10,22 @@
 <body>
   <div id="app">
     <!-- Phase Badge -->
-    <div id="phase-badge">Phase 1 — Core Engine</div>
+    <div id="phase-badge">Phase 2 — Menu &amp; Settings</div>
 
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
-      <div class="menu-stack">
-        <h1 class="title">Plants vs Zombies</h1>
-        <h2 class="subtitle">Card Battler</h2>
-        <div class="menu-buttons">
-          <button class="btn btn-primary" data-action="start-game">Start Game</button>
-          <button class="btn" data-action="open-settings">Settings</button>
-          <button class="btn" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
+      <div class="menu-stack menu-hero">
+        <div class="title-wrap">
+          <h1 class="title title-animated">Plants vs Zombies</h1>
+          <h2 class="subtitle">Card Battler</h2>
         </div>
-        <p class="version">v0.1.0 — Phase 1 Skeleton</p>
+        <div class="menu-buttons">
+          <button class="btn btn-primary btn-pulse" data-action="start-game">Start Game</button>
+          <button class="btn" id="resume-button" data-action="resume-game" hidden>Resume Game</button>
+          <button class="btn" data-action="open-settings">Settings</button>
+          <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
+        </div>
+        <p class="version">v0.2.0 — Phase 2</p>
       </div>
     </section>
 
@@ -42,6 +45,7 @@
         <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold">5</span></div>
         <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp">100</span></div>
         <div class="hud-item"><span class="hud-label">Difficulty</span><span id="hud-difficulty">Normal</span></div>
+        <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
       <main class="shop-main">
         <div class="shop-placeholder">
@@ -66,6 +70,7 @@
         <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round-combat">1</span></div>
         <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold-combat">5</span></div>
         <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp-combat">100</span></div>
+        <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
       <main class="combat-main">
         <aside class="spell-panel">
@@ -111,14 +116,24 @@
             <span>Music</span>
             <input type="checkbox" id="setting-music" checked>
           </label>
+          <label class="setting-row setting-row-slider">
+            <span>Music Volume</span>
+            <input type="range" id="setting-music-volume" min="0" max="100" value="60">
+          </label>
           <label class="setting-row">
             <span>Sounds</span>
             <input type="checkbox" id="setting-sounds" checked>
           </label>
+          <label class="setting-row setting-row-slider">
+            <span>Sound Volume</span>
+            <input type="range" id="setting-sfx-volume" min="0" max="100" value="80">
+          </label>
+          <hr class="settings-divider">
           <button class="btn" data-action="save-game">Save Game</button>
           <button class="btn btn-danger" data-action="reset-game">Reset Game</button>
+          <button class="btn btn-danger" id="quit-run-button" data-action="quit-run" hidden>Quit Run</button>
         </div>
-        <button class="btn" data-action="back-to-menu">← Back</button>
+        <button class="btn" data-action="settings-back">← Back</button>
       </div>
     </section>
   </div>

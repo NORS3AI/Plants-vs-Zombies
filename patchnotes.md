@@ -5,6 +5,49 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v0.2.0 — 2026-04-10 — Phase 2: Main Menu & Settings
+
+### Added
+- **AudioManager** (`docs/js/game/audio.js`) — Web Audio API wrapper with lazy init (autoplay-policy compliant). Synthesizes 5 SFX presets: `click`, `hover`, `tick`, `go`, `back`. Music stub ready for Phase 12 tracks.
+- **Modal system** (`docs/js/ui/modal.js`) — Promise-based modal with backdrop blur, Escape/click-out dismissal, configurable buttons. Replaces native `window.confirm`.
+- **Animated title screen** — Gradient shimmer (`titleShimmer`) + gentle vertical bob (`titleBob`).
+- **Pulsing Start Game button** — Concentric ring pulse animation drawing the eye.
+- **Volume sliders** — Music + SFX, live `input` event updates AudioManager and persists immediately.
+- **Resume Game button** — Visible on menu when `Save.hasRun()` returns true; restores `currentRun` and jumps to SHOP.
+- **In-game pause button** (⚙) — Top-right of shop/combat screens, opens Settings as a pause menu.
+- **Quit Run button** — Visible only in Settings when a run is in progress; confirms before clearing the run.
+- **Settings back button** — Returns to wherever Settings was opened from (uses `state.previous`), so opening Settings mid-run resumes back into the run.
+- **Audio feedback** — All button clicks play `click` SFX, back actions play `back`, countdown ticks play `tick`, round-start plays `go`.
+
+### Changed
+- Reset Game now uses the new modal system instead of native `confirm()`.
+- Phase badge in header advances to "Phase 2 — Menu & Settings".
+- `applySettings` now also reads volume sliders and pushes settings into AudioManager.
+- Version label bumped to v0.2.0.
+
+### Fixed (Phase 1 audit follow-ups)
+- All 6 audit issues fixed in v0.1.1: countdown timing, screen fade-in, endless lock leak, grid checker pattern, animation reset, hardcoded difficulty labels.
+
+### Notes
+- Music tracks themselves are still deferred to Phase 12; the music toggle/volume affect future playback.
+- The pause button is visible but the round simulation isn't yet pausable (no combat sim exists). Treats Settings overlay as a logical pause.
+- Audio context initializes on first user click (browser autoplay policy).
+
+---
+
+## v0.1.1 — 2026-04-10 — Phase 1 Audit Fixes
+
+### Fixed
+- **Bug 1:** Countdown is now exactly 5 seconds (5,4,3,2,1 → combat) instead of 6.
+- **Bug 2:** Screen fade-in animation re-runs on every screen swap via `.is-active` class + reflow.
+- **Bug 3:** Endless unlock state no longer leaks after game reset; difficulty cards rebuilt from `DIFFICULTIES` + meta on every enter.
+- **Bug 5:** Grid checker pattern fixed — uses `(row+col)%2` parity classes (`.tile-a`/`.tile-b`) instead of `:nth-child(even)` which produced vertical stripes.
+- **Bug 6:** Countdown animation reset now uses class swap (`.ticking`) instead of mutating inline `animation` property.
+- **Issue 1:** Difficulty card labels now built from `DIFFICULTIES` in JS (single source of truth); removed hardcoded HP/Gold strings from `index.html`.
+- **Bonus:** `startNewRun` now re-checks meta for endless unlock; previously it always rejected based on the static `locked` flag.
+
+---
+
 ## v0.1.0 — 2026-04-10 — Phase 1: Core Engine
 
 ### Added

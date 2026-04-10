@@ -8,22 +8,26 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 ## 1. Core Game Systems
 
 ### 1.1 Main Menu
-- [~] Animated title screen — basic title, no animation yet
-- [x] **Start Game** button
+- [x] Animated title screen (gradient shimmer + bob)
+- [x] **Start Game** button (pulsing animation)
+- [x] **Resume Game** button (visible when save exists)
 - [x] **Settings** button
-- [~] **Leaderboard** button (visible after Endless unlock) — present but locked
-- [ ] Background music
-- [ ] Hover/click sound effects
+- [x] **Leaderboard** button (gated by endless unlock)
+- [ ] Background music (Phase 12)
+- [x] Click sound effects (synthesized)
+- [ ] Hover sound effects (preset exists, not yet wired)
 
 ### 1.2 Settings
-- [~] Save Game (saves everything: deck, gold, round, unlocks, leaderboard) — skeleton in place
-- [~] Load Game — skeleton in place
+- [x] Save Game (saves everything: deck, gold, round, unlocks, leaderboard)
+- [x] Load Game (Resume Game on menu)
 - [x] Dark Mode toggle
 - [x] Light Mode toggle
-- [~] Reset Game (with confirmation) — basic version live
-- [~] Music On/Off toggle — UI only, no audio yet
-- [~] Sounds On/Off toggle — UI only, no audio yet
-- [ ] Volume sliders (music & sfx)
+- [x] Reset Game (with confirmation modal)
+- [x] Music On/Off toggle (wired to AudioManager; tracks land Phase 12)
+- [x] Sounds On/Off toggle (synthesized SFX active)
+- [x] Volume sliders (music & sfx, live updates)
+- [x] In-game pause / settings access
+- [x] Quit Run button (only when in-run)
 
 ### 1.3 Difficulty Selection
 - [x] Difficulty selection screen UI

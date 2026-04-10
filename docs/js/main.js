@@ -1,11 +1,11 @@
 /**
  * Bootstrap
  *
- * Initializes the state machine, screen manager, and game loop.
+ * Initializes the state machine, screen manager, audio, and game loop.
  * Wires DOM event handlers to state transitions.
  *
- * Phase 1 scope: state flow, screen swapping, theme, save skeleton,
- * grid render. No combat / shop / cards yet — those land in Phases 4–8.
+ * Phase 2 scope: animated menu, full settings (theme, audio, volume sliders),
+ * Resume Game, in-game pause, modal-based confirmation, audio SFX.
  */
 
 import { StateMachine, STATES } from './game/state.js';
@@ -13,26 +13,42 @@ import { GameLoop } from './game/loop.js';
 import { Save } from './game/save.js';
 import { renderGrid } from './game/grid.js';
 import { getDifficulty, DIFFICULTIES } from './game/difficulty.js';
+import { AudioManager } from './game/audio.js';
 import { ScreenManager } from './ui/screens.js';
+import { confirmModal } from './ui/modal.js';
 
 // ---------- Boot ----------
 const screens = new ScreenManager('#app');
 const state = new StateMachine();
+const audio = new AudioManager();
 
 // In-memory current run (mirrors Save.loadRun() once started)
 let currentRun = null;
 let countdownValue = 5;
 let countdownTimer = 0;
 
-// ---------- Settings (theme, audio toggles) ----------
+// ---------- Settings ----------
 function applySettings(settings) {
   document.documentElement.dataset.theme = settings.theme || 'dark';
+
   const themeSel = document.getElementById('setting-theme');
   const musicCb = document.getElementById('setting-music');
   const soundsCb = document.getElementById('setting-sounds');
+  const musicVol = document.getElementById('setting-music-volume');
+  const sfxVol = document.getElementById('setting-sfx-volume');
+
   if (themeSel) themeSel.value = settings.theme;
   if (musicCb) musicCb.checked = !!settings.music;
   if (soundsCb) soundsCb.checked = !!settings.sounds;
+  if (musicVol) musicVol.value = Math.round((settings.musicVolume ?? 0.6) * 100);
+  if (sfxVol) sfxVol.value = Math.round((settings.sfxVolume ?? 0.8) * 100);
+
+  audio.setSettings({
+    music: settings.music,
+    sounds: settings.sounds,
+    musicVolume: settings.musicVolume,
+    sfxVolume: settings.sfxVolume,
+  });
 }
 
 const settings = Save.loadSettings();
@@ -56,7 +72,10 @@ function syncHUD() {
 
 // ---------- State Registrations ----------
 state.register(STATES.MENU, {
-  enter() { screens.show('menu'); },
+  enter() {
+    screens.show('menu');
+    refreshMenuButtons();
+  },
 });
 
 state.register(STATES.DIFFICULTY, {
@@ -65,38 +84,6 @@ state.register(STATES.DIFFICULTY, {
     buildDifficultyCards();
   },
 });
-
-/**
- * Build difficulty cards from DIFFICULTIES (single source of truth).
- * Called on every DIFFICULTY enter so unlock state stays in sync with meta.
- */
-function buildDifficultyCards() {
-  const host = document.getElementById('difficulty-grid');
-  if (!host) return;
-  const meta = Save.loadMeta();
-  host.innerHTML = '';
-  for (const d of Object.values(DIFFICULTIES)) {
-    const isLocked = d.locked && !(d.id === 'endless' && meta.endlessUnlocked);
-    const btn = document.createElement('button');
-    btn.className = 'diff-card' + (isLocked ? ' locked' : '');
-    btn.dataset.difficulty = d.id;
-    btn.disabled = isLocked;
-
-    const name = document.createElement('span');
-    name.className = 'diff-name';
-    name.textContent = d.label;
-
-    const metaEl = document.createElement('span');
-    metaEl.className = 'diff-meta';
-    metaEl.textContent = isLocked
-      ? '🔒 Beat Round 10'
-      : `${d.playerHP} HP · ${d.startGold} Gold`;
-
-    btn.appendChild(name);
-    btn.appendChild(metaEl);
-    host.appendChild(btn);
-  }
-}
 
 state.register(STATES.SHOP, {
   enter() {
@@ -112,6 +99,7 @@ state.register(STATES.COUNTDOWN, {
     countdownValue = 5;
     countdownTimer = 0;
     paintCountdown();
+    audio.playSfx('tick');
   },
   update(dt) {
     countdownTimer += dt;
@@ -120,9 +108,11 @@ state.register(STATES.COUNTDOWN, {
       countdownValue--;
       if (countdownValue <= 0) {
         // 5,4,3,2,1 each shown for 1s, then transition at t=5s
+        audio.playSfx('go');
         state.transition(STATES.COMBAT);
       } else {
         paintCountdown();
+        audio.playSfx('tick');
       }
     }
   },
@@ -157,16 +147,67 @@ state.register(STATES.GAME_OVER, {
 });
 
 state.register(STATES.SETTINGS, {
-  enter() { screens.show('settings'); },
+  enter() {
+    screens.show('settings');
+    refreshSettingsButtons();
+  },
 });
+
+// ---------- Difficulty Cards (built from DIFFICULTIES) ----------
+function buildDifficultyCards() {
+  const host = document.getElementById('difficulty-grid');
+  if (!host) return;
+  const meta = Save.loadMeta();
+  host.innerHTML = '';
+  for (const d of Object.values(DIFFICULTIES)) {
+    const isLocked = d.locked && !(d.id === 'endless' && meta.endlessUnlocked);
+    const btn = document.createElement('button');
+    btn.className = 'diff-card' + (isLocked ? ' locked' : '');
+    btn.dataset.difficulty = d.id;
+    btn.disabled = isLocked;
+
+    const name = document.createElement('span');
+    name.className = 'diff-name';
+    name.textContent = d.label;
+
+    const metaEl = document.createElement('span');
+    metaEl.className = 'diff-meta';
+    metaEl.textContent = isLocked
+      ? '🔒 Beat Round 10'
+      : `${d.playerHP} HP · ${d.startGold} Gold`;
+
+    btn.appendChild(name);
+    btn.appendChild(metaEl);
+    host.appendChild(btn);
+  }
+}
+
+// ---------- Menu / Settings Reactivity ----------
+function refreshMenuButtons() {
+  // Resume button visible only when a saved run exists
+  const resumeBtn = document.getElementById('resume-button');
+  if (resumeBtn) resumeBtn.hidden = !Save.hasRun();
+
+  // Leaderboard unlock follows endless unlock
+  const lbBtn = document.getElementById('leaderboard-button');
+  if (lbBtn) {
+    const meta = Save.loadMeta();
+    lbBtn.disabled = !meta.endlessUnlocked;
+  }
+}
+
+function refreshSettingsButtons() {
+  // Quit Run only visible when a run is in progress
+  const quitBtn = document.getElementById('quit-run-button');
+  if (quitBtn) quitBtn.hidden = !currentRun;
+}
 
 function paintCountdown() {
   const el = document.getElementById('countdown-number');
   if (!el) return;
   el.textContent = countdownValue;
-  // Re-trigger the zoom animation by removing and re-adding the class
   el.classList.remove('ticking');
-  void el.offsetWidth; // force reflow so the class re-add restarts the animation
+  void el.offsetWidth;
   el.classList.add('ticking');
 }
 
@@ -174,7 +215,6 @@ function paintCountdown() {
 function startNewRun(difficultyId) {
   const d = getDifficulty(difficultyId);
   if (!d) return;
-  // Endless is the only meta-gated difficulty
   if (d.locked) {
     const meta = Save.loadMeta();
     if (!(d.id === 'endless' && meta.endlessUnlocked)) return;
@@ -192,25 +232,79 @@ function startNewRun(difficultyId) {
   state.transition(STATES.SHOP);
 }
 
+function resumeRun() {
+  if (!Save.hasRun()) return;
+  currentRun = Save.loadRun();
+  state.transition(STATES.SHOP);
+}
+
+async function quitRun() {
+  const confirmed = await confirmModal({
+    title: 'Quit Run',
+    message: 'Abandon the current run? Your save for this run will be cleared.',
+    confirmLabel: 'Quit',
+    danger: true,
+  });
+  if (!confirmed) return;
+  Save.clearRun();
+  currentRun = null;
+  state.transition(STATES.MENU);
+}
+
+async function resetGame() {
+  const confirmed = await confirmModal({
+    title: 'Reset Game',
+    message: 'This wipes all save data including settings, run, leaderboard, and unlocks. This cannot be undone.',
+    confirmLabel: 'Reset Everything',
+    danger: true,
+  });
+  if (!confirmed) return;
+  Save.resetAll();
+  currentRun = null;
+  applySettings(Save.loadSettings());
+  state.transition(STATES.MENU);
+}
+
 // ---------- DOM Event Wiring ----------
 document.addEventListener('click', (e) => {
+  // Lazy-init audio on first user click (browser autoplay policy)
+  audio.init();
+
   const action = e.target.closest('[data-action]')?.dataset.action;
   const difficulty = e.target.closest('[data-difficulty]')?.dataset.difficulty;
 
   if (difficulty) {
+    audio.playSfx('click');
     startNewRun(difficulty);
     return;
   }
+
+  if (action) audio.playSfx(action.startsWith('back') || action === 'settings-back' ? 'back' : 'click');
 
   switch (action) {
     case 'start-game':
       state.transition(STATES.DIFFICULTY);
       break;
+    case 'resume-game':
+      resumeRun();
+      break;
     case 'open-settings':
       state.transition(STATES.SETTINGS);
       break;
+    case 'open-leaderboard':
+      // Phase 11
+      flashToast('Leaderboard arrives in Phase 11');
+      break;
     case 'back-to-menu':
       state.transition(STATES.MENU);
+      break;
+    case 'settings-back':
+      // Return to previous screen if mid-run, otherwise menu
+      if (currentRun && state.previous && state.previous !== STATES.SETTINGS) {
+        state.transition(state.previous);
+      } else {
+        state.transition(STATES.MENU);
+      }
       break;
     case 'start-countdown':
       state.transition(STATES.COUNTDOWN);
@@ -227,12 +321,10 @@ document.addEventListener('click', (e) => {
       flashToast('Game saved');
       break;
     case 'reset-game':
-      if (confirm('Reset all save data? This cannot be undone.')) {
-        Save.resetAll();
-        currentRun = null;
-        applySettings(Save.loadSettings());
-        state.transition(STATES.MENU);
-      }
+      resetGame();
+      break;
+    case 'quit-run':
+      quitRun();
       break;
   }
 });
@@ -244,7 +336,18 @@ document.addEventListener('change', (e) => {
     Save.saveSettings(readSettingsFromDOM());
   }
   if (e.target.id === 'setting-music' || e.target.id === 'setting-sounds') {
-    Save.saveSettings(readSettingsFromDOM());
+    const s = readSettingsFromDOM();
+    Save.saveSettings(s);
+    audio.setSettings(s);
+  }
+});
+
+// Live volume slider handlers (use 'input' for instant feedback)
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'setting-music-volume' || e.target.id === 'setting-sfx-volume') {
+    const s = readSettingsFromDOM();
+    Save.saveSettings(s);
+    audio.setSettings(s);
   }
 });
 
@@ -253,11 +356,12 @@ function readSettingsFromDOM() {
     theme: document.getElementById('setting-theme')?.value || 'dark',
     music: !!document.getElementById('setting-music')?.checked,
     sounds: !!document.getElementById('setting-sounds')?.checked,
+    musicVolume: (Number(document.getElementById('setting-music-volume')?.value) || 60) / 100,
+    sfxVolume: (Number(document.getElementById('setting-sfx-volume')?.value) || 80) / 100,
   };
 }
 
 function flashToast(msg) {
-  // Lightweight inline toast — replaced with proper UI in Phase 12
   const t = document.createElement('div');
   t.textContent = msg;
   t.style.cssText = `
@@ -281,5 +385,5 @@ state.transition(STATES.MENU);
 loop.start();
 
 // Expose for dev console debugging (remove in v1.0)
-window.__pvz = { state, Save, currentRun: () => currentRun, DIFFICULTIES };
-console.log('[pvz] Phase 1 boot complete. Use window.__pvz for debug.');
+window.__pvz = { state, Save, audio, currentRun: () => currentRun, DIFFICULTIES };
+console.log('[pvz] Phase 2 boot complete. Use window.__pvz for debug.');
