@@ -233,16 +233,11 @@ function spawnDue() {
     };
     _state.zombies.push(zombie);
 
-    // Boss spawn: announce + apply Frenzy buff to remaining zombies
+    // Boss spawn: announce (no more Frenzy buff — rounds were too
+    // punishing with the +10% speed boost on remaining zombies)
     if (zombie.isBoss) {
       _state.bossActive = zombie;
       _state.bossJustSpawned = 0.6; // triggers CSS shake for 600ms
-      for (const z of _state.zombies) {
-        if (z === zombie) continue;
-        // +10% speed frenzy buff per spec
-        z.baseSpeed *= 1.1;
-        z.speed *= 1.1;
-      }
       _callbacks?.onBossSpawn?.(zombie);
     }
   }
