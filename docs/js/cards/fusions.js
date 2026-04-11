@@ -315,4 +315,26 @@ export const FUSION_PLANTS = [
     economy: { goldPerCast: 120 },
     notInShop: true,
   },
+
+  // ============================================================
+  // Lily Weed × 5 → Blue Lily (omni-pattern; hits all 8 directions)
+  // ============================================================
+  {
+    id: 'blue_lily',
+    name: 'Blue Lily',
+    type: 'plant',
+    rarity: 'legendary',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 10, max: 15 },
+    health: 300,
+    damage: 1000,
+    castTime: 0.1,
+    range: 2,
+    attackPattern: 'omni',
+    targetingDefault: 'first',
+    description: 'Fusion: 5 Lily Weeds. Lashes in all 8 directions up to 2 tiles away. 0.1s cast, 1000 DMG — deletes anything it catches.',
+    abilities: [],
+    notInShop: true,
+  },
 ];

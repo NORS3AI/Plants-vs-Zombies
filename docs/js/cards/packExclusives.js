@@ -340,6 +340,32 @@ export const FRENZY_EXCLUSIVES = [
     economy: { goldPerKill: 'round_number' },
     evolution: { requiresCount: 3, requiresSameId: true, intoId: 'bloody_mandrake' },
   },
+
+  // ---------- Frenzy easter egg: Lily Weed (1% per card slot) ----------
+  // Every player starts a run with 1 Lily Weed for free. Beyond that,
+  // extra copies only drop from Frenzy packs at packDropChance 0.01.
+  // Stacking 5 of them on the grid fuses into Blue Lily (300/1000/0.1s).
+  {
+    id: 'lily_weed',
+    name: 'Lily Weed',
+    type: 'plant',
+    rarity: 'trash',
+    category: 'pack_exclusive',
+    pack: 'frenzy',
+    cost: null,
+    sell: { min: 1, max: 1 },
+    health: 3,
+    damage: 1,
+    castTime: 2.0,
+    range: 1,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'A brittle weed. One free at the start of every run — more drop from Frenzy packs at 1%. Five on the grid fuse into a Blue Lily.',
+    abilities: [],
+    notInShop: true,
+    packDropChance: 0.01,
+    evolution: { requiresCount: 5, requiresSameId: true, intoId: 'blue_lily' },
+  },
 ];
 
 // ============================================================

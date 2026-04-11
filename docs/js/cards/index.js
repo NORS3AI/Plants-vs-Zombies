@@ -169,6 +169,17 @@ export function rollShopCards(count = 3) {
  * If the chosen rarity has no candidates in this pack, fall through.
  */
 function rollPackCardOnce(pack) {
+  // Special-drop pre-roll: any pack-affiliated card tagged with
+  // `packDropChance` rolls independently BEFORE the normal rarity
+  // weights. Used for rare easter-egg drops like Lily Weed (1% per
+  // Frenzy card slot). The first special that succeeds wins the slot.
+  const specialDrops = PACK_EXCLUSIVE_CARDS.filter(
+    (c) => c.pack === pack.id && c.packDropChance != null,
+  );
+  for (const c of specialDrops) {
+    if (Math.random() < c.packDropChance) return c;
+  }
+
   const totalWeight = Object.values(pack.rarityWeights).reduce(
     (a, b) => a + b,
     0,
@@ -177,17 +188,19 @@ function rollPackCardOnce(pack) {
   const entries = Object.entries(pack.rarityWeights);
   for (const [rarity, weight] of entries) {
     if (roll < weight) {
+      // Exclude special-drop cards from the normal rarity pool so
+      // they can ONLY come through the pre-roll above.
       const candidates = PACK_EXCLUSIVE_CARDS.concat(AETHER_ROOT_SPELLS).filter(
-        (c) => c.pack === pack.id && c.rarity === rarity,
+        (c) => c.pack === pack.id && c.rarity === rarity && c.packDropChance == null,
       );
       if (candidates.length > 0) return pickOne(candidates);
       // Fall through to next rarity if empty
     }
     roll -= weight;
   }
-  // Fallback: any card in this pack
+  // Fallback: any card in this pack that isn't a special drop
   const all = PACK_EXCLUSIVE_CARDS.concat(AETHER_ROOT_SPELLS).filter(
-    (c) => c.pack === pack.id,
+    (c) => c.pack === pack.id && c.packDropChance == null,
   );
   return all.length > 0 ? pickOne(all) : null;
 }

@@ -5,6 +5,20 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.0.7 — 2026-04-11 — Lily Weed, Blue Lily & omni attack pattern
+
+### Added
+- **Lily Weed** — a tiny trash plant (`3 HP / 1 DMG / 2.0 s cast`, sells for 1 g). Every new run **starts with one Lily Weed for free** in the Plant Deck, regardless of difficulty. It's a stat slop solo, but five on the grid fuse into…
+- **Blue Lily** — the Lily Weed fusion reward: `300 HP / 1000 DMG / 0.1 s cast`. **Attacks in all 8 directions** up to 2 tiles away (including diagonals, forward *and* backward). 0.1 s cast means 10 hits per second — deletes anything it catches.
+- **Frenzy-pack easter egg drop** — extra Lily Weeds only come from **Frenzy Chests at a 1 % per-slot drop rate**. You get one free, you hunt the other four.
+- **`omni` attack pattern** — new attack shape in `combat.js findTarget` using Chebyshev distance (`max(|dx|, |dy|) ≤ range`). Omni plants bypass the global 5-tile minimum range floor, so short-range omni attackers actually stay short.
+- **`packDropChance` card field** — lets any pack-affiliated card roll independently *before* the normal rarity-weighted roll at its own probability. Special-drop cards are excluded from the normal rarity pool so they can only come through the pre-roll.
+
+### Changed
+- New runs now seed a free Lily Weed into `run.deck` inside `startNewRun()` so every difficulty gets the same starter.
+
+---
+
 ## v1.0.6 — 2026-04-11 — Fusion System, Spell Deck split & balance pass
 
 ### Added

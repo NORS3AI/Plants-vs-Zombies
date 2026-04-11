@@ -389,6 +389,20 @@ function startNewRun(difficultyId) {
   currentRun.gold = d.startGold;
   currentRun.aetherRootHP = d.playerHP;
   currentRun.aetherRootMaxHP = d.playerHP;
+
+  // Every player gets one free Lily Weed in their starter Plant Deck
+  // (every difficulty). Beyond that, extra Lily Weeds only drop from
+  // Frenzy packs at 1% — you have to hunt the other four if you want
+  // to fuse them into a Blue Lily.
+  const lilyWeedCard = Cards.getCard('lily_weed');
+  if (lilyWeedCard) {
+    currentRun.deck.push({
+      cardId: 'lily_weed',
+      instanceId: `inst_${Date.now()}_starter`,
+      sellValue: Cards.rollSell(lilyWeedCard),
+    });
+  }
+
   Save.saveRun(currentRun);
   Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
@@ -1124,5 +1138,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.0.6 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.0.7 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

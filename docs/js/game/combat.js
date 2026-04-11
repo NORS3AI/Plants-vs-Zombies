@@ -606,13 +606,14 @@ function produceGold(plant) {
  */
 function findTarget(plant) {
   const card = plant.card;
-  // Balance: every plant gets a minimum engagement range of 5 tiles
-  // so melee plants (Seedling Scrubber, Ironroot Sentry, Bramble-Whip
-  // Vine) get ~5 cast cycles of free fire before the zombie blocks
-  // them. Commons can now handle rounds 1-3 solo; Rares+ are needed
-  // by round 5+ when zombie HP outpaces their 5-dmg ceiling.
-  const range = Math.max(5, card.range ?? 1);
   const pattern = card.attackPattern ?? 'forward';
+  const baseRange = card.range ?? 1;
+  // Balance: most plants get a minimum engagement range of 5 tiles so
+  // melee units (Seedling Scrubber, Ironroot Sentry, Bramble-Whip Vine)
+  // get ~5 cast cycles of free fire before the zombie blocks them.
+  // Omni-pattern plants are explicitly SHORT-range (Blue Lily is "only
+  // up to 2 tiles in all directions"), so they bypass the floor.
+  const range = pattern === 'omni' ? baseRange : Math.max(5, baseRange);
   const hasBeam = (card.abilities ?? []).some((a) => a.type === 'beam');
 
   // Candidate rows this plant attacks
@@ -620,6 +621,11 @@ function findTarget(plant) {
   if (hasBeam) {
     // Beam weapons can pivot to any row (Solar Archon's "beam damage")
     for (let r = 0; r < GRID_ROWS; r++) rows.add(r);
+  } else if (pattern === 'omni') {
+    // Omni: every row within `range` tiles of the plant's row.
+    for (let r = Math.max(0, plant.row - range); r <= Math.min(GRID_ROWS - 1, plant.row + range); r++) {
+      rows.add(r);
+    }
   } else if (pattern === 'side') {
     rows.add(plant.row);
     if (plant.row > 0) rows.add(plant.row - 1);
@@ -641,9 +647,15 @@ function findTarget(plant) {
     // the 9th column; zombies only become valid targets once they
     // march into col 0..7.
     if (z.col >= STAGING_COL) return false;
-    // Zombie column must be within range, on the correct side.
     const dx = z.col - plant.col;
     if (pattern === 'backward') return dx < 0 && -dx <= range;
+    if (pattern === 'omni') {
+      // Chebyshev distance ≤ range = all 8 directions within `range`
+      // tiles (including diagonals, both forward and backward).
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(z.row - plant.row);
+      return Math.max(absDx, absDy) <= range;
+    }
     // Default: forward. Zombies enter from the right (col GRID_COLS)
     // and walk toward col 0. A plant at col 3 attacks zombies with
     // col >= 3 AND col < STAGING_COL.
