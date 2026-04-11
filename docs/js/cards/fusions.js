@@ -202,7 +202,9 @@ export const FUSION_PLANTS = [
   },
 
   // ============================================================
-  // Solar Archon → Solar Breach
+  // Solar Archon → Solar Breach → Solae
+  // (Solae is the only 4-way merge in the game — every other
+  //  fusion uses requiresCount: 3.)
   // ============================================================
   {
     id: 'solar_breach',
@@ -222,6 +224,28 @@ export const FUSION_PLANTS = [
     abilities: [
       { type: 'beam' },
       { type: 'heal_adjacent', value: 8, interval: 2.0 },
+    ],
+    notInShop: true,
+    evolution: { requiresCount: 4, requiresSameId: true, intoId: 'solae' },
+  },
+  {
+    id: 'solae',
+    name: 'Solae',
+    type: 'plant',
+    rarity: 'legendary',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 10, max: 15 },
+    health: 500,
+    damage: 600,
+    castTime: 3.0,
+    range: 12,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Fusion: 4 Solar Breaches. Star-forged. Piercing beam + adjacent heal aura.',
+    abilities: [
+      { type: 'beam' },
+      { type: 'heal_adjacent', value: 12, interval: 2.0 },
     ],
     notInShop: true,
   },
