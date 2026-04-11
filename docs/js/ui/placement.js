@@ -253,8 +253,8 @@ function applyPlantSpell(effect, targetInstance, card, run) {
       targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value, permanent: false });
       return true;
     case 'cast_speed_buff':
-      // Aether Bloom: -0.5s cast for 10s (treat as per-round for simplicity)
-      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value, permanent: false });
+      // Aether Bloom: permanent -1s cast time (stacks if cast multiple times).
+      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value, permanent: true });
       return true;
     case 'damage_mul':
       // Arcane Surge: 2× damage for 5s (treat as per-round for simplicity)

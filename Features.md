@@ -139,7 +139,7 @@ Status legend: `[ ]` Planned · `[~]` In Progress · `[x]` Implemented
 
 ### 4.2 Standard Spells
 - [x] **Barkskin Guard** — Shield = 50% Max HP
-- [x] **Aether Bloom** — -0.5s cast time for 10s
+- [x] **Aether Bloom** — Permanent -1s cast time
 - [x] **Wild Growth** — Permanent +20 HP
 - [x] **Nectar Rush** — +15 DMG for round
 - [x] **Magic Mushroom** — Evolve to next rarity tier

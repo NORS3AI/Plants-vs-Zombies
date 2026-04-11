@@ -151,8 +151,8 @@ export const STANDARD_SPELLS = [
     cost: { min: 4, max: 7 },
     sell: { min: 3, max: 5 },
     target: 'plant',
-    description: 'Reduces a plant\'s cast time by 0.5s for 10 seconds.',
-    effect: { type: 'cast_speed_buff', value: -0.5, duration: 10 },
+    description: 'Permanently reduces a plant\'s cast time by 1 second.',
+    effect: { type: 'cast_speed_buff', value: -1 },
   },
   {
     id: 'wild_growth',
