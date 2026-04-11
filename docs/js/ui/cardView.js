@@ -26,6 +26,8 @@ import { showModal } from './modal.js';
  *   - isPlaced?: boolean — visual "already placed on grid"
  *   - onClick?: (card) => void — main card body click
  *   - onSell?: (card) => void — "Sell" pill click (stops propagation)
+ *   - instance?: object — the deck instance (with buffs / tier) so the
+ *     card can surface applied spells and tier even when unplaced.
  * @returns {HTMLElement}
  */
 export function renderCard(card, options = {}) {
@@ -38,10 +40,23 @@ export function renderCard(card, options = {}) {
   if (card.rarity === 'legendary') el.classList.add('card-legendary-shine');
   el.dataset.cardId = card.id;
 
+  const instance = options.instance ?? null;
+  const buffs = instance?.buffs ?? [];
+  const tier = Math.max(1, instance?.tier ?? 1);
+
   // Rarity stripe (top)
   const stripe = document.createElement('div');
   stripe.className = 'card-stripe';
   el.appendChild(stripe);
+
+  // Corner tier pill — visible even on small deck cards
+  if (tier > 1) {
+    const tierPill = document.createElement('div');
+    tierPill.className = 'card-tier-pill';
+    tierPill.textContent = `T${tier}`;
+    tierPill.title = `Tier ${tier} (+${(tier - 1) * 10} HP, +${(tier - 1) * 5} DMG)`;
+    el.appendChild(tierPill);
+  }
 
   // Body
   const body = document.createElement('div');
@@ -71,6 +86,30 @@ export function renderCard(card, options = {}) {
     desc.className = 'card-desc';
     desc.textContent = card.description ?? '';
     body.appendChild(desc);
+  }
+
+  // Active spells panel — shown on any card whose instance carries
+  // buffs. Groups by spellId so "Wild Growth × 2" collapses cleanly.
+  if (buffs.length > 0) {
+    const spellsSection = document.createElement('div');
+    spellsSection.className = 'card-active-spells';
+    const header = document.createElement('div');
+    header.className = 'card-active-spells-head';
+    header.textContent = `Active Spells (${buffs.length})`;
+    spellsSection.appendChild(header);
+    const list = document.createElement('ul');
+    list.className = 'card-active-spells-list';
+    for (const entry of groupBuffsBySpell(buffs)) {
+      const li = document.createElement('li');
+      li.className = 'card-active-spells-item';
+      li.textContent = entry.count > 1
+        ? `${entry.name} × ${entry.count}`
+        : entry.name;
+      li.title = entry.summary;
+      list.appendChild(li);
+    }
+    spellsSection.appendChild(list);
+    body.appendChild(spellsSection);
   }
 
   el.appendChild(body);
@@ -204,9 +243,12 @@ export function showCardDetails(card) {
 
 /**
  * Build a tiny card icon suitable for rendering inside a grid tile.
- * Just shows the first letter + rarity border.
+ * Shows the type glyph, first word of the name, and — when an
+ * `instance` with buffs is passed in — a compact row of buff-type
+ * icons stacked below the label so the player can see at a glance
+ * which spells are applied without opening the modal.
  */
-export function renderGridCardIcon(card) {
+export function renderGridCardIcon(card, instance = null) {
   const el = document.createElement('div');
   el.className = `grid-card grid-card-rarity-${card.rarity}`;
   const icon = document.createElement('div');
@@ -217,7 +259,86 @@ export function renderGridCardIcon(card) {
   label.className = 'grid-card-label';
   label.textContent = card.name.split(' ')[0]; // First word
   el.appendChild(label);
+
+  // Active-spell icon strip — visible on the grid tile itself so
+  // buffed plants are obvious at a glance (the detailed list lives in
+  // the tap-to-open modal).
+  const buffs = instance?.buffs ?? [];
+  if (buffs.length > 0) {
+    const strip = document.createElement('div');
+    strip.className = 'grid-card-buff-strip';
+    const seen = new Set();
+    for (const b of buffs) {
+      if (seen.has(b.type)) continue;
+      seen.add(b.type);
+      const dot = document.createElement('span');
+      dot.className = `grid-card-buff-icon grid-card-buff-${b.type}`;
+      dot.textContent = buffTypeEmoji(b.type);
+      dot.title = b.spellName ?? b.type;
+      strip.appendChild(dot);
+    }
+    el.appendChild(strip);
+  }
   return el;
+}
+
+function buffTypeEmoji(type) {
+  switch (type) {
+    case 'shield': return '🛡';
+    case 'hp_boost': return '❤';
+    case 'dmg_boost': return '⚔';
+    case 'dmg_mul': return '⚡';
+    case 'cast_speed': return '⏱';
+    default: return '✨';
+  }
+}
+
+/**
+ * Group an instance's buffs by source spellId and return a flat
+ * list of { name, count, summary } suitable for rendering on cards.
+ * Buffs without a spellName (legacy saves or untagged pushes) fall
+ * back to a type-based label so they still show up.
+ */
+function groupBuffsBySpell(buffs) {
+  const groups = new Map();
+  for (const b of buffs) {
+    const key = b.spellId ?? `__type_${b.type}`;
+    const name = b.spellName ?? fallbackBuffName(b);
+    const summary = buffSummary(b);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      existing.summary += `, ${summary}`;
+    } else {
+      groups.set(key, { name, count: 1, summary });
+    }
+  }
+  return [...groups.values()];
+}
+
+function fallbackBuffName(b) {
+  switch (b.type) {
+    case 'shield': return 'Shield';
+    case 'hp_boost': return 'HP Buff';
+    case 'dmg_boost': return 'Damage Buff';
+    case 'dmg_mul': return 'Damage Multiplier';
+    case 'cast_speed': return 'Cast Speed';
+    default: return b.type ?? 'Buff';
+  }
+}
+
+function buffSummary(b) {
+  switch (b.type) {
+    case 'shield': return `+${b.value} shield`;
+    case 'hp_boost': return `+${b.value} max HP`;
+    case 'dmg_boost': return `+${b.value} damage`;
+    case 'dmg_mul': return `×${b.value} damage`;
+    case 'cast_speed': {
+      const sign = b.value < 0 ? '' : '+';
+      return `${sign}${b.value}s cast time`;
+    }
+    default: return b.type ?? '';
+  }
 }
 
 /**

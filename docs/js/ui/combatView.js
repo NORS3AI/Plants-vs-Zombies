@@ -124,7 +124,7 @@ export function initCombatView(host, run) {
     const tile = findTile(instance.gridRow, instance.gridCol);
     if (!tile) continue;
     tile.innerHTML = '';
-    const icon = renderGridCardIcon(card);
+    const icon = renderGridCardIcon(card, instance);
 
     // Shield bar (blue, shown above HP when shield > 0)
     const shieldBar = document.createElement('div');

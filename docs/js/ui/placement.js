@@ -192,7 +192,7 @@ function castSpellAtTile(run, instance, card, row, col, targetPlant) {
       break;
 
     case 'board':
-      success = applyBoardSpell(effect, run);
+      success = applyBoardSpell(effect, run, card);
       break;
 
     case 'lane':
@@ -235,6 +235,10 @@ function applyPlantSpell(effect, targetInstance, card, run) {
   const targetCard = getCard(targetInstance.cardId);
   if (!targetCard) return false;
 
+  // Every buff is tagged with the spell that created it so UI
+  // renderers can show "Wild Growth × 2" etc. on the card / grid tile.
+  const source = { spellId: card.id, spellName: card.name };
+
   switch (effect.type) {
     case 'shield': {
       const maxHp = targetCard.health ?? 0;
@@ -242,23 +246,23 @@ function applyPlantSpell(effect, targetInstance, card, run) {
         ? Math.round(maxHp * effect.value)
         : effect.value;
       // Shields re-apply each round (refreshed in initCombat)
-      targetInstance.buffs.push({ type: 'shield', value: amount, permanent: true });
+      targetInstance.buffs.push({ type: 'shield', value: amount, permanent: true, ...source });
       return true;
     }
     case 'permanent_hp_buff':
-      targetInstance.buffs.push({ type: 'hp_boost', value: effect.value, permanent: true });
+      targetInstance.buffs.push({ type: 'hp_boost', value: effect.value, permanent: true, ...source });
       return true;
     case 'damage_buff':
       // Nectar Rush: +15 DMG for the round only
-      targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value, permanent: false });
+      targetInstance.buffs.push({ type: 'dmg_boost', value: effect.value, permanent: false, ...source });
       return true;
     case 'cast_speed_buff':
       // Aether Bloom: permanent -1s cast time (stacks if cast multiple times).
-      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value, permanent: true });
+      targetInstance.buffs.push({ type: 'cast_speed', value: effect.value, permanent: true, ...source });
       return true;
     case 'damage_mul':
       // Arcane Surge: 2× damage for 5s (treat as per-round for simplicity)
-      targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value, permanent: false });
+      targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value, permanent: false, ...source });
       return true;
     case 'tier_up':
       return tierUpPlantInstance(targetInstance, targetCard, effect, run);
@@ -316,7 +320,8 @@ function applySelfSpell(effect, run, card) {
   }
 }
 
-function applyBoardSpell(effect, run) {
+function applyBoardSpell(effect, run, card) {
+  const source = card ? { spellId: card.id, spellName: card.name } : {};
   switch (effect.type) {
     case 'heal_all': {
       // World-Tree Seed: full heal + shield on all placed plants
@@ -325,7 +330,7 @@ function applyBoardSpell(effect, run) {
       for (const inst of run.deck) {
         if (inst.gridRow == null) continue;
         if (!inst.buffs) inst.buffs = [];
-        inst.buffs.push({ type: 'shield', value: shieldAmount });
+        inst.buffs.push({ type: 'shield', value: shieldAmount, permanent: true, ...source });
         touched++;
       }
       if (touched === 0) {
@@ -363,7 +368,13 @@ function applyLaneSpell(effect, run, row, card) {
       for (const inst of plantsInRow) {
         if (!inst.buffs) inst.buffs = [];
         // -1.5s cast time (combat.js clamps final castTimer to 0.1 min)
-        inst.buffs.push({ type: 'cast_speed', value: -1.5, permanent: false });
+        inst.buffs.push({
+          type: 'cast_speed',
+          value: -1.5,
+          permanent: false,
+          spellId: card.id,
+          spellName: card.name,
+        });
       }
       flashToast(`⏱ ${card.name} — row ${row + 1} cast time slashed`);
       return true;
@@ -783,6 +794,11 @@ function renderDeckInventory(run) {
       sellValue: instance.sellValue,
       small: true,
       isSelected,
+      // Pass the instance so the card can surface Active Spells and
+      // tier even for unplaced cards (e.g., a plant that was on the
+      // grid, got buffed, and was then removed — it retains its
+      // buffs and should show them here).
+      instance,
       onClick: () => selectDeckCard(run, instance.instanceId),
       onSell: () => sellDeckInstance(run, instance.instanceId),
     });
@@ -824,7 +840,10 @@ function renderGridWithPlacements(run) {
       const card = getCard(placedInstance.cardId);
       if (card) {
         tile.innerHTML = '';
-        const icon = renderGridCardIcon(card);
+        // Pass the instance so the icon can render its buff strip
+        // (one emoji per applied spell type, with spell name as the
+        // hover title).
+        const icon = renderGridCardIcon(card, placedInstance);
         // Buff badge if the instance has any buffs OR tier > 1
         const buffCount = (placedInstance.buffs ?? []).length;
         const tier = placedInstance.tier ?? 1;
