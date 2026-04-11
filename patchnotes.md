@@ -5,6 +5,40 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.0.6 — 2026-04-11 — Fusion System, Spell Deck split & balance pass
+
+### Added
+- **Fusion merge system** — every plant can now carry an `evolution` block. Place 3 identical plants on the grid and they atomically collapse into their evolved form. Chains cascade in a single placement, so dropping the 3rd Seedling Scrubber on a board already holding 2 Blooming Scrubbers collapses the whole line into a **Scrubber** in one tap.
+- **15 new fusion plants** in a brand-new `category: 'fusion'`:
+  - *Standard chains:* Seedling Scrubber → **Blooming Scrubber** → **Scrubber**, Ironroot Sentry → **Ironroot Archer** → **Ironroot Knight**, Frost-Bite Willow → **Frozen Willow** → **Pulsing Willow**, Cinder-Fern → **Smoldering Fern** → **Horned Fern**, Void-Petal Bloom → **Void Bloom**, Solar Archon → **Solar Breach**.
+  - *Pack-exclusive chains:* Dragon-Breath Snapdragon → **Runite Dragon**, Void-Reaper Lily → **Void Lily**, Midas Mandrake → **Bloody Mandrake**.
+  - *Economy chain:* Gilded Rose → **Thorn** (200 HP, generates **120 Gold every 10 s**).
+  - Every fusion inherits its base plant's abilities — beams stay beams, splash stays splash, fire stays fire.
+- **Dedicated Spell Deck** — plant-target spells now live in their own `run.spellDeck` inventory, completely separated from the Plant Deck. A new "Spell Deck (N)" section appears in the shop below the Plant Deck with the same click-to-select / Sell-pill affordances. Existing saves auto-migrate on load.
+- **Aether-Root spell info buttons** — every spell slot in the side panel now has a small `ℹ` button that opens the full card details (description, cooldown, effect) without triggering the cast.
+- **Red damage popups** — plant attacks now spawn a big red `-{damage}` floating number over every zombie they hit, mirroring the gold popup treatment so you can read exactly how hard each hit lands.
+- **Clear Grid button** — a one-tap `↩ Clear Grid` pill in the Battlefield section returns every placed plant to the deck (keeping buffs and tiers intact) so you can rearrange freely. Auto-hides when the grid is empty.
+- **Active Spells on cards** — the Plant Deck and Spell Deck cards now show a compact "Active Spells (N)" panel listing every stacked spell by name (grouped with `× N` when stacked), a purple `T{n}` tier pill when Magic Mushroom has leveled the plant up, and a small buff-icon strip on placed grid tiles so buffed plants are obvious at a glance — even when sitting in the deck inventory after removal.
+
+### Balance
+- **Solar Archon** nerfed: `300 HP / 150 DMG → 100 HP / 50 DMG`. The legendary was overshadowing every other plant in the endgame.
+- **Void-Petal Bloom** nerfed: `120 HP / 60 DMG → 50 HP / 22 DMG`.
+- **Dragon-Breath Snapdragon** nerfed: `300 HP / 150 DMG → 50 HP / 50 DMG`.
+- **Void-Reaper Lily** nerfed: `120 HP / 60 DMG → 40 HP / 20 DMG`.
+- **Midas Mandrake** nerfed: `300 HP / 50 DMG → 100 HP / 25 DMG`.
+- **Nature's Wrath** cooldown: `90 s → 25 s` — the beam is meant to be a reactive tool, not a once-per-round nuke.
+- **Thorn-Pulse** cooldown: `45 s → 15 s` — same reasoning; knockback should feel responsive.
+- **Aether Bloom** is now a **permanent** `-1 s` cast-time buff (was `-0.5 s` for 10 s). Stacks cleanly: multiple casts drive cast time toward the `0.1 s` floor.
+- **All attacking plants default to First targeting.** Void-Petal Bloom, Solar Archon, and Bramble Executioner used to default to Strongest/Weakest; they now start on First so new placements behave predictably. You can still override per-instance from the placed-card modal.
+
+### Fixed
+- **SFX died after round 1** — the AudioContext was entering `suspended` / `interrupted` state after idle combat and `ctx.currentTime` was freezing while suspended, so every `playSfx` scheduled events in the past. The context is now explicitly resumed on every user gesture (pointerdown / touchstart / keydown, capture phase), a `statechange` listener auto-kicks it back to running, and `playSfx` awaits the resume promise before scheduling.
+- **Card text was selectable on long-press** — `.card` and every descendant now set `user-select: none` + `-webkit-touch-callout: none` to suppress the iOS callout menu and desktop text selection.
+- **Aether-Root panel wasn't centered** — the side panel is now `align-items: center` so the header and every slot line up cleanly; width bumped `180 → 200 px`.
+- **Rarity words replaced with Plant / Spell labels** on every card surface and the pack-reveal modal. Rarity still drives border color, drop rates, and pack distribution — this is purely a readable-label change.
+
+---
+
 ## v1.0.5 — 2026-04-11 — Mid-combat moves, Magic Mushroom tiers & patch notes viewer
 
 ### Added

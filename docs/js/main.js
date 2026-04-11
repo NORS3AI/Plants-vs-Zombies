@@ -1016,7 +1016,12 @@ async function openPatchNotesModal() {
   let md = _patchNotesCache;
   if (!md) {
     try {
-      const res = await fetch('./patchnotes.md', { cache: 'no-cache' });
+      // Cache-bust with a timestamp query param so GitHub Pages /
+      // browser HTTP caches can never serve a stale patchnotes.md
+      // after a redeploy. `cache: 'no-store'` also forces a fresh
+      // request on every cold load of this function.
+      const url = `./patchnotes.md?_=${Date.now()}`;
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       md = await res.text();
       _patchNotesCache = md;
@@ -1119,5 +1124,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.0.5 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.0.6 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
