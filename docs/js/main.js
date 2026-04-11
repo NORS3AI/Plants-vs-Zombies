@@ -19,7 +19,7 @@ import { AudioManager } from './game/audio.js';
 import * as Combat from './game/combat.js';
 import * as AetherSpells from './game/aetherSpells.js';
 import { ScreenManager } from './ui/screens.js';
-import { confirmModal } from './ui/modal.js';
+import { confirmModal, showModal } from './ui/modal.js';
 import * as Cards from './cards/index.js';
 import * as Shop from './ui/shop.js';
 import * as Placement from './ui/placement.js';
@@ -37,7 +37,8 @@ const audio = new AudioManager();
 
 // In-memory current run (mirrors Save.loadRun() once started)
 let currentRun = null;
-let countdownValue = 5;
+const COUNTDOWN_START = 3;
+let countdownValue = COUNTDOWN_START;
 let countdownTimer = 0;
 
 // ---------- Settings ----------
@@ -157,7 +158,7 @@ state.register(STATES.SHOP, {
 state.register(STATES.COUNTDOWN, {
   enter() {
     screens.show('countdown');
-    countdownValue = 5;
+    countdownValue = COUNTDOWN_START;
     countdownTimer = 0;
     paintCountdown();
     audio.playSfx('tick');
@@ -169,7 +170,7 @@ state.register(STATES.COUNTDOWN, {
       countdownTimer = 0;
       countdownValue--;
       if (countdownValue <= 0) {
-        // 5,4,3,2,1 each shown for 1s, then transition at t=5s
+        // 3,2,1 each shown for 1s, then transition at t=3s
         audio.playSfx('go');
         state.transition(STATES.COMBAT);
       } else {
@@ -743,6 +744,12 @@ document.addEventListener('click', (e) => {
         syncHUD();
         Save.saveRun(currentRun);
         audio.playSfx('click');
+        // Re-render the shop so pack chests / refresh button /
+        // shop-card affordability toggles instantly as gold goes up.
+        if (state.current === STATES.SHOP) {
+          Shop.renderShop(currentRun);
+          Placement.renderPlacement(currentRun);
+        }
       }
       break;
     case 'start-countdown':
@@ -771,6 +778,9 @@ document.addEventListener('click', (e) => {
       break;
     case 'quit-run':
       quitRun();
+      break;
+    case 'open-patch-notes':
+      openPatchNotesModal();
       break;
   }
 });
@@ -899,6 +909,104 @@ state.onChange((current) => {
   sidebar.hidden = !(showIn.has(current) && currentRun);
 });
 
+// ============================================================
+// PATCH NOTES MODAL (tap version label on main menu)
+// ============================================================
+
+let _patchNotesCache = null;
+
+/**
+ * Fetch docs/patchnotes.md, convert to HTML, and show in a wide
+ * scrollable modal. The file is cached after the first fetch so
+ * repeat taps are instant.
+ */
+async function openPatchNotesModal() {
+  let md = _patchNotesCache;
+  if (!md) {
+    try {
+      const res = await fetch('./patchnotes.md', { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      md = await res.text();
+      _patchNotesCache = md;
+    } catch (err) {
+      console.warn('[patch-notes] failed to load:', err);
+      md = '# Patch Notes\n\nCould not load patch notes. Please try again.';
+    }
+  }
+  const bodyHtml = `<div class="patch-notes-body">${markdownToHtml(md)}</div>`;
+  showModal({
+    title: 'Patch Notes',
+    bodyHtml,
+    buttons: [{ label: 'Close', value: null, kind: 'default' }],
+    wide: true,
+    showClose: true,
+    extraClass: 'modal-dialog-patchnotes',
+  });
+}
+
+/**
+ * Minimal Markdown → HTML converter aimed at our patch-notes file.
+ * Supports: h1/h2/h3/h4, bullets, paragraphs, inline bold / code /
+ * italics, and horizontal rules. Escapes HTML first so we never
+ * render user-controllable markup.
+ */
+function markdownToHtml(md) {
+  const escape = (s) =>
+    String(s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+    );
+  const inline = (s) =>
+    s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, href) =>
+        /^https?:\/\//.test(href)
+          ? `<a href="${href}" target="_blank" rel="noopener">${text}</a>`
+          : text
+      );
+
+  const lines = md.split('\n');
+  const out = [];
+  let inList = false;
+  const flushList = () => {
+    if (inList) {
+      out.push('</ul>');
+      inList = false;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    if (line.startsWith('## ')) {
+      flushList();
+      out.push(`<h3 class="pn-h3">${inline(escape(line.slice(3)))}</h3>`);
+    } else if (line.startsWith('### ')) {
+      flushList();
+      out.push(`<h4 class="pn-h4">${inline(escape(line.slice(4)))}</h4>`);
+    } else if (line.startsWith('# ')) {
+      flushList();
+      out.push(`<h2 class="pn-h2">${inline(escape(line.slice(2)))}</h2>`);
+    } else if (/^-{3,}$/.test(line.trim())) {
+      flushList();
+      out.push('<hr class="pn-hr">');
+    } else if (line.startsWith('- ')) {
+      if (!inList) {
+        out.push('<ul class="pn-list">');
+        inList = true;
+      }
+      out.push(`<li>${inline(escape(line.slice(2)))}</li>`);
+    } else if (line.trim() === '') {
+      flushList();
+      out.push('');
+    } else {
+      flushList();
+      out.push(`<p class="pn-p">${inline(escape(line))}</p>`);
+    }
+  }
+  flushList();
+  return out.join('\n');
+}
+
 // ---------- Start ----------
 state.transition(STATES.MENU);
 loop.start();
@@ -919,5 +1027,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.0.0 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.0.5 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

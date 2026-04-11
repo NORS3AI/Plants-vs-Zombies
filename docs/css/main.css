@@ -234,6 +234,95 @@ input, select, textarea {
   font-size: 0.8rem;
 }
 
+/* Version label is actually a button → opens the patch notes modal. */
+.version-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.05em;
+}
+.version-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
+}
+.version-btn::before { content: '📜 '; }
+
+/* Patch notes modal — tall, scrollable, with readable markdown styling */
+.modal-dialog-patchnotes {
+  max-height: 85vh;
+}
+.modal-dialog-patchnotes .modal-body,
+.modal-dialog-patchnotes .placed-modal-body,
+.modal-dialog-patchnotes .patch-notes-body {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+.patch-notes-body {
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--fg-base);
+}
+.patch-notes-body .pn-h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.4rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.patch-notes-body .pn-h3 {
+  font-size: 1.05rem;
+  margin: 1.2rem 0 0.4rem;
+  color: var(--accent);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+}
+.patch-notes-body .pn-h4 {
+  font-size: 0.9rem;
+  margin: 0.85rem 0 0.35rem;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.patch-notes-body .pn-list {
+  margin: 0.25rem 0 0.75rem;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+.patch-notes-body .pn-list li {
+  margin-bottom: 0.3rem;
+}
+.patch-notes-body .pn-p {
+  margin: 0.4rem 0;
+}
+.patch-notes-body .pn-hr {
+  border: 0;
+  border-top: 1px dashed var(--border);
+  margin: 1.2rem 0;
+}
+.patch-notes-body strong { color: var(--accent); font-weight: 700; }
+.patch-notes-body code {
+  background: var(--bg-elev);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--accent-blue);
+}
+.patch-notes-body a {
+  color: var(--accent-blue);
+  text-decoration: underline;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
@@ -594,8 +683,53 @@ input, select, textarea {
 
 .start-round-btn {
   margin-top: 1rem;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
+  padding: 1.1rem 2.2rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  position: relative;
+  /* Override .btn-pulse with a more intense layered animation */
+  animation:
+    startRoundGlow 1.5s ease-in-out infinite,
+    startRoundBob 2.8s ease-in-out infinite;
+}
+.start-round-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 10px;
+  background: linear-gradient(45deg,
+    rgba(212, 175, 55, 0.6),
+    rgba(244, 63, 94, 0.4),
+    rgba(212, 175, 55, 0.6));
+  background-size: 200% 200%;
+  filter: blur(10px);
+  z-index: -1;
+  animation: startRoundShimmer 3s linear infinite;
+  opacity: 0.85;
+}
+@keyframes startRoundGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(212, 175, 55, 0.75),
+      0 0 16px 2px rgba(212, 175, 55, 0.55),
+      inset 0 0 12px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(212, 175, 55, 0),
+      0 0 32px 6px rgba(244, 63, 94, 0.65),
+      inset 0 0 14px rgba(255, 255, 255, 0.25);
+  }
+}
+@keyframes startRoundBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes startRoundShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 .btn-small {
@@ -1603,6 +1737,78 @@ input, select, textarea {
   padding-top: 0.6rem;
   border-top: 1px solid var(--border);
   margin: 0;
+}
+
+/* ---------- Combat Plant Details Modal ---------- */
+.combat-plant-hp-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.combat-plant-hp-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fg-base);
+}
+.combat-plant-hp-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.combat-plant-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-green), #65a30d);
+  transition: width 0.12s linear;
+}
+.combat-plant-shield {
+  font-size: 0.85rem;
+  color: var(--accent-blue);
+  padding: 0.3rem 0.5rem;
+  background: rgba(96, 165, 250, 0.1);
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 4px;
+}
+.combat-plant-targeting {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+}
+.combat-plant-targeting strong {
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.combat-plant-move-hint {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  text-align: center;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* Combat move mode: highlight valid destination tiles */
+.combat-grid.combat-move-mode {
+  cursor: pointer;
+}
+.grid-tile.combat-move-target-valid {
+  box-shadow:
+    inset 0 0 0 2px rgba(74, 222, 128, 0.75),
+    0 0 10px rgba(74, 222, 128, 0.55);
+  animation: move-target-pulse 1.4s ease-in-out infinite;
+}
+.grid-tile.combat-move-source {
+  box-shadow:
+    inset 0 0 0 3px rgba(250, 204, 21, 0.9),
+    0 0 14px rgba(250, 204, 21, 0.7);
+}
+@keyframes move-target-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(74, 222, 128, 0.6), 0 0 6px rgba(74, 222, 128, 0.4); }
+  50%      { box-shadow: inset 0 0 0 2px rgba(74, 222, 128, 0.9), 0 0 14px rgba(74, 222, 128, 0.7); }
 }
 
 /* Tier badge (Magic Mushroom upgrade) shown inline in the stats line. */

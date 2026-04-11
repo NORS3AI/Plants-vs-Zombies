@@ -17,6 +17,8 @@ import { getCard } from '../cards/index.js';
 import { renderGridCardIcon } from './cardView.js';
 import { GRID_ROWS, GRID_COLS, STAGING_COL } from '../game/grid.js';
 import { castAetherSpell } from '../game/aetherSpells.js';
+import { getCombatState } from '../game/combat.js';
+import { showModal } from './modal.js';
 
 // Optional audio manager; set by main.js via setCombatViewAudio
 let _audio = null;
@@ -55,12 +57,20 @@ let _overlayEl = null;
 const _zombieEls = new Map(); // zombie.id → { el, hpFill }
 const _plantEls = new Map(); // plant.instanceId → { el, hpFill }
 
+// Combat-time plant move mode. When set the next tap on an empty
+// (non-staging) tile relocates the plant to that position. Cleared
+// after a successful move, cancellation, or modal close.
+let _moveMode = null; // { plant, run } | null
+let _currentCombatRun = null; // captured in initCombatView for tile handlers
+
 /**
  * Build the static grid DOM for combat. Called once on COMBAT enter.
  * Also places plant icons on their tiles based on run.deck placements.
  */
 export function initCombatView(host, run) {
   _hostEl = host;
+  _currentCombatRun = run;
+  _moveMode = null;
   host.innerHTML = '';
   _zombieEls.clear();
   _plantEls.clear();
@@ -88,6 +98,7 @@ export function initCombatView(host, run) {
       tile.className = `grid-tile ${parity}${isStaging ? ' tile-staging' : ''}`;
       tile.dataset.row = String(r);
       tile.dataset.col = String(c);
+      tile.addEventListener('click', () => handleCombatTileClick(r, c));
       gridEl.appendChild(tile);
     }
   }
@@ -143,6 +154,244 @@ export function initCombatView(host, run) {
 function findTile(row, col) {
   if (!_gridEl) return null;
   return _gridEl.querySelector(`.grid-tile[data-row="${row}"][data-col="${col}"]`);
+}
+
+// ============================================================
+// COMBAT TILE CLICKS — plant details + mid-round move
+// ============================================================
+
+function handleCombatTileClick(row, col) {
+  const run = _currentCombatRun;
+  const state = getCombatState();
+  if (!run || !state) return;
+
+  // In move mode: next tap picks the destination tile.
+  if (_moveMode) {
+    // Tap the source tile (the plant being moved) → cancel move mode
+    if (row === _moveMode.plant.row && col === _moveMode.plant.col) {
+      exitMoveMode();
+      flashCombatToast('Move cancelled.');
+      return;
+    }
+    if (col === STAGING_COL) {
+      flashCombatToast("Can't move into the staging column.");
+      return;
+    }
+    // Destination must be empty (no living plant)
+    const occupied = state.plants.some(
+      (p) => p.hp > 0 && p.row === row && p.col === col,
+    );
+    if (occupied) {
+      flashCombatToast('That tile is already occupied.');
+      return;
+    }
+    movePlantTo(_moveMode.plant, row, col, run);
+    exitMoveMode();
+    return;
+  }
+
+  // Otherwise: tap a plant to open its details modal
+  const plant = state.plants.find(
+    (p) => p.hp > 0 && p.row === row && p.col === col,
+  );
+  if (plant) {
+    openCombatPlantModal(plant, run);
+  }
+}
+
+/**
+ * Combat-time plant details modal. Shows live HP, shield, buffs,
+ * tier and targeting. Includes a Move button that enters move mode
+ * so the player can relocate the plant to any empty non-staging
+ * tile mid-round.
+ */
+async function openCombatPlantModal(plant, run) {
+  const card = plant.card;
+  const instance = run.deck.find((d) => d.instanceId === plant.instanceId);
+  if (!card || !instance) return;
+
+  const bodyHtml = buildCombatPlantBody(plant, card, instance);
+
+  const choice = await showModal({
+    title: card.name,
+    bodyHtml,
+    buttons: [
+      { label: 'Move', value: 'move', kind: 'primary' },
+      { label: 'Close', value: null, kind: 'default' },
+    ],
+    showClose: true,
+    extraClass: 'modal-dialog-placed',
+  });
+
+  if (choice === 'move') {
+    enterMoveMode(plant, run);
+  }
+}
+
+/**
+ * Build the live body HTML for a plant in combat. Uses the runtime
+ * `plant` for current HP / shield / damage multipliers and the
+ * `instance` buffs list for the stacked-spell breakdown.
+ */
+function buildCombatPlantBody(plant, card, instance) {
+  const tier = plant.tier ?? 1;
+  const buffs = instance.buffs ?? [];
+
+  // Effective stats right now, in combat
+  const effectiveDmg = Math.round(
+    (card.damage + (plant.dmgBonus ?? 0)) * (plant.dmgMul ?? 1),
+  );
+  const baseCast = card.castTime > 0 ? card.castTime : 0;
+  const castTime = Math.max(0.1, baseCast + (plant.castSpeedBuff ?? 0));
+
+  const tierBadge = tier > 1
+    ? `<span class="placed-tier-badge">T${tier}</span>`
+    : '';
+
+  const hpPct = Math.max(0, Math.min(1, plant.hp / plant.maxHp));
+  const hpText = `${Math.ceil(plant.hp)} / ${Math.ceil(plant.maxHp)} HP`;
+  const shieldRow = (plant.shield ?? 0) > 0
+    ? `<div class="combat-plant-shield">🛡 Shield: <strong>${Math.ceil(plant.shield)}</strong></div>`
+    : '';
+
+  const statsParts = [];
+  if (card.damage > 0) statsParts.push(`${effectiveDmg} DMG`);
+  if (baseCast > 0) statsParts.push(`${castTime.toFixed(1)}s cast`);
+  const statsLine = statsParts.length > 0 ? statsParts.join(' · ') : '—';
+
+  const buffsHtml = buffs.length > 0
+    ? `
+      <div class="placed-section">
+        <h4>Active Spells (${buffs.length})</h4>
+        <ul class="placed-buffs-list">
+          ${buffs.map((b) => `<li>${describeBuffText(b)}</li>`).join('')}
+        </ul>
+      </div>
+    `
+    : '';
+
+  const targetingLine = card.damage > 0
+    ? `<div class="combat-plant-targeting">Targeting: <strong>${escapeHtmlText(plant.targeting ?? 'first')}</strong></div>`
+    : '';
+
+  return `
+    <div class="placed-modal-body">
+      <p class="placed-modal-stats">${tierBadge}${escapeHtmlText(statsLine)}</p>
+      <div class="combat-plant-hp-wrap">
+        <div class="combat-plant-hp-text">${escapeHtmlText(hpText)}</div>
+        <div class="combat-plant-hp-track"><div class="combat-plant-hp-fill" style="width:${hpPct * 100}%"></div></div>
+      </div>
+      ${shieldRow}
+      <p class="placed-modal-desc">${escapeHtmlText(card.description ?? '')}</p>
+      ${buffsHtml}
+      ${targetingLine}
+      <p class="combat-plant-move-hint">Tap <strong>Move</strong> to relocate this plant — any empty tile except the staging column is a valid target.</p>
+    </div>
+  `;
+}
+
+function describeBuffText(buff) {
+  switch (buff.type) {
+    case 'shield':
+      return `🛡 <strong>+${buff.value}</strong> shield`;
+    case 'hp_boost':
+      return `❤️ <strong>+${buff.value}</strong> max HP`;
+    case 'dmg_boost':
+      return `⚔️ <strong>+${buff.value}</strong> damage`;
+    case 'dmg_mul':
+      return `⚡ <strong>×${buff.value}</strong> damage multiplier`;
+    case 'cast_speed': {
+      const sign = buff.value < 0 ? '' : '+';
+      return `⏱ <strong>${sign}${buff.value}s</strong> cast time`;
+    }
+    default:
+      return `✨ ${buff.type}`;
+  }
+}
+
+function escapeHtmlText(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+function enterMoveMode(plant, run) {
+  _moveMode = { plant, run: run ?? _currentCombatRun };
+  if (_gridEl) _gridEl.classList.add('combat-move-mode');
+  // Highlight empty (non-staging) tiles as valid destinations
+  const state = getCombatState();
+  if (!state || !_gridEl) return;
+  const tiles = _gridEl.querySelectorAll('.grid-tile');
+  tiles.forEach((tile) => {
+    const r = Number(tile.dataset.row);
+    const c = Number(tile.dataset.col);
+    if (c === STAGING_COL) return;
+    const occupied = state.plants.some(
+      (p) => p.hp > 0 && p.row === r && p.col === c,
+    );
+    if (!occupied) tile.classList.add('combat-move-target-valid');
+    // The "source" tile gets a distinct class so the player knows
+    // which plant they're moving.
+    if (r === plant.row && c === plant.col) tile.classList.add('combat-move-source');
+  });
+  flashCombatToast('Tap an empty tile to move the plant there.');
+}
+
+function exitMoveMode() {
+  _moveMode = null;
+  if (_gridEl) {
+    _gridEl.classList.remove('combat-move-mode');
+    _gridEl.querySelectorAll('.grid-tile').forEach((tile) => {
+      tile.classList.remove('combat-move-target-valid', 'combat-move-source');
+    });
+  }
+}
+
+/**
+ * Relocate a plant to (row, col) mid-combat. Updates both the
+ * runtime _state.plants entry (so targeting / findBlockingPlant
+ * re-evaluate next tick) and the run.deck instance (so the new
+ * position persists through save / round end / next shop phase).
+ * Also moves the DOM icon between tiles.
+ */
+function movePlantTo(plant, row, col, run) {
+  const oldTile = findTile(plant.row, plant.col);
+  const newTile = findTile(row, col);
+  if (!newTile) return;
+
+  // Update runtime state
+  plant.row = row;
+  plant.col = col;
+
+  // Update the persistent deck instance
+  const instance = run.deck.find((d) => d.instanceId === plant.instanceId);
+  if (instance) {
+    instance.gridRow = row;
+    instance.gridCol = col;
+  }
+
+  // Move the DOM icon between tiles. The _plantEls map entry still
+  // points at the same element — it just lives under a new parent.
+  const entry = _plantEls.get(plant.instanceId);
+  if (entry?.el) {
+    if (oldTile) {
+      oldTile.classList.remove('tile-has-card');
+      oldTile.innerHTML = '';
+    }
+    newTile.innerHTML = '';
+    newTile.appendChild(entry.el);
+    newTile.classList.add('tile-has-card');
+  }
+
+  flashCombatToast(`${plant.card.name} relocated.`);
+}
+
+function flashCombatToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.className = 'shop-toast shop-toast-success';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
 }
 
 /**
@@ -496,4 +745,6 @@ export function resetCombatView() {
   _projectileEls.clear();
   _spellSlotEls.clear();
   _currentRun = null;
+  _currentCombatRun = null;
+  _moveMode = null;
 }
