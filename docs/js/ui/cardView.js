@@ -10,7 +10,7 @@
  * The renderer is purely presentational. Buy/sell logic lives in shop.js.
  */
 
-import { RARITIES, formatCardStats } from '../cards/index.js';
+import { formatCardStats } from '../cards/index.js';
 import { showModal } from './modal.js';
 
 /**
@@ -54,10 +54,10 @@ export function renderCard(card, options = {}) {
 
   const typeRow = document.createElement('div');
   typeRow.className = 'card-type-row';
-  const rarityLabel = RARITIES[card.rarity]?.label ?? card.rarity;
   const typeIcon = card.type === 'plant' ? '🌱' : '✨';
+  const typeLabel = card.type === 'plant' ? 'Plant' : 'Spell';
   const typeSpan = document.createElement('span');
-  typeSpan.textContent = `${typeIcon} ${rarityLabel}`;
+  typeSpan.textContent = `${typeIcon} ${typeLabel}`;
   typeRow.appendChild(typeSpan);
   body.appendChild(typeRow);
 
@@ -135,7 +135,9 @@ export function renderCard(card, options = {}) {
  * the top-right also dismisses.
  */
 export function showCardDetails(card) {
-  const rarityLabel = RARITIES[card.rarity]?.label ?? card.rarity;
+  // Show "Plant" or "Spell" instead of the rarity name. Rarity still
+  // drives the border color via `var(--rarity-${card.rarity})`.
+  const typeLabel = card.type === 'plant' ? 'Plant' : 'Spell';
   const rarityColor = `var(--rarity-${card.rarity})`;
   const typeIcon = card.type === 'plant' ? '🌱' : '✨';
 
@@ -182,7 +184,7 @@ export function showCardDetails(card) {
     <div class="card-details card-rarity-${escape(card.rarity)}">
       <div class="cd-header">
         <div class="cd-icon">${typeIcon}</div>
-        <div class="cd-rarity" style="color: ${rarityColor};">${escape(rarityLabel)}</div>
+        <div class="cd-rarity" style="color: ${rarityColor};">${typeLabel}</div>
       </div>
       ${statsRows ? `<div class="cd-stats">${statsRows}</div>` : ''}
       <p class="cd-desc">${escape(card.description ?? '')}</p>

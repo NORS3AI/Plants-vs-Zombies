@@ -288,13 +288,16 @@ function showPackRevealModal(pack, cards) {
   const titleEl = `${pack.label} Pack — ${cards.length} cards`;
   const cardsHtml = cards
     .map((c) => {
+      // Keep the rarity-driven border via card-rarity-* class, but
+      // show "Plant" or "Spell" as the readable label.
       const rarityClass = `card-rarity-${c.rarity}`;
       const icon = c.type === 'plant' ? '🌱' : '✨';
+      const typeLabel = c.type === 'plant' ? 'Plant' : 'Spell';
       return `
         <div class="reveal-card ${rarityClass}">
           <div class="reveal-card-icon">${icon}</div>
           <div class="reveal-card-name">${escapeHtml(c.name)}</div>
-          <div class="reveal-card-rarity">${escapeHtml(c.rarity)}</div>
+          <div class="reveal-card-rarity">${typeLabel}</div>
         </div>
       `;
     })
