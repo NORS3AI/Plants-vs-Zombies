@@ -27,6 +27,7 @@ export function showModal({
   wide = false,
   showClose = false,
   extraClass = '',
+  onReady = null,
 }) {
   // Close any existing modal first
   if (activeModal) closeModal(null);
@@ -116,7 +117,15 @@ export function showModal({
     };
 
     // Trigger fade-in next frame
-    requestAnimationFrame(() => backdrop.classList.add('is-open'));
+    requestAnimationFrame(() => {
+      backdrop.classList.add('is-open');
+      // onReady gives the caller access to the dialog element so
+      // they can wire up interactive content in bodyHtml (e.g.
+      // targeting buttons that update state without closing).
+      if (onReady) {
+        try { onReady(dialog); } catch (e) { console.warn('[modal] onReady failed:', e); }
+      }
+    });
   });
 }
 

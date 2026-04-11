@@ -135,11 +135,14 @@ function handleTileClick(run, row, col) {
       return;
     }
 
-    // Plant placement path: empty tile = place, occupied = cancel selection
+    // Plant placement path: empty tile = place, occupied = switch the
+    // tap to "open modal for that plant" so taps never feel wasted.
     if (!atTile) {
       placeAt(run, row, col);
     } else {
-      clearSelection(run);
+      _selection = null;
+      openPlacedCardModal(run, atTile);
+      renderPlacement(run);
     }
     return;
   }
@@ -406,48 +409,111 @@ async function openPlacedCardModal(run, instance) {
   const card = getCard(instance.cardId);
   if (!card) return;
 
-  const targetingLine = card.damage > 0
-    ? `Currently targeting: <strong>${instance.targeting ?? card.targetingDefault ?? 'first'}</strong>`
-    : `<em>${card.name} does not attack.</em>`;
-
-  const bodyHtml = `
-    <div class="placed-modal-body">
-      <p class="placed-modal-stats">${formatCardStats(card)}</p>
-      <p class="placed-modal-desc">${escapeHtml(card.description ?? '')}</p>
-      <p class="placed-modal-targeting">${targetingLine}</p>
-    </div>
-  `;
-
-  const buttons = [];
-  if (card.damage > 0) {
-    buttons.push(
-      { label: '🎯 First', value: 'first' },
-      { label: '💪 Strongest', value: 'strongest' },
-      { label: '🩸 Weakest', value: 'weakest' },
-    );
-  }
-  buttons.push({ label: 'Remove', value: 'remove', kind: 'danger' });
-  buttons.push({ label: 'Close', value: null, kind: 'default' });
+  const bodyHtml = buildPlacedCardBody(card, instance);
 
   const choice = await showModal({
     title: card.name,
     bodyHtml,
-    buttons,
-    wide: false,
+    buttons: [
+      { label: 'Remove', value: 'remove', kind: 'danger' },
+      { label: 'Close', value: null, kind: 'default' },
+    ],
+    showClose: true,
+    extraClass: 'modal-dialog-placed',
+    onReady: (dialog) => {
+      // Attach click handlers to targeting buttons so taps update
+      // instance.targeting in place, WITHOUT closing the modal.
+      dialog.querySelectorAll('.placed-targeting-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newTarget = btn.dataset.targeting;
+          if (!newTarget) return;
+          instance.targeting = newTarget;
+          // Update visual "is-selected" state
+          dialog.querySelectorAll('.placed-targeting-btn').forEach((b) => {
+            b.classList.toggle('is-selected', b === btn);
+          });
+          _audio?.playSfx('click');
+          _onChange?.();
+        });
+      });
+    },
   });
 
   if (choice === 'remove') {
     instance.gridRow = null;
     instance.gridCol = null;
     _audio?.playSfx('back');
-  } else if (choice === 'first' || choice === 'strongest' || choice === 'weakest') {
-    instance.targeting = choice;
-    _audio?.playSfx('click');
-  }
-
-  if (choice) {
     _onChange?.();
     renderPlacement(run);
+  } else {
+    // Even on "Close" we might have updated targeting — re-render so
+    // the grid reflects any state changes.
+    renderPlacement(run);
+  }
+}
+
+/**
+ * Build the HTML body for the placed-card modal. Shows stats,
+ * description, active buffs (stacked), and inline targeting buttons.
+ */
+function buildPlacedCardBody(card, instance) {
+  const buffs = instance.buffs ?? [];
+  const currentTarget = instance.targeting ?? card.targetingDefault ?? 'first';
+
+  const buffsHtml = buffs.length > 0
+    ? `
+      <div class="placed-section">
+        <h4>Active Spells (${buffs.length})</h4>
+        <ul class="placed-buffs-list">
+          ${buffs.map((b) => `<li>${describeBuff(b, card)}</li>`).join('')}
+        </ul>
+      </div>
+    `
+    : '';
+
+  const targetingHtml = card.damage > 0
+    ? `
+      <div class="placed-section">
+        <h4>Targeting</h4>
+        <div class="placed-targeting-btns">
+          <button type="button" class="placed-targeting-btn ${currentTarget === 'first' ? 'is-selected' : ''}" data-targeting="first">🎯 First</button>
+          <button type="button" class="placed-targeting-btn ${currentTarget === 'strongest' ? 'is-selected' : ''}" data-targeting="strongest">💪 Strongest</button>
+          <button type="button" class="placed-targeting-btn ${currentTarget === 'weakest' ? 'is-selected' : ''}" data-targeting="weakest">🩸 Weakest</button>
+        </div>
+      </div>
+    `
+    : '<p class="placed-no-target"><em>This plant does not attack.</em></p>';
+
+  return `
+    <div class="placed-modal-body">
+      <p class="placed-modal-stats">${formatCardStats(card)}</p>
+      <p class="placed-modal-desc">${escapeHtml(card.description ?? '')}</p>
+      ${buffsHtml}
+      ${targetingHtml}
+    </div>
+  `;
+}
+
+/**
+ * Human-readable description of a stored buff entry.
+ */
+function describeBuff(buff, card) {
+  switch (buff.type) {
+    case 'shield':
+      return `🛡 <strong>+${buff.value}</strong> shield`;
+    case 'hp_boost':
+      return `❤️ <strong>+${buff.value}</strong> max HP`;
+    case 'dmg_boost':
+      return `⚔️ <strong>+${buff.value}</strong> damage`;
+    case 'dmg_mul':
+      return `⚡ <strong>×${buff.value}</strong> damage multiplier`;
+    case 'cast_speed': {
+      const sign = buff.value < 0 ? '' : '+';
+      return `⏱ <strong>${sign}${buff.value}s</strong> cast time`;
+    }
+    default:
+      return `✨ ${buff.type}`;
   }
 }
 
@@ -553,6 +619,14 @@ function flashToast(msg) {
   t.className = 'shop-toast shop-toast-success';
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
+}
+
+function flashError(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.className = 'shop-toast';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
 }
 
 // ============================================================

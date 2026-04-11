@@ -478,7 +478,7 @@ input, select, textarea {
   border-radius: 0 12px 12px 0;
   box-shadow: var(--shadow);
   z-index: 40;
-  width: 72px;
+  width: 88px;
 }
 
 #hud-sidebar[hidden] { display: none; }
@@ -491,6 +491,8 @@ input, select, textarea {
   padding: 0.35rem 0.25rem;
   border-radius: 6px;
   background: var(--bg-elev-2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hud-sb-icon {
@@ -507,15 +509,21 @@ input, select, textarea {
 }
 
 .hud-sb-value {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--accent);
   line-height: 1.1;
   text-align: center;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* HP gets its own even smaller font so 100/100 or 150/150 fits cleanly */
+.hud-sb-item:nth-child(3) .hud-sb-value {
+  font-size: 0.72rem;
+  letter-spacing: -0.02em;
 }
 
 /* HP color states applied by syncHUD */
@@ -523,8 +531,8 @@ input, select, textarea {
 .hud-sb-value.hud-hp-med { color: #f59e0b; }
 
 /* Clear the sidebar so shop/combat content doesn't sit underneath it */
-#screen-shop .shop-main { padding-left: 84px; }
-#screen-combat .combat-main { padding-left: 84px; }
+#screen-shop .shop-main { padding-left: 100px; }
+#screen-combat .combat-main { padding-left: 100px; }
 
 .hud-item .hud-sub {
   font-size: 0.85rem;
@@ -1424,7 +1432,13 @@ input, select, textarea {
   border-radius: 4px;
   overflow: hidden;
   border-top: 3px solid var(--border);
+  /* Let the parent .grid-tile capture every tap — no child swallows clicks. */
+  pointer-events: none;
+  user-select: none;
 }
+.grid-card * { pointer-events: none; }
+/* Buff badge still needs to be visible but not intercept taps */
+.grid-card .grid-card-buff-badge { pointer-events: none; }
 
 .grid-card-rarity-trash     { border-top-color: var(--rarity-trash); }
 .grid-card-rarity-common    { border-top-color: var(--rarity-common); }
@@ -1457,7 +1471,7 @@ input, select, textarea {
 .placed-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.75rem;
   padding-bottom: 0.5rem;
 }
 
@@ -1473,17 +1487,86 @@ input, select, textarea {
   line-height: 1.4;
 }
 
-.placed-modal-targeting {
-  color: var(--fg-base);
-  font-size: 0.9rem;
-  padding-top: 0.5rem;
+/* Each labeled section (Active Spells, Targeting) inside the placed modal */
+.placed-section {
+  padding-top: 0.6rem;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.placed-section h4 {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  font-weight: 700;
 }
 
-/* The targeting modal buttons are a 3x3 (ish) grid for tighter layout */
-.placed-modal-body + .modal-actions {
-  flex-wrap: wrap;
-  justify-content: center;
+/* Stacked buffs list — one line per applied spell */
+.placed-buffs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.placed-buffs-list li {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--fg-base);
+}
+.placed-buffs-list li strong {
+  color: var(--accent);
+}
+
+/* Inline targeting buttons (replaces modal-actions targeting) */
+.placed-targeting-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+.placed-targeting-btn {
+  padding: 0.55rem 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--bg-elev);
+  color: var(--fg-base);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+  min-height: 44px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.placed-targeting-btn:hover {
+  background: var(--bg-hover, var(--bg-elev));
+  border-color: var(--accent);
+}
+.placed-targeting-btn.is-selected {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.25);
+}
+.placed-targeting-btn.is-selected:hover {
+  background: var(--accent);
+}
+
+.placed-no-target {
+  color: var(--fg-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  margin: 0;
 }
 
 /* ---------- Grid (5x12) ---------- */
@@ -1559,6 +1642,10 @@ input, select, textarea {
   font-size: 0.65rem;
   color: var(--fg-muted);
   transition: all 0.1s ease;
+  cursor: pointer;
+  /* Eliminate 300ms tap delay on mobile and prevent double-tap zoom */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .grid-tile.tile-a { background: var(--grid-tile); }
@@ -2299,9 +2386,9 @@ input, select, textarea {
 /* Phones */
 @media (max-width: 640px) {
   :root {
-    --tile-size: 32px;
+    --tile-size: 40px;
     --tile-gap: 3px;
-    --aether-width: 48px;
+    --aether-width: 52px;
   }
   #app { padding: 0; }
   /* All screens become scrollable on phones so game-over, victory, and
@@ -2413,18 +2500,19 @@ input, select, textarea {
   .speed-btn { top: 6px; right: 48px; height: 34px; min-height: 34px; padding: 0 0.6rem; font-size: 0.7rem; }
   .dev-gold-btn { width: 44px; height: 44px; bottom: 14px; right: 14px; font-size: 1.1rem; }
 
-  /* HUD sidebar shrinks on phones */
+  /* HUD sidebar shrinks on phones but stays wide enough for 100/100 */
   #hud-sidebar {
-    width: 56px;
-    padding: 0.45rem 0.25rem;
+    width: 66px;
+    padding: 0.4rem 0.25rem;
     gap: 0.3rem;
   }
   .hud-sb-item { padding: 0.25rem 0.15rem; }
   .hud-sb-icon { font-size: 0.9rem; }
   .hud-sb-label { font-size: 0.48rem; }
   .hud-sb-value { font-size: 0.7rem; }
-  #screen-shop .shop-main { padding-left: 66px; padding-right: 0.25rem; }
-  #screen-combat .combat-main { padding-left: 66px; }
+  .hud-sb-item:nth-child(3) .hud-sb-value { font-size: 0.62rem; }
+  #screen-shop .shop-main { padding-left: 76px; padding-right: 0.25rem; }
+  #screen-combat .combat-main { padding-left: 76px; }
 
   /* ----- Combat ----- */
   .combat-main {
@@ -2547,9 +2635,9 @@ input, select, textarea {
 /* Very small phones (iPhone SE, etc.) */
 @media (max-width: 380px) {
   :root {
-    --tile-size: 26px;
+    --tile-size: 34px;
     --tile-gap: 2px;
-    --aether-width: 40px;
+    --aether-width: 44px;
   }
   .shop-section-title { font-size: 0.75rem; }
   .card-name { font-size: 0.9rem; }
