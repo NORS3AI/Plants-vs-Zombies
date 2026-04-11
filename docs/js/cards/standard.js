@@ -35,6 +35,7 @@ export const STANDARD_PLANTS = [
     targetingDefault: 'first',
     description: 'Cheap fodder to stall a lane. Attacks fast but hits weak.',
     abilities: [],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'blooming_scrubber' },
   },
   {
     id: 'ironroot_sentry',
@@ -52,6 +53,7 @@ export const STANDARD_PLANTS = [
     targetingDefault: 'first',
     description: 'The bread-and-butter melee plant.',
     abilities: [],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'ironroot_archer' },
   },
   {
     id: 'cinder_fern',
@@ -69,6 +71,7 @@ export const STANDARD_PLANTS = [
     targetingDefault: 'first',
     description: 'Shoots small firebolts down its lane at range.',
     abilities: [{ type: 'projectile', element: 'fire' }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'smoldering_fern' },
   },
   {
     id: 'frost_bite_willow',
@@ -86,6 +89,7 @@ export const STANDARD_PLANTS = [
     targetingDefault: 'first',
     description: 'Slow attack speed, but chills enemies and slows their movement.',
     abilities: [{ type: 'slow_on_hit', percent: 0.5, duration: 2.0 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'frozen_willow' },
   },
   {
     id: 'void_petal_bloom',
@@ -95,14 +99,15 @@ export const STANDARD_PLANTS = [
     category: 'standard',
     cost: { min: 6, max: 9 },
     sell: { min: 5, max: 8 },
-    health: 120,
-    damage: 60,
+    health: 50,
+    damage: 22,
     castTime: 2.0,
     range: 12,
     attackPattern: 'forward',
     targetingDefault: 'first',
-    description: 'High damage; attacks splash to adjacent lanes.',
+    description: 'Splash damage to adjacent lanes. Fragile but lethal.',
     abilities: [{ type: 'splash', radius: 1 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'void_bloom' },
   },
   {
     id: 'solar_archon',
@@ -123,6 +128,7 @@ export const STANDARD_PLANTS = [
       { type: 'beam' },
       { type: 'heal_adjacent', value: 5, interval: 2.0 },
     ],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'solar_breach' },
   },
 ];
 
@@ -250,6 +256,7 @@ export const STANDARD_ECONOMY = [
     abilities: [],
     economy: { goldPerCast: 30 },
     notInShop: true, // Hidden from regular shop randomizer
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'thorn' },
   },
 ];
 

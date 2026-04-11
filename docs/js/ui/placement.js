@@ -86,8 +86,9 @@ function selectDeckCard(run, instanceId) {
 
 /**
  * Place the selected card at (row, col). Returns true on success.
- * If the placed card is a Sunflower and this triggers a 3-Sunflower
- * merge, it handles the evolve atomically.
+ * Any plant with an `evolution.requiresSameId` block will trigger
+ * a merge check after placement (cascading through chain tiers
+ * atomically so the player can collapse a whole line in one tap).
  */
 function placeAt(run, row, col) {
   if (!_selection) return false;
@@ -121,9 +122,12 @@ function placeAt(run, row, col) {
   _audio?.playSfx('click');
   _onFirstPlace?.();
 
-  // Check for Sunflower → Gilded Rose merge
-  if (instance.cardId === 'sunflower') {
-    mergeSunflowers(run, row, col);
+  // Check for evolution merge (any plant with `evolution.requiresSameId`:
+  // Sunflower → Gilded Rose, Seedling → Blooming → Scrubber, etc.).
+  // mergeEvolution consults the card definition, so no hard-coded ids.
+  const placedCard = getCard(instance.cardId);
+  if (placedCard?.evolution?.requiresSameId) {
+    mergeEvolution(run, instance.cardId, row, col);
   }
 
   _onChange?.();
@@ -703,43 +707,67 @@ async function sellDeckInstance(run, instanceId) {
 // ============================================================
 
 /**
- * Check if 3+ Sunflowers are placed and merge them into a Gilded Rose
- * at the `anchor` tile (usually the most recently placed one).
+ * Generic "merge N of the same plant into its evolution" logic.
+ *
+ * When a plant is placed, we check its card definition for an
+ * `evolution: { requiresCount, requiresSameId, intoId }` block. If
+ * the grid already has enough siblings, this function consumes them
+ * and spawns the evolved plant at the anchor tile.
+ *
+ * Recurses after a successful merge so chain evolutions (e.g.
+ * Seedling Scrubber → Blooming Scrubber → Scrubber) can collapse
+ * in a single placement when the right number of tiles line up.
  */
-function mergeSunflowers(run, anchorRow, anchorCol) {
-  const placedSunflowers = run.deck.filter(
-    (d) => d.cardId === 'sunflower' && d.gridRow != null && d.gridCol != null,
-  );
-  if (placedSunflowers.length < 3) return false;
+function mergeEvolution(run, cardId, anchorRow, anchorCol) {
+  const card = getCard(cardId);
+  const evolution = card?.evolution;
+  if (!evolution?.requiresSameId || !evolution.intoId) return false;
 
-  // Prefer the anchor tile's sunflower, then any 2 others
-  const anchor = placedSunflowers.find(
+  const requiresCount = evolution.requiresCount ?? 3;
+  const placed = run.deck.filter(
+    (d) => d.cardId === cardId && d.gridRow != null && d.gridCol != null,
+  );
+  if (placed.length < requiresCount) return false;
+
+  // Prefer the anchor tile's instance so the fusion lands where
+  // the player just clicked. Then take any (requiresCount - 1)
+  // others in placement order.
+  const anchor = placed.find(
     (s) => s.gridRow === anchorRow && s.gridCol === anchorCol,
   );
-  const others = placedSunflowers.filter((s) => s !== anchor);
-  const toMerge = [anchor, ...others.slice(0, 2)].filter(Boolean);
-  if (toMerge.length < 3) return false;
+  const others = placed.filter((s) => s !== anchor);
+  const toMerge = [anchor, ...others.slice(0, requiresCount - 1)].filter(Boolean);
+  if (toMerge.length < requiresCount) return false;
 
-  // Remove the 3 sunflowers from the deck
+  // Remove the consumed instances from the deck.
   for (const s of toMerge) {
     const idx = run.deck.findIndex((d) => d.instanceId === s.instanceId);
     if (idx >= 0) run.deck.splice(idx, 1);
   }
 
-  // Add a Gilded Rose placed at the anchor tile
-  const rose = getCard('gilded_rose');
-  if (rose) {
-    run.deck.push({
-      cardId: 'gilded_rose',
-      instanceId: freshInstanceId(),
-      sellValue: rollSell(rose),
-      gridRow: anchorRow,
-      gridCol: anchorCol,
-      targeting: 'none',
-    });
-    _audio?.playSfx('go');
-    flashToast('🌹 3 Sunflowers merged into a Gilded Rose!');
+  // Spawn the evolved plant at the anchor tile.
+  const resultCard = getCard(evolution.intoId);
+  if (!resultCard) {
+    console.warn(`[merge] target '${evolution.intoId}' not in card database`);
+    return false;
   }
+  const resultInst = {
+    cardId: evolution.intoId,
+    instanceId: freshInstanceId(),
+    sellValue: rollSell(resultCard),
+    gridRow: anchorRow,
+    gridCol: anchorCol,
+    targeting: resultCard.targetingDefault ?? 'first',
+  };
+  run.deck.push(resultInst);
+
+  _audio?.playSfx('go');
+  flashToast(`✨ 3 ${card.name}s → ${resultCard.name}!`);
+
+  // Chain: if the new plant can itself merge (there are already 2
+  // more of the evolved form placed), cascade the merge through
+  // every chain tier in a single placement.
+  mergeEvolution(run, evolution.intoId, anchorRow, anchorCol);
   return true;
 }
 

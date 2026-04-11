@@ -16,6 +16,7 @@ import { PACKS, PACK_ORDER, getPack } from './packs.js';
 import { STANDARD_CARDS } from './standard.js';
 import { PACK_EXCLUSIVE_CARDS } from './packExclusives.js';
 import { AETHER_ROOT_SPELLS } from './aetherRoot.js';
+import { FUSION_PLANTS } from './fusions.js';
 import { validateCards, validateAndLog } from './validate.js';
 
 // ============================================================
@@ -32,15 +33,22 @@ export {
   STANDARD_CARDS,
   PACK_EXCLUSIVE_CARDS,
   AETHER_ROOT_SPELLS,
+  FUSION_PLANTS,
   validateCards,
   validateAndLog,
 };
 
-/** Every card in the database, regardless of source. */
+/**
+ * Every card in the database, regardless of source.
+ * FUSION_PLANTS are merged-only (created at runtime by the placement
+ * module when 3 identical plants land on the grid). They still need
+ * to be in ALL_CARDS so getCard() can hydrate them.
+ */
 export const ALL_CARDS = [
   ...STANDARD_CARDS,
   ...PACK_EXCLUSIVE_CARDS,
   ...AETHER_ROOT_SPELLS,
+  ...FUSION_PLANTS,
 ];
 
 // O(1) id → card lookup

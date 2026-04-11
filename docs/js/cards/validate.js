@@ -11,6 +11,7 @@ import { PACKS } from './packs.js';
 import { STANDARD_CARDS } from './standard.js';
 import { PACK_EXCLUSIVE_CARDS } from './packExclusives.js';
 import { AETHER_ROOT_SPELLS } from './aetherRoot.js';
+import { FUSION_PLANTS } from './fusions.js';
 
 const VALID_TYPES = new Set(['plant', 'spell']);
 const VALID_CATEGORIES = new Set([
@@ -18,6 +19,7 @@ const VALID_CATEGORIES = new Set([
   'pack_exclusive',
   'economy',
   'aether_root',
+  'fusion',
 ]);
 
 /**
@@ -30,6 +32,7 @@ export function validateCards() {
     ...STANDARD_CARDS,
     ...PACK_EXCLUSIVE_CARDS,
     ...AETHER_ROOT_SPELLS,
+    ...FUSION_PLANTS,
   ];
   const ids = new Set();
 
