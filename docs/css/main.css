@@ -616,6 +616,17 @@ input, select, textarea {
   overflow: hidden;
   transition: all 0.15s ease;
   min-height: 220px;
+  /* Long-pressing a card on mobile/desktop shouldn't trigger text
+     selection or the iOS callout menu. Cards are tap targets, not
+     readable content. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.card * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .card-clickable { cursor: pointer; }
@@ -1404,19 +1415,44 @@ input, select, textarea {
 /* Buff badge on placed plant icons */
 .grid-card-buff-badge {
   position: absolute;
-  top: 1px;
-  right: 1px;
-  font-size: 0.6rem;
+  top: -2px;
+  right: -2px;
+  font-size: 0.65rem;
   line-height: 1;
   background: var(--accent-blue);
-  color: var(--bg-base);
+  color: #fff;
+  border: 1px solid #fff;
   border-radius: 50%;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 6px rgba(96, 165, 250, 0.8);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
+  z-index: 5;
+  animation: buff-badge-pulse 1.8s ease-in-out infinite;
+}
+@keyframes buff-badge-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(96, 165, 250, 0.9), 0 0 4px rgba(0, 0, 0, 0.8); }
+  50%      { transform: scale(1.15); box-shadow: 0 0 16px rgba(96, 165, 250, 1), 0 0 4px rgba(0, 0, 0, 0.8); }
+}
+
+/* Whole tile gets a subtle blue glow while the plant has any buffs so
+   the player has instant visual confirmation a spell landed. */
+.grid-tile.tile-buffed {
+  box-shadow:
+    inset 0 0 0 2px rgba(96, 165, 250, 0.75),
+    0 0 10px rgba(96, 165, 250, 0.55);
+}
+
+/* Tier badge variant — purple/gold instead of blue to distinguish
+   Magic Mushroom tiers from spell buffs. */
+.grid-card-buff-badge-tier {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  font-size: 0.55rem;
+  width: 20px;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
 /* ---------- Grid Card Icon (placed card on tile) ---------- */
@@ -1567,6 +1603,94 @@ input, select, textarea {
   padding-top: 0.6rem;
   border-top: 1px solid var(--border);
   margin: 0;
+}
+
+/* Tier badge (Magic Mushroom upgrade) shown inline in the stats line. */
+.placed-tier-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.45);
+}
+
+/* "Clear all buffs" pill button inside the modal buffs section. */
+.placed-clear-buffs-btn {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* ---------- Aether-Root Spell Inventory (shop section) ---------- */
+.aether-spell-inventory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+.aether-spell-empty {
+  padding: 0.9rem;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  background: var(--bg-elev);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+.aether-spell-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-elev);
+  border: 2px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.aether-spell-rarity-common    { border-left-color: var(--rarity-common); }
+.aether-spell-rarity-uncommon  { border-left-color: var(--rarity-uncommon); }
+.aether-spell-rarity-rare      { border-left-color: var(--rarity-rare); }
+.aether-spell-rarity-epic      { border-left-color: var(--rarity-epic); }
+.aether-spell-rarity-legendary {
+  border-left-color: var(--rarity-legendary);
+  background: linear-gradient(135deg, var(--bg-elev), rgba(212, 175, 55, 0.1));
+}
+.aether-spell-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.aether-spell-body { flex: 1; min-width: 0; }
+.aether-spell-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--fg-base);
+}
+.aether-spell-desc {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  line-height: 1.35;
+  margin-top: 0.15rem;
+}
+.aether-spell-meta {
+  font-size: 0.7rem;
+  color: var(--accent);
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.aether-spell-sell-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ---------- Grid (5×9, last col is staging) ---------- */
@@ -2123,6 +2247,18 @@ input, select, textarea {
 .floating-text-red   { color: var(--accent-red); }
 .floating-text-green { color: var(--accent-green); }
 .floating-text-blue  { color: var(--accent-blue); }
+
+/* Gold popups from Sunflower casts + zombie kills use a bigger, punchier
+   font so the player can read them even while the combat is busy. */
+.floating-text-big {
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-shadow:
+    0 0 6px rgba(0, 0, 0, 0.95),
+    0 0 12px rgba(250, 204, 21, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.02em;
+}
 
 .combat-status {
   position: absolute;

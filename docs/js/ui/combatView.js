@@ -325,7 +325,9 @@ function renderFloatingTexts(state, step) {
     let el = _floatingEls.get(key);
     if (!el) {
       el = document.createElement('div');
-      el.className = `floating-text floating-text-${ft.color ?? 'gold'}`;
+      el.className =
+        `floating-text floating-text-${ft.color ?? 'gold'}` +
+        (ft.big ? ' floating-text-big' : '');
       el.textContent = ft.text;
       _overlayEl.appendChild(el);
       _floatingEls.set(key, el);

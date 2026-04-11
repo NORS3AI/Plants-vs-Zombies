@@ -94,16 +94,24 @@ export function initCombat(run, callbacks = {}) {
     const card = getCard(instance.cardId);
     if (!card) continue;
 
+    // Magic Mushroom tier bonuses: +10 HP and +5 DMG per tier above 1.
+    // Stacks up to T99. Applied BEFORE buffs so spell hp/dmg buffs
+    // stack additively on top of the tier base stats.
+    const tier = Math.max(1, instance.tier ?? 1);
+    const tierHpBonus = (tier - 1) * 10;
+    const tierDmgBonus = (tier - 1) * 5;
+
     const plant = {
       instanceId: instance.instanceId,
       cardId: card.id,
       card, // direct reference for faster access
+      tier,
       row: instance.gridRow,
       col: instance.gridCol,
-      hp: card.health,
-      maxHp: card.health,
+      hp: card.health + tierHpBonus,
+      maxHp: card.health + tierHpBonus,
       shield: 0, // Barkskin Guard / World-Tree Seed
-      dmgBonus: 0, // Nectar Rush (+damage)
+      dmgBonus: tierDmgBonus, // Nectar Rush (+damage) + tier bonus
       dmgMul: 1, // Arcane Surge (×damage)
       castSpeedBuff: 0, // Aether Bloom (-cast time)
       // Balance: plants start ready to fire, not after a full 2s delay.
@@ -568,8 +576,9 @@ function produceGold(plant) {
     row: plant.row,
     col: plant.col,
     age: 0,
-    maxAge: 1.2,
+    maxAge: 2.2, // +1s longer than regular pops
     color: 'gold',
+    big: true,   // bigger font for gold popups
   });
   _callbacks?.onGoldChange?.();
 }
@@ -763,8 +772,9 @@ function killZombie(zombie) {
     row: zombie.row,
     col: zombie.col,
     age: 0,
-    maxAge: 1.0,
+    maxAge: 2.0, // +1s longer than regular pops
     color: 'gold',
+    big: true,   // bigger font for gold popups
   });
   _callbacks?.onGoldChange?.();
   _callbacks?.onZombieKilled?.(zombie);

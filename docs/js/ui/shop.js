@@ -118,9 +118,27 @@ function addToDeck(run, card) {
 
 /**
  * Add an Aether-Root spell to the side panel inventory.
+ *
+ * Aether-Root spells can't stack — the Aether-Root only has one of
+ * each socket. If the player already owns a copy of this spell, the
+ * new copy is auto-sold (the rolled sell value is added to gold) and
+ * a toast is flashed so the player knows what happened. Returns
+ * `{ added, soldValue }` so the pack-reveal UI can show context.
  */
 function addToAetherSpells(run, card) {
   if (!run.aetherSpells) run.aetherSpells = [];
+
+  // Duplicate? Auto-sell instead of adding.
+  const already = run.aetherSpells.find((s) => s.cardId === card.id);
+  if (already) {
+    const soldValue = rollSell(card);
+    run.gold += soldValue;
+    run.lastRoundGoldEarned = (run.lastRoundGoldEarned ?? 0) + soldValue;
+    run.totalGoldEarned = (run.totalGoldEarned ?? 0) + soldValue;
+    flashError(`${card.name}: duplicate auto-sold for ${soldValue}g.`);
+    return { added: false, soldValue };
+  }
+
   run.aetherSpells.push({
     cardId: card.id,
     instanceId: freshInstanceId(),
@@ -128,6 +146,7 @@ function addToAetherSpells(run, card) {
     cooldownRemaining: 0,
     usedThisRound: false,
   });
+  return { added: true, soldValue: 0 };
 }
 
 /**
@@ -153,6 +172,34 @@ export function buyShopSlot(run, slotIndex) {
   addToDeck(run, card);
   _audio?.playSfx('click');
   _onFirstBuy?.();
+  _onChange?.();
+  return true;
+}
+
+/**
+ * Sell an Aether-Root spell from the side-panel inventory. Confirms
+ * via modal first. Used by the Aether-Root shop section.
+ */
+export async function sellAetherSpell(run, instanceId) {
+  if (!run.aetherSpells) return false;
+  const idx = run.aetherSpells.findIndex((s) => s.instanceId === instanceId);
+  if (idx < 0) return false;
+  const instance = run.aetherSpells[idx];
+  const card = getCard(instance.cardId);
+  if (!card) return false;
+
+  const ok = await confirmModal({
+    title: `Sell ${card.name}?`,
+    message: `You will receive ${instance.sellValue} gold. The Aether-Root will lose access to this spell for the rest of the run (until you find another copy).`,
+    confirmLabel: `Sell for ${instance.sellValue}g`,
+    cancelLabel: 'Cancel',
+    danger: true,
+  });
+  if (!ok) return false;
+
+  run.aetherSpells.splice(idx, 1);
+  run.gold += instance.sellValue;
+  _audio?.playSfx('click');
   _onChange?.();
   return true;
 }
@@ -279,7 +326,56 @@ export function renderShop(run) {
   ensureShopRollForRound(run);
   renderShopCards(run);
   renderPackRow(run);
+  renderAetherSpellInventory(run);
   updateRefreshButton(run);
+}
+
+/**
+ * Render the Aether-Root spell inventory section. Each owned spell
+ * shows its icon, name, cooldown, and a sell button. Duplicates can't
+ * exist (they auto-sell on pack open), so this is a single-instance
+ * list with at most one of each spell.
+ */
+function renderAetherSpellInventory(run) {
+  const host = document.getElementById('aether-spell-inventory');
+  const countEl = document.getElementById('aether-spell-count');
+  if (!host) return;
+  const spells = run.aetherSpells ?? [];
+  if (countEl) countEl.textContent = String(spells.length);
+  host.innerHTML = '';
+
+  if (spells.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'aether-spell-empty';
+    empty.textContent = 'No Aether-Root spells yet — open Mythic, Arcane, or Frenzy packs to find them.';
+    host.appendChild(empty);
+    return;
+  }
+
+  for (const inst of spells) {
+    const card = getCard(inst.cardId);
+    if (!card) continue;
+    const tile = document.createElement('div');
+    tile.className = `aether-spell-tile aether-spell-rarity-${card.rarity}`;
+    tile.innerHTML = `
+      <div class="aether-spell-icon">✨</div>
+      <div class="aether-spell-body">
+        <div class="aether-spell-name">${escapeHtml(card.name)}</div>
+        <div class="aether-spell-desc">${escapeHtml(card.description ?? '')}</div>
+        <div class="aether-spell-meta">
+          ${card.cooldown ? `${card.cooldown}s CD` : card.oncePerRound ? '1/round' : ''}
+        </div>
+      </div>
+      <button type="button" class="btn btn-small btn-danger aether-spell-sell-btn" data-sell="${inst.instanceId}">Sell ${inst.sellValue}g</button>
+    `;
+    tile
+      .querySelector('.aether-spell-sell-btn')
+      .addEventListener('click', (e) => {
+        e.stopPropagation();
+        sellAetherSpell(run, inst.instanceId);
+      });
+    host.appendChild(tile);
+  }
 }
 
 function renderShopCards(run) {

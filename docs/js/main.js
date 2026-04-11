@@ -593,6 +593,7 @@ function resumeRun() {
   if (!Save.hasRun()) return;
   currentRun = Save.loadRun();
   migrateRunForCurrentGrid(currentRun);
+  migrateStrayAetherSpells(currentRun);
   Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
 }
@@ -616,6 +617,40 @@ function migrateRunForCurrentGrid(run) {
   }
   if (demoted > 0) {
     console.info(`[grid migration] Demoted ${demoted} plant(s) to the deck (old staging / off-grid col).`);
+  }
+}
+
+/**
+ * One-shot migration: Aether-Root spells now live strictly in
+ * `run.aetherSpells`, never `run.deck`. Any aether_root card still
+ * sitting in the plant deck from older saves is moved to aetherSpells
+ * (or auto-sold as a duplicate if the player already owns one).
+ */
+function migrateStrayAetherSpells(run) {
+  if (!run?.deck) return;
+  if (!run.aetherSpells) run.aetherSpells = [];
+
+  for (let i = run.deck.length - 1; i >= 0; i--) {
+    const inst = run.deck[i];
+    const card = Cards.getCard(inst.cardId);
+    if (!card || card.category !== 'aether_root') continue;
+
+    // Already own a copy? Auto-sell this stray one.
+    const dup = run.aetherSpells.find((s) => s.cardId === inst.cardId);
+    if (dup) {
+      run.gold += inst.sellValue ?? 0;
+      console.info(`[aether migration] Auto-sold stray duplicate ${card.name} for ${inst.sellValue ?? 0}g.`);
+    } else {
+      run.aetherSpells.push({
+        cardId: inst.cardId,
+        instanceId: inst.instanceId,
+        sellValue: inst.sellValue ?? 0,
+        cooldownRemaining: 0,
+        usedThisRound: false,
+      });
+      console.info(`[aether migration] Moved stray ${card.name} from deck to aetherSpells.`);
+    }
+    run.deck.splice(i, 1);
   }
 }
 

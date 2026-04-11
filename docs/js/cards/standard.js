@@ -187,8 +187,8 @@ export const STANDARD_SPELLS = [
     cost: { min: 6, max: 9 },
     sell: { min: 5, max: 8 },
     target: 'plant',
-    description: 'Evolve. Target plant transforms into a random card of the next highest rarity tier.',
-    effect: { type: 'evolve', tiers: 1 },
+    description: 'Tier Up. Target plant gains a tier (+10 HP, +5 DMG, stacking up to T99). Cast on a Sunflower to duplicate it instead.',
+    effect: { type: 'tier_up', hpPerTier: 10, dmgPerTier: 5, maxTier: 99 },
   },
   {
     id: 'solar_flare',

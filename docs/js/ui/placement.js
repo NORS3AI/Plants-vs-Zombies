@@ -17,9 +17,6 @@
 import {
   getCard,
   rollSell,
-  formatCardStats,
-  getCardsByRarity,
-  getNextRarity,
 } from '../cards/index.js';
 import { renderGrid, STAGING_COL } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
@@ -187,7 +184,7 @@ function castSpellAtTile(run, instance, card, row, col, targetPlant) {
         flashError(`Cast ${card.name} on a plant (tap a plant on the grid).`);
         return;
       }
-      success = applyPlantSpell(effect, targetPlant, card);
+      success = applyPlantSpell(effect, targetPlant, card, run);
       break;
 
     case 'self':
@@ -233,7 +230,7 @@ function castSpellAtTile(run, instance, card, row, col, targetPlant) {
  * as a buff on the instance so it's persisted through save/load and
  * re-applied to the runtime plant each combat init.
  */
-function applyPlantSpell(effect, targetInstance, card) {
+function applyPlantSpell(effect, targetInstance, card, run) {
   if (!targetInstance.buffs) targetInstance.buffs = [];
   const targetCard = getCard(targetInstance.cardId);
   if (!targetCard) return false;
@@ -263,8 +260,8 @@ function applyPlantSpell(effect, targetInstance, card) {
       // Arcane Surge: 2× damage for 5s (treat as per-round for simplicity)
       targetInstance.buffs.push({ type: 'dmg_mul', value: effect.value, permanent: false });
       return true;
-    case 'evolve':
-      return evolvePlantInstance(targetInstance);
+    case 'tier_up':
+      return tierUpPlantInstance(targetInstance, targetCard, effect, run);
     default:
       flashError(`Effect '${effect.type}' not implemented yet.`);
       return false;
@@ -272,28 +269,37 @@ function applyPlantSpell(effect, targetInstance, card) {
 }
 
 /**
- * Magic Mushroom evolve: replace the target plant with a random card
- * of the next rarity tier, keeping its placement.
+ * Magic Mushroom — Tier Up.
+ *
+ * On Sunflower: duplicates the plant (adds a fresh unplaced Sunflower
+ * to the deck) so the player can stack gold production / eventually
+ * merge 3 into a Gilded Rose. The original Sunflower is untouched.
+ *
+ * On any other plant: bumps `instance.tier` by +1 (defaulting from 1),
+ * capped at `effect.maxTier` (99). Combat.js reads the tier during
+ * hydration and adds +hpPerTier and +dmgPerTier per tier beyond 1.
  */
-function evolvePlantInstance(instance) {
-  const currentCard = getCard(instance.cardId);
-  if (!currentCard) return false;
-  const nextRarity = getNextRarity(currentCard.rarity);
-  if (!nextRarity) {
-    flashError('Already at the highest rarity.');
+function tierUpPlantInstance(instance, card, effect, run) {
+  // Sunflower special case: duplicate instead of tier up.
+  if (card.id === 'sunflower') {
+    const freshInst = {
+      cardId: 'sunflower',
+      instanceId: freshInstanceId(),
+      sellValue: rollSell(card),
+    };
+    run.deck.push(freshInst);
+    flashToast('🍄 A new Sunflower sprouts in your deck!');
+    return true;
+  }
+
+  const maxTier = effect.maxTier ?? 99;
+  const currentTier = instance.tier ?? 1;
+  if (currentTier >= maxTier) {
+    flashError(`${card.name} is already at T${maxTier} (the cap).`);
     return false;
   }
-  const candidates = getCardsByRarity(nextRarity.id).filter(
-    (c) => c.type === 'plant' && c.category === 'standard',
-  );
-  if (candidates.length === 0) {
-    flashError(`No ${nextRarity.label} plants available to evolve into.`);
-    return false;
-  }
-  const newCard = candidates[Math.floor(Math.random() * candidates.length)];
-  instance.cardId = newCard.id;
-  // Reset buffs — the new plant starts fresh
-  instance.buffs = [];
+  instance.tier = currentTier + 1;
+  flashToast(`🍄 ${card.name} is now T${instance.tier}!`);
   return true;
 }
 
@@ -444,10 +450,54 @@ async function openPlacedCardModal(run, instance) {
           _onChange?.();
         });
       });
+
+      // "Clear all buffs" button: wipes the instance.buffs array and
+      // re-renders the modal body in place so the player can see the
+      // result without any modal flicker.
+      const clearBtn = dialog.querySelector('.placed-clear-buffs-btn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const count = (instance.buffs ?? []).length;
+          instance.buffs = [];
+          _audio?.playSfx('back');
+          _onChange?.();
+          renderPlacement(run);
+          flashToast(`🧹 Cleared ${count} buff${count === 1 ? '' : 's'}.`);
+          // Replace the modal body in-place so the player sees the
+          // updated stats and the (now empty) buffs list immediately.
+          const body = dialog.querySelector('.placed-modal-body');
+          if (body) {
+            const card = getCard(instance.cardId);
+            if (card) {
+              const newBody = document.createElement('div');
+              newBody.innerHTML = buildPlacedCardBody(card, instance);
+              body.replaceWith(newBody.firstElementChild);
+              // Re-wire targeting buttons on the new body
+              dialog.querySelectorAll('.placed-targeting-btn').forEach((btn) => {
+                btn.addEventListener('click', (ev) => {
+                  ev.stopPropagation();
+                  const newTarget = btn.dataset.targeting;
+                  if (!newTarget) return;
+                  instance.targeting = newTarget;
+                  dialog.querySelectorAll('.placed-targeting-btn').forEach((b) => {
+                    b.classList.toggle('is-selected', b === btn);
+                  });
+                  _audio?.playSfx('click');
+                  _onChange?.();
+                });
+              });
+            }
+          }
+        });
+      }
     },
   });
 
   if (choice === 'remove') {
+    // Keep the plant instance (and its buffs) — just demote it off
+    // the grid back into the deck inventory. The player can re-place
+    // it later and it will keep everything that was cast on it.
     instance.gridRow = null;
     instance.gridCol = null;
     _audio?.playSfx('back');
@@ -467,6 +517,16 @@ async function openPlacedCardModal(run, instance) {
 function buildPlacedCardBody(card, instance) {
   const buffs = instance.buffs ?? [];
   const currentTarget = instance.targeting ?? card.targetingDefault ?? 'first';
+  const tier = Math.max(1, instance.tier ?? 1);
+
+  // Effective stats = base card + tier bonus + buff bonuses. We compute
+  // them here so the player can see what the plant will actually do in
+  // combat without having to mentally add up every buff.
+  const effective = computeEffectiveStats(card, instance, tier);
+
+  const tierBadge = tier > 1
+    ? `<span class="placed-tier-badge">T${tier}</span>`
+    : '';
 
   const buffsHtml = buffs.length > 0
     ? `
@@ -475,6 +535,7 @@ function buildPlacedCardBody(card, instance) {
         <ul class="placed-buffs-list">
           ${buffs.map((b) => `<li>${describeBuff(b, card)}</li>`).join('')}
         </ul>
+        <button type="button" class="btn btn-small btn-danger placed-clear-buffs-btn">Clear all buffs</button>
       </div>
     `
     : '';
@@ -494,12 +555,52 @@ function buildPlacedCardBody(card, instance) {
 
   return `
     <div class="placed-modal-body">
-      <p class="placed-modal-stats">${formatCardStats(card)}</p>
+      <p class="placed-modal-stats">${tierBadge}${effective.statsHtml}</p>
       <p class="placed-modal-desc">${escapeHtml(card.description ?? '')}</p>
       ${buffsHtml}
       ${targetingHtml}
     </div>
   `;
+}
+
+/**
+ * Compute effective in-combat stats from a card + instance by adding
+ * tier bonuses and every stored buff. Returns a pre-formatted HTML
+ * string ready to drop into the modal.
+ *
+ * Tier:   +10 HP, +5 DMG per tier above 1
+ * Buffs:  hp_boost, dmg_boost, dmg_mul, cast_speed (per buff)
+ */
+function computeEffectiveStats(card, instance, tier) {
+  const baseHp = card.health ?? 0;
+  const baseDmg = card.damage ?? 0;
+  const baseCast = card.castTime ?? 0;
+  const tierHpBonus = (tier - 1) * 10;
+  const tierDmgBonus = (tier - 1) * 5;
+
+  let hp = baseHp + tierHpBonus;
+  let dmg = baseDmg + tierDmgBonus;
+  let dmgMul = 1;
+  let cast = baseCast;
+
+  for (const buff of instance.buffs ?? []) {
+    switch (buff.type) {
+      case 'hp_boost': hp += buff.value; break;
+      case 'dmg_boost': dmg += buff.value; break;
+      case 'dmg_mul': dmgMul *= buff.value; break;
+      case 'cast_speed': cast = Math.max(0.1, cast + buff.value); break;
+    }
+  }
+
+  const finalDmg = Math.round(dmg * dmgMul);
+  const parts = [`${hp} HP`];
+  if (baseDmg > 0) parts.push(`${finalDmg} DMG`);
+  if (baseCast > 0) parts.push(`${cast.toFixed(1)}s cast`);
+  return {
+    statsHtml: parts.map((p) => escapeHtml(p)).join(' · '),
+    hp,
+    dmg: finalDmg,
+  };
 }
 
 /**
@@ -716,7 +817,7 @@ function renderGridWithPlacements(run) {
     const c = Number(tile.dataset.col);
     const placedInstance = findAtTile(run, r, c);
 
-    tile.classList.remove('placement-valid', 'tile-has-card', 'spell-target-valid');
+    tile.classList.remove('placement-valid', 'tile-has-card', 'spell-target-valid', 'tile-buffed');
 
     if (placedInstance) {
       tile.classList.add('tile-has-card');
@@ -724,14 +825,19 @@ function renderGridWithPlacements(run) {
       if (card) {
         tile.innerHTML = '';
         const icon = renderGridCardIcon(card);
-        // Buff badge if the instance has any buffs
-        if (placedInstance.buffs && placedInstance.buffs.length > 0) {
+        // Buff badge if the instance has any buffs OR tier > 1
+        const buffCount = (placedInstance.buffs ?? []).length;
+        const tier = placedInstance.tier ?? 1;
+        if (buffCount > 0 || tier > 1) {
           const badge = document.createElement('div');
           badge.className = 'grid-card-buff-badge';
-          badge.textContent = '✨';
-          badge.title = 'Buffed';
+          badge.textContent = tier > 1 ? `T${tier}` : '✨';
+          badge.title = tier > 1 ? `Tier ${tier}` : `${buffCount} buff${buffCount === 1 ? '' : 's'}`;
+          // Tier badge uses a different palette to distinguish from buff glow
+          if (tier > 1) badge.classList.add('grid-card-buff-badge-tier');
           icon.appendChild(badge);
         }
+        if (buffCount > 0) tile.classList.add('tile-buffed');
         tile.appendChild(icon);
       }
       // Plant tiles glow when a spell is selected (they're valid targets)
