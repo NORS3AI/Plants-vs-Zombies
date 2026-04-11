@@ -270,7 +270,7 @@ export const FRENZY_EXCLUSIVES = [
     castTime: 2.0,
     range: 12,
     attackPattern: 'forward',
-    targetingDefault: 'weakest',
+    targetingDefault: 'first',
     description: 'Execute. Instantly kills non-boss zombies below 15% HP.',
     abilities: [{ type: 'execute', threshold: 0.15, bossExempt: true }],
   },

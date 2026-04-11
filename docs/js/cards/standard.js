@@ -100,7 +100,7 @@ export const STANDARD_PLANTS = [
     castTime: 2.0,
     range: 12,
     attackPattern: 'forward',
-    targetingDefault: 'strongest',
+    targetingDefault: 'first',
     description: 'High damage; attacks splash to adjacent lanes.',
     abilities: [{ type: 'splash', radius: 1 }],
   },
@@ -117,7 +117,7 @@ export const STANDARD_PLANTS = [
     castTime: 2.0,
     range: 12,
     attackPattern: 'forward',
-    targetingDefault: 'strongest',
+    targetingDefault: 'first',
     description: 'Piercing beam damage; passively heals adjacent plants.',
     abilities: [
       { type: 'beam' },
