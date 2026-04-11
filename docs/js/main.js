@@ -84,6 +84,7 @@ function onRunChange() {
   if (state.current === STATES.SHOP) {
     Shop.renderShop(currentRun);
     Placement.renderPlacement(currentRun);
+    refreshClearGridButton();
   }
 }
 
@@ -145,6 +146,7 @@ state.register(STATES.SHOP, {
     if (currentRun) {
       Shop.renderShop(currentRun);
       Placement.renderPlacement(currentRun);
+      refreshClearGridButton();
       Tutorial.trigger('first_shop');
     }
   },
@@ -152,6 +154,8 @@ state.register(STATES.SHOP, {
     // Drop any pending placement selection when leaving the shop screen
     if (currentRun) Placement.clearSelection(currentRun);
     Tutorial.clearPopup();
+    const clearBtn = document.getElementById('clear-grid-button');
+    if (clearBtn) clearBtn.hidden = true;
   },
 });
 
@@ -655,6 +659,51 @@ function migrateStrayAetherSpells(run) {
   }
 }
 
+/**
+ * Remove every placed plant from the grid in one tap. The plants
+ * stay in the deck (nulling gridRow/gridCol) and keep every buff
+ * and tier — so the player can rearrange freely without losing
+ * spells. Confirms first because it's destructive-ish.
+ */
+async function clearGridToDeck() {
+  if (!currentRun || state.current !== STATES.SHOP) return;
+  const placed = currentRun.deck.filter((d) => d.gridRow != null);
+  if (placed.length === 0) return;
+
+  const confirmed = await confirmModal({
+    title: 'Clear the Grid?',
+    message: `Return all ${placed.length} plant${placed.length === 1 ? '' : 's'} to the deck? Any buffs and tiers are kept — you just get to rearrange.`,
+    confirmLabel: `Return ${placed.length} to deck`,
+    cancelLabel: 'Cancel',
+  });
+  if (!confirmed) return;
+
+  for (const inst of placed) {
+    inst.gridRow = null;
+    inst.gridCol = null;
+  }
+  Placement.clearSelection(currentRun);
+  Save.saveRun(currentRun);
+  audio.playSfx('back');
+  Placement.renderPlacement(currentRun);
+  refreshClearGridButton();
+}
+
+/**
+ * Toggle the Clear Grid button's hidden state based on whether any
+ * plants are currently placed. Called whenever the shop re-renders.
+ */
+function refreshClearGridButton() {
+  const btn = document.getElementById('clear-grid-button');
+  if (!btn) return;
+  if (!currentRun) {
+    btn.hidden = true;
+    return;
+  }
+  const anyPlaced = currentRun.deck.some((d) => d.gridRow != null);
+  btn.hidden = !anyPlaced;
+}
+
 async function quitRun() {
   const confirmed = await confirmModal({
     title: 'Quit Run',
@@ -781,6 +830,9 @@ document.addEventListener('click', (e) => {
       break;
     case 'open-patch-notes':
       openPatchNotesModal();
+      break;
+    case 'clear-grid':
+      clearGridToDeck();
       break;
   }
 });

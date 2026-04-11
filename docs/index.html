@@ -107,9 +107,12 @@
 
         <!-- Battlefield grid -->
         <section class="shop-section">
-          <h3 class="shop-section-title">Battlefield</h3>
+          <div class="shop-section-head">
+            <h3 class="shop-section-title">Battlefield</h3>
+            <button class="btn btn-small btn-danger" id="clear-grid-button" data-action="clear-grid" title="Return every placed plant to the deck" hidden>↩ Clear Grid</button>
+          </div>
           <div id="grid-container" class="grid-wrap"></div>
-          <p class="shop-hint">Plants go on empty tiles. Spells cast on placed plants to buff them. Tap a placed plant to set targeting or remove.</p>
+          <p class="shop-hint">Plants go on empty tiles. Spells cast on placed plants to buff them. Tap a placed plant to set targeting or remove. Tap <strong>Clear Grid</strong> to return every plant to the deck at once.</p>
         </section>
 
         <button class="btn btn-primary btn-pulse start-round-btn" data-action="start-countdown">Start Round →</button>
