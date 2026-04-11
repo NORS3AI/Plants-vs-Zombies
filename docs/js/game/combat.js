@@ -448,6 +448,21 @@ function damageZombie(zombie, amount, source) {
   const armor = zombie.armor ?? 0;
   const net = Math.max(1, amount - armor);
   zombie.hp -= net;
+  // Spawn a red damage popup over the zombie so the player can see
+  // exactly how much each plant hit lands for. Same treatment as
+  // gold popups (big font, +1s linger) but red instead of gold.
+  if (_state?.floatingTexts) {
+    _state.floatingTexts.push({
+      id: nextFloatingId(),
+      text: `-${net}`,
+      row: zombie.row,
+      col: zombie.col,
+      age: 0,
+      maxAge: 1.6,
+      color: 'red',
+      big: true,
+    });
+  }
 }
 
 let _floatingCounter = 0;
