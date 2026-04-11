@@ -140,6 +140,7 @@ export class AudioManager {
     this.musicVolume = 0.6;
     this.sfxVolume = 0.8;
     this._initialized = false;
+    this._resumePending = false;
   }
 
   /**
@@ -162,8 +163,47 @@ export class AudioManager {
       this.musicBus.gain.value = this.musicVolume;
       this.musicBus.connect(this.ctx.destination);
       this._initialized = true;
+
+      // Browsers suspend audio contexts after idle periods. Proactively
+      // kick the context back into "running" whenever it transitions
+      // into an idle state — and whenever the page regains focus.
+      this.ctx.addEventListener?.('statechange', () => {
+        if (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted') {
+          this._requestResume();
+        }
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) this._requestResume();
+      });
     } catch (e) {
       console.warn('[audio] init failed:', e);
+    }
+  }
+
+  /**
+   * Ensure the AudioContext is running. Call this from every user
+   * gesture (click / touch / keydown) so Chrome / Safari never keep
+   * the context suspended between rounds.
+   */
+  ensureRunning() {
+    if (!this._initialized || !this.ctx) return;
+    if (this.ctx.state === 'running') return;
+    this._requestResume();
+  }
+
+  _requestResume() {
+    if (!this.ctx || this._resumePending) return;
+    if (this.ctx.state === 'running' || this.ctx.state === 'closed') return;
+    this._resumePending = true;
+    const p = this.ctx.resume();
+    if (p && typeof p.then === 'function') {
+      p.then(() => { this._resumePending = false; })
+       .catch((e) => {
+         this._resumePending = false;
+         console.warn('[audio] resume failed:', e);
+       });
+    } else {
+      this._resumePending = false;
     }
   }
 
@@ -181,18 +221,44 @@ export class AudioManager {
     }
   }
 
-  /** Fire a one-shot SFX by preset name. Silently no-ops if disabled or uninit. */
+  /**
+   * Fire a one-shot SFX by preset name. Silently no-ops if disabled
+   * or uninit. If the context is suspended, requests a resume and
+   * defers the preset to the next microtask so it runs on the
+   * now-running context (presets read ctx.currentTime, which is
+   * frozen while suspended — scheduling against a stale currentTime
+   * is what made sounds "die out" between rounds).
+   */
   playSfx(name) {
     if (!this.sfxEnabled || !this._initialized) return;
     const preset = SFX_PRESETS[name];
     if (!preset) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
-    try {
-      // Bus handles all volume scaling — presets use fixed inner gains
-      // so the slider response is linear, not quadratic.
-      preset(this.ctx, this.sfxBus);
-    } catch (e) {
-      console.warn(`[audio] sfx '${name}' failed:`, e);
+
+    const fire = () => {
+      try {
+        // Bus handles all volume scaling — presets use fixed inner gains
+        // so the slider response is linear, not quadratic.
+        preset(this.ctx, this.sfxBus);
+      } catch (e) {
+        console.warn(`[audio] sfx '${name}' failed:`, e);
+      }
+    };
+
+    if (this.ctx.state === 'running') {
+      fire();
+      return;
+    }
+    // Context is suspended / interrupted. Kick a resume and fire the
+    // preset once the context is actually running — otherwise
+    // ctx.currentTime is frozen and the scheduled events silently miss.
+    const p = this.ctx.resume ? this.ctx.resume() : null;
+    if (p && typeof p.then === 'function') {
+      p.then(() => {
+        if (this.ctx.state === 'running') fire();
+      }).catch((e) => console.warn(`[audio] resume-for-sfx '${name}' failed:`, e));
+    } else {
+      // Best-effort synchronous fallback (older browsers)
+      fire();
     }
   }
 

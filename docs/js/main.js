@@ -732,9 +732,20 @@ async function resetGame() {
 }
 
 // ---------- DOM Event Wiring ----------
+// Every user gesture lazy-inits (or kicks back to running) the audio
+// context so Chrome/Safari never leave it suspended between rounds.
+// Using capture + passive so this runs BEFORE other click handlers —
+// playSfx() callers then see ctx.state === 'running' and fire
+// synchronously.
+const kickAudio = () => { audio.init(); audio.ensureRunning(); };
+document.addEventListener('pointerdown', kickAudio, { capture: true, passive: true });
+document.addEventListener('touchstart',  kickAudio, { capture: true, passive: true });
+document.addEventListener('keydown',     kickAudio, { capture: true, passive: true });
+
 document.addEventListener('click', (e) => {
   // Lazy-init audio on first user click (browser autoplay policy)
   audio.init();
+  audio.ensureRunning();
 
   const action = e.target.closest('[data-action]')?.dataset.action;
   const difficulty = e.target.closest('[data-difficulty]')?.dataset.difficulty;
