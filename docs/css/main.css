@@ -345,45 +345,43 @@ input, select, textarea {
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
 }
 
-/* Dev gold button — sits left of the speed / pause buttons.
-   Only visible when settings.devMode is on. */
+/* Dev gold button — floats in the bottom-right corner, out of the way
+   of the top HUD buttons. Single element at app level so it persists
+   across screens. Only visible when settings.devMode is on. */
 .dev-gold-btn {
-  position: absolute;
-  top: 12px;
-  right: 115px; /* desktop: left of the speed button */
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
   background: linear-gradient(135deg, var(--accent), #b8860b);
-  border: 1px solid var(--accent);
+  border: 2px solid var(--accent);
   border-radius: 50%;
-  font-size: 1rem;
+  font-size: 1.3rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
-  z-index: 11;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
-  animation: devGoldPulse 2s ease-in-out infinite;
+  transition: transform 0.1s ease;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4),
+              0 0 14px rgba(212, 175, 55, 0.65);
+  animation: devGoldPulse 2.4s ease-in-out infinite;
 }
 
 .dev-gold-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 18px rgba(212, 175, 55, 0.9);
+  transform: scale(1.08);
 }
 
 .dev-gold-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 @keyframes devGoldPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.6); }
-  50%      { box-shadow: 0 0 18px rgba(212, 175, 55, 0.9); }
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(212, 175, 55, 0.55); }
+  50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 22px rgba(212, 175, 55, 0.95); }
 }
-
-/* Shop header has no speed button so dev-gold sits closer to pause */
-#screen-shop .dev-gold-btn { right: 56px; }
 
 /* Settings hint text (shown when dev mode is on) */
 .setting-hint {
@@ -451,39 +449,82 @@ input, select, textarea {
   margin-top: 0.2rem;
 }
 
-/* ---------- Game Header (HUD) ---------- */
+/* ---------- Game Header (pause/speed buttons only, HUD moved to sidebar) ---------- */
 .game-header {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  padding: 1rem 2rem;
+  height: 60px;
   background: linear-gradient(180deg, var(--bg-elev) 0%, transparent 100%);
   z-index: 10;
+  pointer-events: none;
+}
+.game-header button { pointer-events: auto; }
+
+/* ---------- Sticky Left HUD Sidebar ---------- */
+#hud-sidebar {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.4rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  box-shadow: var(--shadow);
+  z-index: 40;
+  width: 72px;
 }
 
-.hud-item {
+#hud-sidebar[hidden] { display: none; }
+
+.hud-sb-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.05rem;
+  padding: 0.35rem 0.25rem;
+  border-radius: 6px;
+  background: var(--bg-elev-2);
 }
 
-.hud-label {
-  font-size: 0.7rem;
+.hud-sb-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.hud-sb-label {
+  font-size: 0.55rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   color: var(--fg-muted);
+  line-height: 1;
 }
 
-.hud-item span:last-child {
-  font-size: 1.25rem;
+.hud-sb-value {
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--accent);
+  line-height: 1.1;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* HP color states applied by syncHUD */
+.hud-sb-value.hud-hp-low { color: #ef4444; }
+.hud-sb-value.hud-hp-med { color: #f59e0b; }
+
+/* Clear the sidebar so shop/combat content doesn't sit underneath it */
+#screen-shop .shop-main { padding-left: 84px; }
+#screen-combat .combat-main { padding-left: 84px; }
 
 .hud-item .hud-sub {
   font-size: 0.85rem;
@@ -653,6 +694,7 @@ input, select, textarea {
   font-weight: 700;
   color: var(--fg-base);
   line-height: 1.2;
+  padding-right: 26px; /* leave space for the top-right info button */
 }
 
 .card-type-row {
@@ -693,6 +735,162 @@ input, select, textarea {
 }
 
 .card-sold .card-cost { color: var(--fg-muted); }
+
+/* Info (ℹ) button — top-right of every card, just below the rarity
+   stripe. Opens the detail modal. */
+.card-info-btn {
+  position: absolute;
+  top: 10px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: all 0.15s ease;
+}
+.card-info-btn:hover {
+  background: var(--accent);
+  color: var(--bg-base);
+  transform: scale(1.1);
+}
+
+/* Card detail modal ("flip" view) */
+.modal-dialog.modal-dialog-flip {
+  animation: cardFlipIn 0.35s cubic-bezier(0.25, 1.3, 0.5, 1);
+  transform-origin: center center;
+}
+@keyframes cardFlipIn {
+  0%   { opacity: 0; transform: translateY(-6px) rotateY(-90deg); }
+  60%  { opacity: 1; transform: translateY(0)    rotateY(10deg); }
+  100% { opacity: 1; transform: translateY(0)    rotateY(0deg); }
+}
+
+.modal-close-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(192, 57, 43, 0.15);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  transition: all 0.15s ease;
+}
+.modal-close-x:hover {
+  background: var(--accent-red);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: 0.5rem;
+}
+
+.cd-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.cd-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+.cd-rarity {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cd-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1rem;
+}
+.cd-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-elev-2);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.cd-stat span {
+  color: var(--fg-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cd-stat strong {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.cd-desc {
+  color: var(--fg-base);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 0.3rem 0;
+}
+
+.cd-section h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+.cd-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.cd-section li {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  padding-left: 0.75rem;
+  position: relative;
+}
+.cd-section li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
 
 /* Compact card for deck inventory */
 .card-small {
@@ -1325,10 +1523,22 @@ input, select, textarea {
 }
 
 .aether-label {
-  font-size: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 0.55rem;
+  line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--accent-green);
+  text-align: center;
+}
+
+.aether-label > span {
+  display: block;
+  white-space: nowrap;
 }
 
 .grid {
@@ -2201,8 +2411,20 @@ input, select, textarea {
   .hud-item span:last-child { font-size: 0.95rem; }
   .pause-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 1rem; min-height: 34px; }
   .speed-btn { top: 6px; right: 48px; height: 34px; min-height: 34px; padding: 0 0.6rem; font-size: 0.7rem; }
-  .dev-gold-btn { width: 32px; height: 32px; min-height: 32px; top: 7px; right: 102px; font-size: 0.9rem; }
-  #screen-shop .dev-gold-btn { right: 46px; top: 7px; }
+  .dev-gold-btn { width: 44px; height: 44px; bottom: 14px; right: 14px; font-size: 1.1rem; }
+
+  /* HUD sidebar shrinks on phones */
+  #hud-sidebar {
+    width: 56px;
+    padding: 0.45rem 0.25rem;
+    gap: 0.3rem;
+  }
+  .hud-sb-item { padding: 0.25rem 0.15rem; }
+  .hud-sb-icon { font-size: 0.9rem; }
+  .hud-sb-label { font-size: 0.48rem; }
+  .hud-sb-value { font-size: 0.7rem; }
+  #screen-shop .shop-main { padding-left: 66px; padding-right: 0.25rem; }
+  #screen-combat .combat-main { padding-left: 66px; }
 
   /* ----- Combat ----- */
   .combat-main {

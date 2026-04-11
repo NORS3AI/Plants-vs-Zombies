@@ -11,6 +11,7 @@
  */
 
 import { RARITIES, formatCardStats } from '../cards/index.js';
+import { showModal } from './modal.js';
 
 /**
  * Build a card element.
@@ -109,7 +110,94 @@ export function renderCard(card, options = {}) {
     el.addEventListener('click', () => options.onClick(card, el));
   }
 
+  // Info button (top-right): opens the full card detail modal.
+  // Stops propagation so it doesn't trigger placement/select.
+  if (options.showInfo !== false) {
+    const infoBtn = document.createElement('button');
+    infoBtn.className = 'card-info-btn';
+    infoBtn.type = 'button';
+    infoBtn.textContent = 'ℹ';
+    infoBtn.setAttribute('aria-label', 'Card details');
+    infoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showCardDetails(card);
+    });
+    el.appendChild(infoBtn);
+  }
+
   return el;
+}
+
+/**
+ * Show a full card detail modal (the "card flip" view). Rendered via
+ * modal.js showModal with bodyHtml so it picks up the existing
+ * backdrop, fade-in, and tap-outside dismiss behaviors. A red X in
+ * the top-right also dismisses.
+ */
+export function showCardDetails(card) {
+  const rarityLabel = RARITIES[card.rarity]?.label ?? card.rarity;
+  const rarityColor = `var(--rarity-${card.rarity})`;
+  const typeIcon = card.type === 'plant' ? '🌱' : '✨';
+
+  const escape = (s) =>
+    String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+    );
+
+  let statsRows = '';
+  if (card.type === 'plant') {
+    statsRows += `<div class="cd-stat"><span>Health</span><strong>${card.health}</strong></div>`;
+    if (card.damage > 0) statsRows += `<div class="cd-stat"><span>Damage</span><strong>${card.damage}</strong></div>`;
+    if (card.castTime > 0) statsRows += `<div class="cd-stat"><span>Cast Time</span><strong>${card.castTime}s</strong></div>`;
+    if (card.range != null && card.range !== 0) statsRows += `<div class="cd-stat"><span>Range</span><strong>${card.range}</strong></div>`;
+    if (card.attackPattern && card.attackPattern !== 'none') statsRows += `<div class="cd-stat"><span>Attack</span><strong>${escape(card.attackPattern)}</strong></div>`;
+    if (card.targetingDefault && card.targetingDefault !== 'none') statsRows += `<div class="cd-stat"><span>Targets</span><strong>${escape(card.targetingDefault)}</strong></div>`;
+  } else {
+    if (card.cooldown) statsRows += `<div class="cd-stat"><span>Cooldown</span><strong>${card.cooldown}s</strong></div>`;
+    if (card.oncePerRound) statsRows += `<div class="cd-stat"><span>Usage</span><strong>1 / round</strong></div>`;
+    if (card.target) statsRows += `<div class="cd-stat"><span>Target</span><strong>${escape(card.target)}</strong></div>`;
+  }
+
+  // Surface abilities in a friendly list
+  const abilities = card.abilities ?? [];
+  const economy = card.economy;
+  let extrasHtml = '';
+  if (abilities.length > 0) {
+    extrasHtml += '<div class="cd-section"><h4>Abilities</h4><ul>';
+    for (const a of abilities) {
+      const type = a.type?.replace(/_/g, ' ') ?? '';
+      extrasHtml += `<li>${escape(type)}</li>`;
+    }
+    extrasHtml += '</ul></div>';
+  }
+  if (economy) {
+    extrasHtml += '<div class="cd-section"><h4>Economy</h4><ul>';
+    if (economy.goldPerCast != null) extrasHtml += `<li>+${economy.goldPerCast} gold every ${card.castTime}s</li>`;
+    if (economy.goldPerLaneKill != null) extrasHtml += `<li>+${economy.goldPerLaneKill} gold per kill in this lane</li>`;
+    if (economy.goldPerKill) extrasHtml += `<li>Gold per kill scales with round</li>`;
+    extrasHtml += '</ul></div>';
+  }
+
+  const bodyHtml = `
+    <div class="card-details card-rarity-${escape(card.rarity)}">
+      <div class="cd-header">
+        <div class="cd-icon">${typeIcon}</div>
+        <div class="cd-rarity" style="color: ${rarityColor};">${escape(rarityLabel)}</div>
+      </div>
+      ${statsRows ? `<div class="cd-stats">${statsRows}</div>` : ''}
+      <p class="cd-desc">${escape(card.description ?? '')}</p>
+      ${extrasHtml}
+    </div>
+  `;
+
+  return showModal({
+    title: card.name,
+    bodyHtml,
+    buttons: [],
+    showClose: true,
+    dismissible: true,
+    extraClass: 'modal-dialog-flip',
+  });
 }
 
 /**

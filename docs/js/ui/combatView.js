@@ -70,7 +70,7 @@ export function initCombatView(host, run) {
   aether.className = 'aether-root';
   const label = document.createElement('span');
   label.className = 'aether-label';
-  label.textContent = 'Aether-Root';
+  label.innerHTML = '<span>AETHER</span><span>ROOT</span>';
   aether.appendChild(label);
   host.appendChild(aether);
 

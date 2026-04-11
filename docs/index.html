@@ -16,6 +16,33 @@
     <!-- Phase Badge removed for v1.0.0 release -->
     <div id="phase-badge" hidden>v1.0.0</div>
 
+    <!-- Floating dev-gold button (bottom-right, only visible with dev mode) -->
+    <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
+
+    <!-- Sticky HUD sidebar — visible only during a run (shop / combat) -->
+    <aside id="hud-sidebar" hidden>
+      <div class="hud-sb-item">
+        <div class="hud-sb-icon">🔁</div>
+        <div class="hud-sb-label">Round</div>
+        <div class="hud-sb-value" id="hud-sb-round">1</div>
+      </div>
+      <div class="hud-sb-item">
+        <div class="hud-sb-icon">💰</div>
+        <div class="hud-sb-label">Gold</div>
+        <div class="hud-sb-value" id="hud-sb-gold">5</div>
+      </div>
+      <div class="hud-sb-item">
+        <div class="hud-sb-icon">🌳</div>
+        <div class="hud-sb-label">HP</div>
+        <div class="hud-sb-value" id="hud-sb-hp">100</div>
+      </div>
+      <div class="hud-sb-item">
+        <div class="hud-sb-icon">⚔️</div>
+        <div class="hud-sb-label">Mode</div>
+        <div class="hud-sb-value" id="hud-sb-difficulty">Normal</div>
+      </div>
+    </aside>
+
     <!-- Screen: Menu -->
     <section id="screen-menu" class="screen" data-screen="menu" hidden>
       <div class="menu-stack menu-hero">
@@ -45,11 +72,6 @@
     <!-- Screen: Shop -->
     <section id="screen-shop" class="screen screen-scrollable" data-screen="shop" hidden>
       <header class="game-header">
-        <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round">1</span></div>
-        <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold">5</span></div>
-        <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp">100</span></div>
-        <div class="hud-item"><span class="hud-label">Difficulty</span><span id="hud-difficulty">Normal</span></div>
-        <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>
       <main class="shop-main">
@@ -97,10 +119,6 @@
     <!-- Screen: Combat -->
     <section id="screen-combat" class="screen" data-screen="combat" hidden>
       <header class="game-header">
-        <div class="hud-item"><span class="hud-label">Round</span><span id="hud-round-combat">1</span></div>
-        <div class="hud-item"><span class="hud-label">Gold</span><span id="hud-gold-combat">5</span></div>
-        <div class="hud-item"><span class="hud-label">Aether-Root HP</span><span id="hud-hp-combat">100</span></div>
-        <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
         <button class="speed-btn" id="speed-btn" data-action="toggle-speed" title="Fast-forward combat" aria-label="Fast-forward">▶ 1×</button>
         <button class="pause-btn" data-action="open-settings" title="Settings (pause)" aria-label="Settings">⚙</button>
       </header>

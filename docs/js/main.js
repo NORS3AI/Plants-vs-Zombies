@@ -110,16 +110,16 @@ function syncHUD() {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
   };
-  set('hud-round', formatRound(currentRun));
-  set('hud-gold', currentRun.gold);
-  set('hud-hp', `${currentRun.aetherRootHP} / ${currentRun.aetherRootMaxHP}`);
-  set('hud-difficulty', getDifficulty(currentRun.difficulty)?.label ?? '—');
-  set('hud-round-combat', formatRound(currentRun));
-  set('hud-gold-combat', currentRun.gold);
-  set('hud-hp-combat', `${currentRun.aetherRootHP} / ${currentRun.aetherRootMaxHP}`);
-
-  applyHpColor(document.getElementById('hud-hp'), currentRun.aetherRootHP, currentRun.aetherRootMaxHP);
-  applyHpColor(document.getElementById('hud-hp-combat'), currentRun.aetherRootHP, currentRun.aetherRootMaxHP);
+  // New sticky left sidebar (hud-sb-*)
+  set('hud-sb-round', formatRound(currentRun));
+  set('hud-sb-gold', currentRun.gold);
+  set('hud-sb-hp', `${currentRun.aetherRootHP}/${currentRun.aetherRootMaxHP}`);
+  set('hud-sb-difficulty', getDifficulty(currentRun.difficulty)?.label ?? '—');
+  applyHpColor(
+    document.getElementById('hud-sb-hp'),
+    currentRun.aetherRootHP,
+    currentRun.aetherRootMaxHP,
+  );
 }
 
 // ---------- State Registrations ----------
@@ -829,6 +829,16 @@ function flashToast(msg) {
 const loop = new GameLoop({
   update: (dt) => state.update(dt),
   render: () => state.render(),
+});
+
+// Show/hide the sticky left HUD sidebar based on which state is active.
+// Only visible during SHOP / COMBAT / ROUND_END so the round stats stay
+// visible between the round summary and the next shop visit.
+state.onChange((current) => {
+  const sidebar = document.getElementById('hud-sidebar');
+  if (!sidebar) return;
+  const showIn = new Set([STATES.SHOP, STATES.COMBAT, STATES.ROUND_END]);
+  sidebar.hidden = !(showIn.has(current) && currentRun);
 });
 
 // ---------- Start ----------

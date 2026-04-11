@@ -18,7 +18,16 @@
 
 let activeModal = null;
 
-export function showModal({ title, message, bodyHtml, buttons = [], dismissible = true, wide = false }) {
+export function showModal({
+  title,
+  message,
+  bodyHtml,
+  buttons = [],
+  dismissible = true,
+  wide = false,
+  showClose = false,
+  extraClass = '',
+}) {
   // Close any existing modal first
   if (activeModal) closeModal(null);
 
@@ -30,7 +39,23 @@ export function showModal({ title, message, bodyHtml, buttons = [], dismissible 
     if (title) backdrop.setAttribute('aria-label', title);
 
     const dialog = document.createElement('div');
-    dialog.className = 'modal-dialog' + (wide ? ' modal-dialog-wide' : '');
+    dialog.className =
+      'modal-dialog' +
+      (wide ? ' modal-dialog-wide' : '') +
+      (extraClass ? ' ' + extraClass : '');
+
+    // Optional red X close button in the top-right corner
+    if (showClose) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-close-x';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.textContent = '✕';
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeModal(null);
+      });
+      dialog.appendChild(closeBtn);
+    }
 
     if (title) {
       const titleEl = document.createElement('h3');

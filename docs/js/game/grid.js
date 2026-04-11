@@ -54,7 +54,8 @@ export function renderGrid(host, { onTileClick } = {}) {
   aether.title = 'Aether-Root (Mother Plant)';
   const label = document.createElement('span');
   label.className = 'aether-label';
-  label.textContent = 'Aether-Root';
+  // Split into two lines so it fits the narrow Aether-Root column on mobile
+  label.innerHTML = '<span>AETHER</span><span>ROOT</span>';
   aether.appendChild(label);
   host.appendChild(aether);
 
