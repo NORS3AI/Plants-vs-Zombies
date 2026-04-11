@@ -15,7 +15,7 @@
 
 import { getCard } from '../cards/index.js';
 import { renderGridCardIcon } from './cardView.js';
-import { GRID_ROWS, GRID_COLS } from '../game/grid.js';
+import { GRID_ROWS, GRID_COLS, STAGING_COL } from '../game/grid.js';
 import { castAetherSpell } from '../game/aetherSpells.js';
 
 // Optional audio manager; set by main.js via setCombatViewAudio
@@ -84,7 +84,8 @@ export function initCombatView(host, run) {
     for (let c = 0; c < GRID_COLS; c++) {
       const tile = document.createElement('div');
       const parity = (r + c) % 2 === 0 ? 'tile-a' : 'tile-b';
-      tile.className = `grid-tile ${parity}`;
+      const isStaging = c === STAGING_COL;
+      tile.className = `grid-tile ${parity}${isStaging ? ' tile-staging' : ''}`;
       tile.dataset.row = String(r);
       tile.dataset.col = String(c);
       gridEl.appendChild(tile);

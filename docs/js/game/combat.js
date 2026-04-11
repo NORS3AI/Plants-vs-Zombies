@@ -32,8 +32,15 @@ import {
   tickActiveBeams,
 } from './aetherSpells.js';
 
-export const GRID_COLS = 12;
+export const GRID_COLS = 9;
 export const GRID_ROWS = 5;
+/**
+ * Rightmost column is the staging / formation zone. Zombies spawn
+ * here and walk out of it toward col 0. Plants cannot target any
+ * zombie whose col is inside the staging zone — this gives zombies
+ * a few seconds of safe passage to line up before combat begins.
+ */
+export const STAGING_COL = GRID_COLS - 1;
 
 // ---------- Module state ----------
 let _state = null;
@@ -247,7 +254,7 @@ function spawnDue() {
       name: type.name,
       sprite: type.sprite,
       row: entry.row,
-      col: GRID_COLS, // spawn at right edge (col 12)
+      col: GRID_COLS, // spawn off the right edge; will march into the staging col first
       hp: type.maxHp,
       maxHp: type.maxHp,
       dmg: type.dmg,
@@ -328,11 +335,13 @@ function tickPlants(dt) {
             // Beam pierces: hit ALL zombies in the target's row (beam
             // weapons pivot to whatever row the target is in) with the
             // same damage. The primary target was already damaged; this
-            // pass hits everyone else in that row.
+            // pass hits everyone else in that row. Staging-col zombies
+            // remain untargetable.
             const range = plant.card.range ?? 12;
             for (const z of _state.zombies) {
               if (z === target || z.hp <= 0) continue;
               if (z.row !== target.row) continue;
+              if (z.col >= STAGING_COL) continue;
               // Use absolute column distance — beam sweeps in both directions
               const dCol = Math.abs(z.col - plant.col);
               if (dCol > range) continue;
@@ -341,7 +350,8 @@ function tickPlants(dt) {
               if (z.hp <= 0) killZombie(z);
             }
           } else if (ab.type === 'chain_lightning') {
-            // Lightning jumps to N additional nearby targets from the primary.
+            // Lightning jumps to N additional nearby targets from the
+            // primary. Staging-col zombies are skipped as hop targets.
             const maxJumps = ab.maxJumps ?? 2;
             const jumpRadius = ab.jumpRadius ?? 2;
             const hit = new Set([target]);
@@ -349,6 +359,7 @@ function tickPlants(dt) {
             for (let j = 0; j < maxJumps; j++) {
               const nextHop = _state.zombies.find((z) => {
                 if (hit.has(z) || z.hp <= 0) return false;
+                if (z.col >= STAGING_COL) return false;
                 const dRow = Math.abs(z.row - lastHop.row);
                 const dCol = Math.abs(z.col - lastHop.col);
                 return dRow <= jumpRadius && dCol <= jumpRadius;
@@ -363,8 +374,10 @@ function tickPlants(dt) {
           } else if (ab.type === 'splash') {
             // Splash: same damage to zombies in the 8 tiles adjacent
             // to the target (row ±1 within 1 tile horizontally).
+            // Staging-col zombies are immune.
             for (const z of _state.zombies) {
               if (z === target || z.hp <= 0) continue;
+              if (z.col >= STAGING_COL) continue;
               const dRow = Math.abs(z.row - target.row);
               const dCol = Math.abs(z.col - target.col);
               if (dRow <= (ab.radius ?? 1) && dCol <= (ab.radius ?? 1)) {
@@ -373,12 +386,14 @@ function tickPlants(dt) {
               }
             }
           } else if (ab.type === 'cone_damage') {
-            // 3-row wide cone hitting zombies ahead of the plant
+            // 3-row wide cone hitting zombies ahead of the plant.
+            // Staging-col zombies are immune.
             const width = ab.width ?? 3;
             const depth = ab.depth ?? 6;
             const halfW = Math.floor(width / 2);
             for (const z of _state.zombies) {
               if (z === target || z.hp <= 0) continue;
+              if (z.col >= STAGING_COL) continue;
               if (Math.abs(z.row - plant.row) > halfW) continue;
               const dx = z.col - plant.col;
               if (dx < 0 || dx > depth) continue;
@@ -598,11 +613,16 @@ function findTarget(plant) {
   const candidates = _state.zombies.filter((z) => {
     if (z.hp <= 0) return false;
     if (!rows.has(z.row)) return false;
+    // Staging-col zombies are untargetable — plants cannot attack into
+    // the 9th column; zombies only become valid targets once they
+    // march into col 0..7.
+    if (z.col >= STAGING_COL) return false;
     // Zombie column must be within range, on the correct side.
     const dx = z.col - plant.col;
     if (pattern === 'backward') return dx < 0 && -dx <= range;
-    // Default: forward. Zombies enter from the right (col 12) and move
-    // toward col 0. A plant at col 3 attacks zombies with col >= 3.
+    // Default: forward. Zombies enter from the right (col GRID_COLS)
+    // and walk toward col 0. A plant at col 3 attacks zombies with
+    // col >= 3 AND col < STAGING_COL.
     return dx >= 0 && dx <= range;
   });
 

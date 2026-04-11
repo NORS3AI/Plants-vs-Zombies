@@ -21,7 +21,7 @@ import {
   getCardsByRarity,
   getNextRarity,
 } from '../cards/index.js';
-import { renderGrid } from '../game/grid.js';
+import { renderGrid, STAGING_COL } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
 import { showModal, confirmModal } from './modal.js';
 
@@ -87,6 +87,13 @@ function placeAt(run, row, col) {
   // Tile occupied?
   const existing = findAtTile(run, row, col);
   if (existing) return false;
+
+  // Staging column is zombie-formation territory — plants can't go there.
+  if (col === STAGING_COL) {
+    flashError("Plants can't be placed in the staging column.");
+    _audio?.playSfx('back');
+    return false;
+  }
 
   // Cap active plants at MAX_PLACED_PLANTS. Opening chests is unlimited
   // but the grid can only hold 10 simultaneously.
@@ -731,8 +738,9 @@ function renderGridWithPlacements(run) {
       if (selectionMode === 'cast-spell') {
         tile.classList.add('spell-target-valid');
       }
-    } else if (selectionMode === 'place-plant') {
-      // Empty tiles glow when a plant is selected
+    } else if (selectionMode === 'place-plant' && c !== STAGING_COL) {
+      // Empty tiles glow when a plant is selected — staging col is
+      // excluded because plants can't be placed there.
       tile.classList.add('placement-valid');
     }
   });

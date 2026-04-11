@@ -592,8 +592,31 @@ function renderLeaderboard() {
 function resumeRun() {
   if (!Save.hasRun()) return;
   currentRun = Save.loadRun();
+  migrateRunForCurrentGrid(currentRun);
   Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
+}
+
+/**
+ * One-shot migration: the grid shrank from 5×12 to 5×9. Any plant
+ * placed at col >= 8 (staging col or beyond) is demoted back to the
+ * deck so players don't end up with invisible / unreachable plants.
+ */
+function migrateRunForCurrentGrid(run) {
+  if (!run?.deck) return;
+  let demoted = 0;
+  for (const inst of run.deck) {
+    if (inst.gridCol == null) continue;
+    // GRID_COLS = 9, STAGING_COL = 8
+    if (inst.gridCol >= 8) {
+      inst.gridRow = null;
+      inst.gridCol = null;
+      demoted++;
+    }
+  }
+  if (demoted > 0) {
+    console.info(`[grid migration] Demoted ${demoted} plant(s) to the deck (old staging / off-grid col).`);
+  }
 }
 
 async function quitRun() {

@@ -38,7 +38,7 @@ const DEFAULT_RUN = {
   // Aether-Root spells (live in side panel, separate from regular deck).
   aetherSpells: [],
 
-  // Grid model (5×12 of cardInstanceIds or null). Phase 6 wires placement.
+  // Grid model (5×9 of cardInstanceIds or null). Phase 6 wires placement.
   grid: [],
 
   // Current 3-card shop offering. Persists across save/reload so the

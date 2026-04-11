@@ -1,13 +1,21 @@
 /**
- * 5×12 Grid Model + Renderer
+ * 5×9 Grid Model + Renderer
  *
- * The battlefield is a 5-row × 12-column grid. The Aether-Root sits
- * to the left of the grid (not part of the 60 tiles). Plants are
+ * The battlefield is a 5-row × 9-column grid. The Aether-Root sits
+ * to the left of the grid (not part of the 45 tiles). Plants are
  * placed on tiles in shop mode and act on cast timers in combat.
+ *
+ * The rightmost column (col 8, the 9th) is a "staging" zone: it is
+ * yellow-checkered, cannot hold plants, and zombies inside it are
+ * untargetable. Zombies spawn off-screen and walk through this
+ * staging column first, giving them a few seconds to march into
+ * battle formation before plants can attack them.
  */
 
 export const GRID_ROWS = 5;
-export const GRID_COLS = 12;
+export const GRID_COLS = 9;
+/** Rightmost column index: zombies spawn here and are untargetable. */
+export const STAGING_COL = GRID_COLS - 1;
 
 /** Create an empty grid: 2D array of nulls. */
 export function createGrid() {
@@ -43,7 +51,7 @@ export function removeCard(grid, row, col) {
 
 /**
  * Render the grid into a host element.
- * Builds Aether-Root + 5×12 tiles. Each tile gets data-row/data-col.
+ * Builds Aether-Root + 5×9 tiles. Each tile gets data-row/data-col.
  */
 export function renderGrid(host, { onTileClick } = {}) {
   host.innerHTML = '';
@@ -59,7 +67,7 @@ export function renderGrid(host, { onTileClick } = {}) {
   aether.appendChild(label);
   host.appendChild(aether);
 
-  // 5×12 Grid
+  // 5×9 Grid
   const gridEl = document.createElement('div');
   gridEl.className = 'grid';
   gridEl.setAttribute('role', 'grid');
@@ -69,11 +77,16 @@ export function renderGrid(host, { onTileClick } = {}) {
     for (let c = 0; c < GRID_COLS; c++) {
       const tile = document.createElement('div');
       const parity = (r + c) % 2 === 0 ? 'tile-a' : 'tile-b';
-      tile.className = `grid-tile ${parity}`;
+      const isStaging = c === STAGING_COL;
+      tile.className = `grid-tile ${parity}${isStaging ? ' tile-staging' : ''}`;
       tile.dataset.row = String(r);
       tile.dataset.col = String(c);
       tile.setAttribute('role', 'gridcell');
-      tile.setAttribute('aria-label', `Row ${r + 1}, Column ${c + 1}`);
+      tile.setAttribute('aria-label',
+        isStaging
+          ? `Row ${r + 1}, staging column (zombies untargetable)`
+          : `Row ${r + 1}, Column ${c + 1}`
+      );
       if (onTileClick) {
         tile.addEventListener('click', () => onTileClick(r, c, tile));
       }
