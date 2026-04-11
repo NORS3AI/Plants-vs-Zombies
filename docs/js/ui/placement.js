@@ -59,6 +59,19 @@ export function clearSelection(run) {
 }
 
 /**
+ * Find an instance across both decks by id. Returns the instance or
+ * null. Used by the selection / cast / sell paths so the rest of
+ * placement.js doesn't have to care which deck an item lives in.
+ */
+function findInstance(run, instanceId) {
+  return (
+    run.deck?.find((d) => d.instanceId === instanceId) ??
+    run.spellDeck?.find((d) => d.instanceId === instanceId) ??
+    null
+  );
+}
+
+/**
  * Click a deck card (unplaced). Toggles selection.
  */
 function selectDeckCard(run, instanceId) {
@@ -78,7 +91,7 @@ function selectDeckCard(run, instanceId) {
  */
 function placeAt(run, row, col) {
   if (!_selection) return false;
-  const instance = run.deck.find((d) => d.instanceId === _selection.instanceId);
+  const instance = findInstance(run, _selection.instanceId);
   if (!instance) return false;
 
   // Tile occupied?
@@ -126,7 +139,7 @@ function handleTileClick(run, row, col) {
   const atTile = findAtTile(run, row, col);
 
   if (_selection) {
-    const instance = run.deck.find((d) => d.instanceId === _selection.instanceId);
+    const instance = findInstance(run, _selection.instanceId);
     if (!instance) {
       clearSelection(run);
       return;
@@ -214,9 +227,16 @@ function castSpellAtTile(run, instance, card, row, col, targetPlant) {
 
   if (!success) return;
 
-  // Consume the spell instance
-  const idx = run.deck.findIndex((d) => d.instanceId === instance.instanceId);
-  if (idx >= 0) run.deck.splice(idx, 1);
+  // Consume the spell instance from whichever deck it lived in.
+  // New saves keep spells in run.spellDeck; older saves may still
+  // have them in run.deck until the migration runs.
+  let idx = run.spellDeck?.findIndex((d) => d.instanceId === instance.instanceId) ?? -1;
+  if (idx >= 0) {
+    run.spellDeck.splice(idx, 1);
+  } else {
+    idx = run.deck.findIndex((d) => d.instanceId === instance.instanceId);
+    if (idx >= 0) run.deck.splice(idx, 1);
+  }
 
   _selection = null;
   _audio?.playSfx('go');
@@ -641,9 +661,17 @@ function describeBuff(buff, card) {
 // ============================================================
 
 async function sellDeckInstance(run, instanceId) {
-  const idx = run.deck.findIndex((d) => d.instanceId === instanceId);
-  if (idx < 0) return false;
-  const instance = run.deck[idx];
+  const pickDeck = (id) => {
+    const plantIdx = run.deck?.findIndex((d) => d.instanceId === id) ?? -1;
+    if (plantIdx >= 0) return { arr: run.deck, idx: plantIdx };
+    const spellIdx = run.spellDeck?.findIndex((d) => d.instanceId === id) ?? -1;
+    if (spellIdx >= 0) return { arr: run.spellDeck, idx: spellIdx };
+    return null;
+  };
+
+  const hit = pickDeck(instanceId);
+  if (!hit) return false;
+  const instance = hit.arr[hit.idx];
 
   // Can't sell placed cards — must remove from grid first
   if (instance.gridRow != null) return false;
@@ -659,11 +687,10 @@ async function sellDeckInstance(run, instanceId) {
   });
   if (!ok) return false;
 
-  // Re-find index in case deck mutated during modal (defensive)
-  const currentIdx = run.deck.findIndex((d) => d.instanceId === instanceId);
-  if (currentIdx < 0) return false;
-
-  run.deck.splice(currentIdx, 1);
+  // Re-find index in case the deck mutated during the modal (defensive).
+  const nowHit = pickDeck(instanceId);
+  if (!nowHit) return false;
+  nowHit.arr.splice(nowHit.idx, 1);
   run.gold += instance.sellValue;
   _audio?.playSfx('click');
   _onChange?.();
@@ -753,7 +780,9 @@ function flashError(msg) {
 // ============================================================
 
 export function renderPlacement(run) {
+  if (!run.spellDeck) run.spellDeck = [];
   renderDeckInventory(run);
+  renderSpellDeckInventory(run);
   renderGridWithPlacements(run);
 }
 
@@ -761,19 +790,20 @@ function renderDeckInventory(run) {
   const host = document.getElementById('deck-inventory');
   const countEl = document.getElementById('deck-count');
   const placedEl = document.getElementById('deck-placed');
+  // The plant deck only tracks plants — the count shown is plants owned.
   const placedCount = run.deck.filter((d) => d.gridRow != null).length;
   if (countEl) countEl.textContent = String(run.deck.length);
   if (placedEl) placedEl.textContent = String(placedCount);
   if (!host) return;
   host.innerHTML = '';
 
-  // Only show unplaced cards in the deck inventory
+  // Only show unplaced plants in the deck inventory
   const unplaced = run.deck.filter((d) => d.gridRow == null);
 
   if (unplaced.length === 0 && run.deck.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'deck-empty';
-    empty.textContent = 'Deck empty — buy cards above to start building';
+    empty.textContent = 'No plants yet — buy cards above to start building your deck.';
     host.appendChild(empty);
     return;
   }
@@ -781,7 +811,7 @@ function renderDeckInventory(run) {
   if (unplaced.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'deck-empty';
-    empty.textContent = 'All deck cards placed. Click a grid card to move or remove.';
+    empty.textContent = 'All plants placed. Tap a grid card to move, upgrade, or remove.';
     host.appendChild(empty);
     return;
   }
@@ -798,6 +828,43 @@ function renderDeckInventory(run) {
       // tier even for unplaced cards (e.g., a plant that was on the
       // grid, got buffed, and was then removed — it retains its
       // buffs and should show them here).
+      instance,
+      onClick: () => selectDeckCard(run, instance.instanceId),
+      onSell: () => sellDeckInstance(run, instance.instanceId),
+    });
+    host.appendChild(el);
+  }
+}
+
+/**
+ * Render the Spell Deck: all owned plant-target spells. Lives in a
+ * dedicated shop section (#spell-deck-inventory) so the player can
+ * scan spells independently of plants.
+ */
+function renderSpellDeckInventory(run) {
+  const host = document.getElementById('spell-deck-inventory');
+  const countEl = document.getElementById('spell-deck-count');
+  const spellDeck = run.spellDeck ?? [];
+  if (countEl) countEl.textContent = String(spellDeck.length);
+  if (!host) return;
+  host.innerHTML = '';
+
+  if (spellDeck.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'deck-empty';
+    empty.textContent = 'No spells yet — buy or pack-open spells to stock this deck.';
+    host.appendChild(empty);
+    return;
+  }
+
+  for (const instance of spellDeck) {
+    const card = getCard(instance.cardId);
+    if (!card) continue;
+    const isSelected = _selection?.instanceId === instance.instanceId;
+    const el = renderCard(card, {
+      sellValue: instance.sellValue,
+      small: true,
+      isSelected,
       instance,
       onClick: () => selectDeckCard(run, instance.instanceId),
       onSell: () => sellDeckInstance(run, instance.instanceId),

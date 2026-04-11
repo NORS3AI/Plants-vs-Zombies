@@ -2135,9 +2135,10 @@ input, select, textarea {
 .spell-panel {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  width: 180px;
+  width: 200px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -2150,6 +2151,8 @@ input, select, textarea {
   letter-spacing: 0.05em;
   color: var(--accent);
   margin-bottom: 0.5rem;
+  text-align: center;
+  width: 100%;
 }
 
 .spell-panel-empty {
@@ -2157,12 +2160,15 @@ input, select, textarea {
   color: var(--fg-muted);
   font-style: italic;
   line-height: 1.4;
+  text-align: center;
 }
 
 .spell-slots {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .spell-slot {
@@ -2170,7 +2176,7 @@ input, select, textarea {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.5rem 0.6rem;
+  padding: 0.5rem 2.25rem 0.5rem 0.6rem; /* right pad for info button */
   background: var(--bg-elev-2);
   border: 2px solid var(--accent-green);
   border-radius: 8px;
@@ -2180,6 +2186,36 @@ input, select, textarea {
   text-align: left;
   transition: all 0.15s ease;
   overflow: hidden;
+  width: 100%;
+}
+
+/* Small ℹ button stamped on every spell slot. Opens the card-details
+   modal without triggering the cast. */
+.spell-slot-info-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 3;
+  transition: all 0.12s ease;
+}
+.spell-slot-info-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.55);
 }
 
 .spell-slot:hover:not(.spell-on-cooldown) {

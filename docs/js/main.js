@@ -599,8 +599,37 @@ function resumeRun() {
   currentRun = Save.loadRun();
   migrateRunForCurrentGrid(currentRun);
   migrateStrayAetherSpells(currentRun);
+  migrateSplitSpellDeck(currentRun);
   Tutorial.setRun(currentRun);
   state.transition(STATES.SHOP);
+}
+
+/**
+ * One-shot migration: the plant deck and the spell deck used to
+ * share `run.deck`. Since the split, plant-target spells live in
+ * `run.spellDeck`. Move anything with type === 'spell' and
+ * category !== 'aether_root' out of run.deck into run.spellDeck.
+ */
+function migrateSplitSpellDeck(run) {
+  if (!run) return;
+  if (!run.spellDeck) run.spellDeck = [];
+  let moved = 0;
+  for (let i = run.deck.length - 1; i >= 0; i--) {
+    const inst = run.deck[i];
+    const card = Cards.getCard(inst.cardId);
+    if (!card) continue;
+    if (card.type === 'spell' && card.category !== 'aether_root') {
+      // Spells are never placed, so just move the instance.
+      inst.gridRow = null;
+      inst.gridCol = null;
+      run.spellDeck.push(inst);
+      run.deck.splice(i, 1);
+      moved++;
+    }
+  }
+  if (moved > 0) {
+    console.info(`[spell-deck migration] Moved ${moved} spell(s) from plant deck to spell deck.`);
+  }
 }
 
 /**

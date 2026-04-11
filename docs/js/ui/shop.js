@@ -104,8 +104,13 @@ function freshInstanceId() {
 }
 
 /**
- * Add a card to the deck. Rolls a sellValue at insertion time so it's
- * deterministic for the lifetime of that instance.
+ * Add a card to the appropriate deck. Plants live in `run.deck`;
+ * plant-target spells live in `run.spellDeck`. Aether-Root spells
+ * never flow through here — they use addToAetherSpells() which
+ * handles the duplicate auto-sell behavior.
+ *
+ * Rolls a sellValue at insertion time so it's deterministic for the
+ * lifetime of that instance.
  */
 function addToDeck(run, card) {
   const instance = {
@@ -113,7 +118,12 @@ function addToDeck(run, card) {
     instanceId: freshInstanceId(),
     sellValue: rollSell(card),
   };
-  run.deck.push(instance);
+  if (card.type === 'spell') {
+    if (!run.spellDeck) run.spellDeck = [];
+    run.spellDeck.push(instance);
+  } else {
+    run.deck.push(instance);
+  }
 }
 
 /**
@@ -205,12 +215,15 @@ export async function sellAetherSpell(run, instanceId) {
 }
 
 /**
- * Sell a deck card by its instance id. Confirms via modal first.
+ * Sell a deck card by its instance id. Searches both the plant
+ * deck and the spell deck. Confirms via modal first.
  */
 export async function sellDeckCard(run, instanceId) {
-  const idx = run.deck.findIndex((c) => c.instanceId === instanceId);
-  if (idx < 0) return false;
-  const instance = run.deck[idx];
+  const findIn = (arr) => ({ arr, idx: arr?.findIndex((c) => c.instanceId === instanceId) ?? -1 });
+  let hit = findIn(run.deck);
+  if (hit.idx < 0) hit = findIn(run.spellDeck);
+  if (hit.idx < 0) return false;
+  const instance = hit.arr[hit.idx];
   const card = getCard(instance.cardId);
   if (!card) return false;
 
@@ -222,7 +235,7 @@ export async function sellDeckCard(run, instanceId) {
   });
   if (!ok) return false;
 
-  run.deck.splice(idx, 1);
+  hit.arr.splice(hit.idx, 1);
   run.gold += instance.sellValue;
   _audio?.playSfx('click');
   _onChange?.();

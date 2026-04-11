@@ -14,7 +14,7 @@
  */
 
 import { getCard } from '../cards/index.js';
-import { renderGridCardIcon } from './cardView.js';
+import { renderGridCardIcon, showCardDetails } from './cardView.js';
 import { GRID_ROWS, GRID_COLS, STAGING_COL } from '../game/grid.js';
 import { castAetherSpell } from '../game/aetherSpells.js';
 import { getCombatState } from '../game/combat.js';
@@ -642,7 +642,25 @@ function buildSpellPanel(run) {
     cooldownEl.appendChild(cooldownText);
     slot.appendChild(cooldownEl);
 
+    // Info button — lets the player read the full spell description
+    // before committing to a cast. stopPropagation prevents the slot's
+    // cast handler from firing when the ℹ is tapped.
+    const infoBtn = document.createElement('span');
+    infoBtn.className = 'spell-slot-info-btn';
+    infoBtn.textContent = 'ℹ';
+    infoBtn.setAttribute('role', 'button');
+    infoBtn.setAttribute('aria-label', `${card.name} info`);
+    infoBtn.title = 'Show spell details';
+    infoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      showCardDetails(card);
+    });
+    slot.appendChild(infoBtn);
+
     slot.addEventListener('click', (e) => {
+      // Guard: if the click landed on the info button, bail.
+      if (e.target.closest('.spell-slot-info-btn')) return;
       e.stopPropagation();
       const ok = castAetherSpell(run, instance.instanceId);
       if (ok) {

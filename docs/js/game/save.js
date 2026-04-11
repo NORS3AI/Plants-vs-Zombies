@@ -31,9 +31,15 @@ const DEFAULT_RUN = {
   aetherRootMaxHP: 100,
   aetherRootShield: 0, // Phase 9: absorbed by incoming damage before HP
 
-  // Owned cards (each is a card-instance with rolled sellValue + instanceId).
-  // Max 10 entries enforced by shop logic.
+  // Plant deck — only owned plants. Each entry is a card-instance
+  // with a rolled sellValue and a unique instanceId. Grid placement
+  // is capped at MAX_PLACED_PLANTS; deck size itself is uncapped.
   deck: [],
+
+  // Spell deck — only owned plant-target spells (Barkskin Guard,
+  // Nectar Rush, Magic Mushroom, Chrono-Bloom, etc.). Kept separate
+  // from the plant deck so the player can scan each independently.
+  spellDeck: [],
 
   // Aether-Root spells (live in side panel, separate from regular deck).
   aetherSpells: [],
