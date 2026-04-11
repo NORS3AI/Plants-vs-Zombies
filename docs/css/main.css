@@ -459,6 +459,15 @@ input, select, textarea {
   animation: devGoldPulse 2.4s ease-in-out infinite;
 }
 
+/* Explicit override: `display: flex` above wins against the UA
+   stylesheet's `[hidden] { display: none }`, so the button stays
+   visible even when `btn.hidden = true`. Force it off here so the
+   applySettings toggle actually hides the button when dev mode is
+   disabled. */
+.dev-gold-btn[hidden] {
+  display: none !important;
+}
+
 .dev-gold-btn:hover {
   transform: scale(1.08);
 }
