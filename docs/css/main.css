@@ -563,7 +563,8 @@ input, select, textarea {
 .merge-log-btn:active { transform: scale(0.92); }
 .merge-log-btn[hidden] { display: none !important; }
 
-/* Modal list inside the merge log */
+/* Modal list inside the merge log — scrollable via the
+   modal-dialog-patchnotes extraClass on its parent modal. */
 .merge-log-list {
   list-style: none;
   margin: 0;
@@ -572,6 +573,9 @@ input, select, textarea {
   flex-direction: column;
   gap: 0.6rem;
   text-align: left;
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .merge-log-entry {
   display: flex;

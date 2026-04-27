@@ -274,6 +274,7 @@ export const FUSION_PLANTS = [
     abilities: [{ type: 'cone_damage', width: 3, depth: 6 }],
     notInShop: true,
     deckLimit: 3,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'mythril_dragon' },
   },
 
   // ============================================================
@@ -322,6 +323,7 @@ export const FUSION_PLANTS = [
     economy: { goldPerKill: 'round_number' },
     notInShop: true,
     deckLimit: 3,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'crimson_mandrake' },
   },
 
   // ============================================================
@@ -823,6 +825,53 @@ export const FUSION_PLANTS = [
     target: 'board',
     description: 'Artifact. Fully heals all plants on the board and adds a +500 Shield to each.',
     effect: { type: 'heal_all', heal: 'full', shield: 500 },
+    notInShop: true,
+    deckLimit: 1,
+  },
+
+  // ============================================================
+  // Bloody Mandrake × 3 → Crimson Mandrake
+  // ============================================================
+  {
+    id: 'crimson_mandrake',
+    name: 'Crimson Mandrake',
+    type: 'plant',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 330,
+    damage: 180,
+    castTime: 2.2,
+    range: 9,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Artifact. Gold per kill scales with the current round.',
+    abilities: [],
+    economy: { goldPerKill: 'round_number' },
+    notInShop: true,
+    deckLimit: 1,
+  },
+
+  // ============================================================
+  // Runite Dragon × 3 → Mythril Dragon
+  // ============================================================
+  {
+    id: 'mythril_dragon',
+    name: 'Mythril Dragon',
+    type: 'plant',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 200,
+    damage: 200,
+    castTime: 2.2,
+    range: 9,
+    attackPattern: 'cone',
+    targetingDefault: 'first',
+    description: 'Artifact. Mythril cone burst across 3 lanes.',
+    abilities: [{ type: 'cone_damage', width: 3, depth: 9 }],
     notInShop: true,
     deckLimit: 1,
   },

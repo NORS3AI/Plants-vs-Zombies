@@ -5,6 +5,19 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.8a — 2026-04-12 — Crimson Mandrake, Mythril Dragon, scrollable Fusion Log
+
+### Added
+- **Crimson Mandrake** (artifact) — 3 Bloody Mandrakes → `330 HP / 180 DMG / 2.2 s / 9 range`. Gold per kill scales with round. Limit 1 in deck.
+- **Mythril Dragon** (artifact) — 3 Runite Dragons → `200 HP / 200 DMG / 2.2 s / 9 range`. Cone damage across 3 lanes. Limit 1 in deck.
+
+### Fixed
+- **Fusion Log is now scrollable** — the modal uses the `modal-dialog-patchnotes` scroll class and the list itself caps at `max-height: 60vh` with `overflow-y: auto`. No longer unusable when the player has many fusions.
+
+78 cards, validator clean.
+
+---
+
 ## v1.1.8 — 2026-04-12 — Per-card legendary limits
 
 ### Changed

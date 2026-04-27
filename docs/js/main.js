@@ -1131,6 +1131,7 @@ function openMergeLogModal() {
     buttons: [{ label: 'Close', value: null, kind: 'default' }],
     showClose: true,
     wide: true,
+    extraClass: 'modal-dialog-patchnotes',
   });
 }
 
@@ -1261,5 +1262,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.8 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.8a boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
