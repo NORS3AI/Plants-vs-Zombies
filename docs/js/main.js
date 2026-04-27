@@ -50,6 +50,7 @@ function applySettings(settings) {
   const soundsCb = document.getElementById('setting-sounds');
   const musicVol = document.getElementById('setting-music-volume');
   const sfxVol = document.getElementById('setting-sfx-volume');
+  const skipSellCb = document.getElementById('setting-skip-sell-confirm');
   const devModeCb = document.getElementById('setting-dev-mode');
   const devHint = document.getElementById('dev-mode-hint');
 
@@ -58,6 +59,7 @@ function applySettings(settings) {
   if (soundsCb) soundsCb.checked = !!settings.sounds;
   if (musicVol) musicVol.value = Math.round((settings.musicVolume ?? 0.6) * 100);
   if (sfxVol) sfxVol.value = Math.round((settings.sfxVolume ?? 0.8) * 100);
+  if (skipSellCb) skipSellCb.checked = !!settings.skipSellConfirm;
   if (devModeCb) devModeCb.checked = !!settings.devMode;
   if (devHint) devHint.hidden = !settings.devMode;
 
@@ -1014,6 +1016,7 @@ function readSettingsFromDOM() {
     sounds: !!document.getElementById('setting-sounds')?.checked,
     musicVolume: (musicVolRaw !== undefined ? Number(musicVolRaw) : 60) / 100,
     sfxVolume: (sfxVolRaw !== undefined ? Number(sfxVolRaw) : 80) / 100,
+    skipSellConfirm: !!document.getElementById('setting-skip-sell-confirm')?.checked,
     devMode: persistedDevMode,
   };
 }

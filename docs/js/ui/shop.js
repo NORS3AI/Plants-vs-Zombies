@@ -19,6 +19,7 @@ import {
 } from '../cards/index.js';
 import { renderCard, renderPackChest } from './cardView.js';
 import { confirmModal, showModal } from './modal.js';
+import { Save } from '../game/save.js';
 
 // Deck itself is uncapped — "opening a chest should be super exciting".
 // The 10-card limit is now on how many plants can be PLACED on the
@@ -198,14 +199,16 @@ export async function sellAetherSpell(run, instanceId) {
   const card = getCard(instance.cardId);
   if (!card) return false;
 
-  const ok = await confirmModal({
-    title: `Sell ${card.name}?`,
-    message: `You will receive ${instance.sellValue} gold. The Aether-Root will lose access to this spell for the rest of the run (until you find another copy).`,
-    confirmLabel: `Sell for ${instance.sellValue}g`,
-    cancelLabel: 'Cancel',
-    danger: true,
-  });
-  if (!ok) return false;
+  if (!Save.loadSettings().skipSellConfirm) {
+    const ok = await confirmModal({
+      title: `Sell ${card.name}?`,
+      message: `You will receive ${instance.sellValue} gold. The Aether-Root will lose access to this spell for the rest of the run (until you find another copy).`,
+      confirmLabel: `Sell for ${instance.sellValue}g`,
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return false;
+  }
 
   run.aetherSpells.splice(idx, 1);
   run.gold += instance.sellValue;
@@ -227,13 +230,15 @@ export async function sellDeckCard(run, instanceId) {
   const card = getCard(instance.cardId);
   if (!card) return false;
 
-  const ok = await confirmModal({
-    title: `Sell ${card.name}?`,
-    message: `You will receive ${instance.sellValue} gold. This cannot be undone.`,
-    confirmLabel: `Sell for ${instance.sellValue}g`,
-    cancelLabel: 'Cancel',
-  });
-  if (!ok) return false;
+  if (!Save.loadSettings().skipSellConfirm) {
+    const ok = await confirmModal({
+      title: `Sell ${card.name}?`,
+      message: `You will receive ${instance.sellValue} gold. This cannot be undone.`,
+      confirmLabel: `Sell for ${instance.sellValue}g`,
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return false;
+  }
 
   hit.arr.splice(hit.idx, 1);
   run.gold += instance.sellValue;

@@ -113,6 +113,14 @@ export function renderCard(card, options = {}) {
     body.appendChild(spellsSection);
   }
 
+  // Artifact warning — limit 1 per cardId
+  if (card.rarity === 'artifact') {
+    const warn = document.createElement('div');
+    warn.className = 'card-artifact-warn';
+    warn.textContent = '⚠ Artifact — limit 1. Duplicates are auto-sold.';
+    body.appendChild(warn);
+  }
+
   el.appendChild(body);
 
   // Footer (cost / sell value / sell button)

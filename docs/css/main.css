@@ -1005,6 +1005,20 @@ input, select, textarea {
   50%      { box-shadow: 0 0 34px rgba(220, 38, 38, 0.65), 0 0 18px rgba(180, 20, 20, 0.45); }
 }
 
+/* Artifact card warning — displayed on every artifact plant card
+   to remind the player that duplicates are auto-sold. */
+.card-artifact-warn {
+  font-size: 0.65rem;
+  color: var(--rarity-artifact);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 4px;
+  padding: 0.25rem 0.4rem;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .card-body {
   display: flex;
   flex-direction: column;

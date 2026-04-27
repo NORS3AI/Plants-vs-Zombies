@@ -773,13 +773,16 @@ async function sellDeckInstance(run, instanceId) {
   const card = getCard(instance.cardId);
   if (!card) return false;
 
-  const ok = await confirmModal({
-    title: `Sell ${card.name}?`,
-    message: `You will receive ${instance.sellValue} gold. This cannot be undone.`,
-    confirmLabel: `Sell for ${instance.sellValue}g`,
-    cancelLabel: 'Cancel',
-  });
-  if (!ok) return false;
+  const skip = Save.loadSettings().skipSellConfirm;
+  if (!skip) {
+    const ok = await confirmModal({
+      title: `Sell ${card.name}?`,
+      message: `You will receive ${instance.sellValue} gold. This cannot be undone.`,
+      confirmLabel: `Sell for ${instance.sellValue}g`,
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return false;
+  }
 
   // Re-find index in case the deck mutated during the modal (defensive).
   const nowHit = pickDeck(instanceId);
@@ -859,6 +862,7 @@ function mergeEvolution(run, cardId, anchorRow, anchorCol) {
   // more of the evolved form placed), cascade the merge through
   // every chain tier in a single placement.
   mergeEvolution(run, evolution.intoId, anchorRow, anchorCol);
+  autoSellDuplicateArtifacts(run);
   return true;
 }
 
@@ -922,11 +926,34 @@ export function checkDeckMerges(run) {
       break;
     }
   }
+  autoSellDuplicateArtifacts(run);
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
+
+/**
+ * Artifact rarity plants are limited to 1 copy per cardId. After
+ * any merge, scan the deck and auto-sell any extras for their gold.
+ */
+function autoSellDuplicateArtifacts(run) {
+  if (!run?.deck) return;
+  const seen = new Set();
+  for (let i = run.deck.length - 1; i >= 0; i--) {
+    const inst = run.deck[i];
+    const card = getCard(inst.cardId);
+    if (!card || card.rarity !== 'artifact') continue;
+    if (seen.has(inst.cardId)) {
+      const gold = inst.sellValue ?? 0;
+      run.gold += gold;
+      run.deck.splice(i, 1);
+      flashToast(`⚠️ Duplicate ${card.name} auto-sold for ${gold}g (artifact limit: 1)`);
+    } else {
+      seen.add(inst.cardId);
+    }
+  }
+}
 
 function recordAttainedFusion(run, cardId) {
   // Write to BOTH run (for the merge-log button visibility check)
@@ -1194,19 +1221,21 @@ function autoSellExcessSpells(run) {
   }
 }
 
-/** Sell all unplaced plants in the Plant Deck. Returns gold gained. */
+/** Sell all unplaced plants in the Plant Deck. */
 export async function sellAllPlants(run) {
   const unplaced = run.deck.filter((d) => d.gridRow == null);
   if (unplaced.length === 0) return;
   const totalGold = unplaced.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
-  const ok = await confirmModal({
-    title: `Sell all ${unplaced.length} unplaced plants?`,
-    message: `You will receive ${totalGold} gold. Plants on the grid are NOT affected.`,
-    confirmLabel: `Sell for ${totalGold}g`,
-    cancelLabel: 'Cancel',
-    danger: true,
-  });
-  if (!ok) return;
+  if (!Save.loadSettings().skipSellConfirm) {
+    const ok = await confirmModal({
+      title: `Sell all ${unplaced.length} unplaced plants?`,
+      message: `You will receive ${totalGold} gold. Plants on the grid are NOT affected.`,
+      confirmLabel: `Sell for ${totalGold}g`,
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+  }
   for (let i = run.deck.length - 1; i >= 0; i--) {
     if (run.deck[i].gridRow == null) {
       run.gold += run.deck[i].sellValue ?? 0;
@@ -1218,19 +1247,21 @@ export async function sellAllPlants(run) {
   renderPlacement(run);
 }
 
-/** Sell all spells in the Spell Deck. Returns gold gained. */
+/** Sell all spells in the Spell Deck. */
 export async function sellAllSpells(run) {
   const spellDeck = run.spellDeck ?? [];
   if (spellDeck.length === 0) return;
   const totalGold = spellDeck.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
-  const ok = await confirmModal({
-    title: `Sell all ${spellDeck.length} spells?`,
-    message: `You will receive ${totalGold} gold.`,
-    confirmLabel: `Sell for ${totalGold}g`,
-    cancelLabel: 'Cancel',
-    danger: true,
-  });
-  if (!ok) return;
+  if (!Save.loadSettings().skipSellConfirm) {
+    const ok = await confirmModal({
+      title: `Sell all ${spellDeck.length} spells?`,
+      message: `You will receive ${totalGold} gold.`,
+      confirmLabel: `Sell for ${totalGold}g`,
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+  }
   run.gold += totalGold;
   run.spellDeck = [];
   _audio?.playSfx('click');
