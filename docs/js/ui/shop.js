@@ -443,5 +443,6 @@ function flashError(msg) {
   const offset = document.querySelectorAll('.shop-toast').length;
   t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1800);
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 8000);
+  setTimeout(() => t.remove(), 10000);
 }

@@ -477,6 +477,57 @@ input, select, textarea {
   transform: scale(0.92);
 }
 
+/* Artifact gold button — sits between merge-log and gold btn */
+.dev-artifact-gold-btn {
+  position: fixed;
+  bottom: 78px;
+  right: 78px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  border: 2px solid #dc2626;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  z-index: 50;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4),
+              0 0 14px rgba(220, 38, 38, 0.65);
+  animation: artifactGoldPulse 2s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  position: fixed;
+}
+.dev-artifact-gold-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(220, 38, 38, 0.5) 50%,
+    rgba(255, 255, 255, 0.25) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: legendaryShine 2.2s linear infinite;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.dev-artifact-gold-btn:hover { transform: scale(1.08); }
+.dev-artifact-gold-btn:active { transform: scale(0.92); }
+.dev-artifact-gold-btn[hidden] { display: none !important; }
+@keyframes artifactGoldPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 14px rgba(220, 38, 38, 0.55); }
+  50%      { box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 24px rgba(220, 38, 38, 0.95); }
+}
+
 @keyframes devGoldPulse {
   0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(212, 175, 55, 0.55); }
   50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 22px rgba(212, 175, 55, 0.95); }
@@ -1737,6 +1788,13 @@ input, select, textarea {
 .shop-toast-success {
   color: var(--accent-green);
   border-color: var(--accent-green);
+}
+
+.shop-toast {
+  transition: opacity 2s ease;
+}
+.shop-toast-fade {
+  opacity: 0 !important;
 }
 
 /* ---------- Card Sell Button (Phase 6) ---------- */

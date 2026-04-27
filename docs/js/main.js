@@ -61,8 +61,8 @@ function applySettings(settings) {
   if (devModeCb) devModeCb.checked = !!settings.devMode;
   if (devHint) devHint.hidden = !settings.devMode;
 
-  // Show/hide all dev-gold buttons across screens based on the setting
-  document.querySelectorAll('.dev-gold-btn').forEach((btn) => {
+  // Show/hide all dev buttons based on the setting
+  document.querySelectorAll('.dev-gold-btn, .dev-artifact-gold-btn').forEach((btn) => {
     btn.hidden = !settings.devMode;
   });
 
@@ -855,16 +855,23 @@ document.addEventListener('click', (e) => {
       }
       break;
     case 'dev-gold':
-      // Dev-mode cheat: +50 gold per tap. Only wired when
-      // settings.devMode is true (the button is hidden otherwise,
-      // but check again here defensively).
       if (Save.loadSettings().devMode && currentRun) {
         currentRun.gold += 50;
         syncHUD();
         Save.saveRun(currentRun);
         audio.playSfx('click');
-        // Re-render the shop so pack chests / refresh button /
-        // shop-card affordability toggles instantly as gold goes up.
+        if (state.current === STATES.SHOP) {
+          Shop.renderShop(currentRun);
+          Placement.renderPlacement(currentRun);
+        }
+      }
+      break;
+    case 'dev-artifact-gold':
+      if (Save.loadSettings().devMode && currentRun) {
+        currentRun.gold += 5000;
+        syncHUD();
+        Save.saveRun(currentRun);
+        audio.playSfx('go');
         if (state.current === STATES.SHOP) {
           Shop.renderShop(currentRun);
           Placement.renderPlacement(currentRun);
@@ -1020,10 +1027,11 @@ function flashToast(msg) {
     position: fixed; bottom: ${24 + offset * 48}px; left: 50%; transform: translateX(-50%);
     background: var(--bg-elev); color: var(--accent); padding: 0.75rem 1.25rem;
     border: 1px solid var(--accent); border-radius: 8px; z-index: 9999;
-    font-size: 0.9rem; box-shadow: var(--shadow);
+    font-size: 0.9rem; box-shadow: var(--shadow); transition: opacity 2s ease;
   `;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2000);
+  setTimeout(() => { t.style.opacity = '0'; }, 8000);
+  setTimeout(() => t.remove(), 10000);
 }
 
 // ---------- Game Loop ----------
