@@ -30,6 +30,7 @@ export const MYTHIC_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Entangle. Slows zombie movement by 10% on hit.',
     abilities: [{ type: 'slow_on_hit', percent: 0.1, duration: 1.0 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'thorned_vine' },
   },
   {
     id: 'glimmer_spore',
@@ -48,6 +49,7 @@ export const MYTHIC_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Illuminate. Reveals invisible enemies (e.g., Shadow-Stalker Wraith).',
     abilities: [{ type: 'reveal_invisible' }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'radiant_spore' },
   },
   {
     id: 'stone_root_bulwark',
@@ -66,6 +68,7 @@ export const MYTHIC_EXCLUSIVES = [
     targetingDefault: 'none',
     description: 'Reflect. High HP wall; returns 10% of damage taken to the attacker.',
     abilities: [{ type: 'reflect_damage', percent: 0.1 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'granite_bulwark' },
   },
   {
     id: 'spore_burst',
@@ -111,6 +114,7 @@ export const MYTHIC_EXCLUSIVES = [
     description: 'Economy. Grants +1 Gold every time a zombie dies in its lane.',
     abilities: [],
     economy: { goldPerLaneKill: 1 },
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'golden_grain' },
   },
 ];
 
@@ -136,6 +140,7 @@ export const ARCANE_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Chain Lightning. Lightning jumps to 2 additional nearby targets.',
     abilities: [{ type: 'chain_lightning', maxJumps: 2, jumpRadius: 2 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'thunder_orchid' },
   },
   {
     id: 'frost_thistle',
@@ -154,6 +159,7 @@ export const ARCANE_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Deep Freeze. 5% chance per hit to stun a zombie for 1 second.',
     abilities: [{ type: 'stun_chance', chance: 0.05, duration: 1.0 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'glacial_thistle' },
   },
   {
     id: 'elder_oak_aegis',
@@ -172,6 +178,7 @@ export const ARCANE_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Protection. Grants a 20 HP shield to the plant directly behind it.',
     abilities: [{ type: 'shield_aura', target: 'rear', value: 20 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'ancient_oak' },
   },
   {
     id: 'arcane_surge',
@@ -217,6 +224,7 @@ export const ARCANE_EXCLUSIVES = [
     description: 'Economy + tank. Every 15 seconds, grants +5 Gold and adds a 5 HP shield to itself.',
     abilities: [{ type: 'self_shield', value: 5, interval: 15.0 }],
     economy: { goldPerCast: 5 },
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'diamond_fern' },
   },
   {
     id: 'synthesis',
@@ -255,6 +263,7 @@ export const FRENZY_EXCLUSIVES = [
     targetingDefault: 'first',
     description: 'Scorch. Leaves a fire trail on the ground dealing damage-over-time.',
     abilities: [{ type: 'fire_trail', dotPerSec: 5, duration: 3 }],
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'volcanic_calla' },
   },
   {
     id: 'void_reaper_lily',

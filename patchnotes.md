@@ -5,6 +5,25 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.0.9 — 2026-04-12 — Every plant can now fuse + 9 new fusion targets
+
+### Added
+- **9 new fusion plants** — the last 9 pack-exclusive base plants that were missing evolution paths now merge:
+  - Bramble-Whip Vine × 3 → **Thorned Vine** (50 HP / 18 DMG, stronger slow)
+  - Glimmer-Spore × 3 → **Radiant Spore** (75 HP / 35 DMG, reveal invisible)
+  - Stone-Root Bulwark × 3 → **Granite Bulwark** (200 HP, wall, 20% reflect)
+  - Amber Grain × 3 → **Golden Grain** (50 HP, +3 gold per lane kill)
+  - Storm-Caster Orchid × 3 → **Thunder Orchid** (80 HP / 35 DMG, 4-jump lightning)
+  - Frost-Thistle × 3 → **Glacial Thistle** (150 HP / 70 DMG, 10% stun)
+  - Elder Oak Aegis × 3 → **Ancient Oak** (300 HP / 30 DMG, 40 HP shield aura)
+  - Crystal Fern × 3 → **Diamond Fern** (150 HP / 30 DMG, +15 gold + 15 HP self-shield / 12 s)
+  - Magma-Core Calla × 3 → **Volcanic Calla** (140 HP / 70 DMG, hotter fire trail)
+
+### Fixed
+- **Storm-Caster Orchid wouldn't auto-merge** — it (and 8 other pack-exclusive plants) were missing `evolution` blocks entirely. Full audit confirmed every non-fusion plant in the database now carries an evolution path. Card count: 65, validator: 0 errors.
+
+---
+
 ## v1.0.8 — 2026-04-12 — Deck sort, auto-merge in deck, Solae & fixes
 
 ### Added
