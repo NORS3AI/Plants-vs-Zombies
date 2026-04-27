@@ -862,7 +862,7 @@ function mergeEvolution(run, cardId, anchorRow, anchorCol) {
   // more of the evolved form placed), cascade the merge through
   // every chain tier in a single placement.
   mergeEvolution(run, evolution.intoId, anchorRow, anchorCol);
-  autoSellDuplicateArtifacts(run);
+  enforceRarityLimits(run);
   return true;
 }
 
@@ -926,7 +926,7 @@ export function checkDeckMerges(run) {
       break;
     }
   }
-  autoSellDuplicateArtifacts(run);
+  enforceRarityLimits(run);
 }
 
 // ============================================================
@@ -934,23 +934,57 @@ export function checkDeckMerges(run) {
 // ============================================================
 
 /**
- * Artifact rarity plants are limited to 1 copy per cardId. After
- * any merge, scan the deck and auto-sell any extras for their gold.
+ * Enforce per-rarity and per-card deck limits. After any merge, scan
+ * run.deck and auto-sell any copies that exceed the limit for their
+ * rarity or card-level cap.
+ *
+ * Rules:
+ *   - Legendary: max 3 total in the deck (across all legendary cardIds)
+ *   - Artifact:  max card.deckLimit per cardId (default 1)
+ *   - Void:      max card.deckLimit per cardId (default 1)
+ *   - Lily Weed: always exempt from ALL limits
  */
-function autoSellDuplicateArtifacts(run) {
+function enforceRarityLimits(run) {
   if (!run?.deck) return;
-  const seen = new Set();
+
+  // --- Per-card limits (artifact / void / any card with deckLimit) ---
+  const cardCounts = new Map();
   for (let i = run.deck.length - 1; i >= 0; i--) {
     const inst = run.deck[i];
+    if (inst.cardId === 'lily_weed') continue;
     const card = getCard(inst.cardId);
-    if (!card || card.rarity !== 'artifact') continue;
-    if (seen.has(inst.cardId)) {
+    if (!card) continue;
+    const limit = card.deckLimit;
+    if (limit == null) continue;
+    const count = (cardCounts.get(inst.cardId) ?? 0) + 1;
+    cardCounts.set(inst.cardId, count);
+    if (count > limit) {
       const gold = inst.sellValue ?? 0;
       run.gold += gold;
       run.deck.splice(i, 1);
-      flashToast(`⚠️ Duplicate ${card.name} auto-sold for ${gold}g (artifact limit: 1)`);
-    } else {
-      seen.add(inst.cardId);
+      flashToast(`⚠️ ${card.name} auto-sold for ${gold}g (limit: ${limit})`);
+    }
+  }
+
+  // --- Legendary cap: max 3 across ALL legendary cardIds ---
+  const MAX_LEGENDARY = 3;
+  const legendaries = [];
+  for (let i = 0; i < run.deck.length; i++) {
+    const inst = run.deck[i];
+    if (inst.cardId === 'lily_weed') continue;
+    const card = getCard(inst.cardId);
+    if (card?.rarity === 'legendary') legendaries.push(i);
+  }
+  if (legendaries.length > MAX_LEGENDARY) {
+    // Sell the newest extras (highest indices first)
+    const toSell = legendaries.slice(MAX_LEGENDARY).reverse();
+    for (const idx of toSell) {
+      const inst = run.deck[idx];
+      const card = getCard(inst.cardId);
+      const gold = inst.sellValue ?? 0;
+      run.gold += gold;
+      run.deck.splice(idx, 1);
+      flashToast(`⚠️ ${card?.name ?? 'Legendary'} auto-sold for ${gold}g (legendary cap: ${MAX_LEGENDARY})`);
     }
   }
 }

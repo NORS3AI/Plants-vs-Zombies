@@ -39,6 +39,7 @@ export function renderCard(card, options = {}) {
   if (options.isPlaced) el.classList.add('card-placed');
   if (card.rarity === 'legendary') el.classList.add('card-legendary-shine');
   if (card.rarity === 'artifact') el.classList.add('card-artifact-shine');
+  if (card.rarity === 'void') el.classList.add('card-void-shine');
   el.dataset.cardId = card.id;
 
   const instance = options.instance ?? null;
@@ -113,11 +114,20 @@ export function renderCard(card, options = {}) {
     body.appendChild(spellsSection);
   }
 
-  // Artifact warning — limit 1 per cardId
+  // Rarity limit warnings
   if (card.rarity === 'artifact') {
+    const limit = card.deckLimit ?? 1;
     const warn = document.createElement('div');
     warn.className = 'card-artifact-warn';
-    warn.textContent = '⚠ Artifact — limit 1. Duplicates are auto-sold.';
+    warn.textContent = `⚠ Artifact — limit ${limit}. Extras are auto-sold.`;
+    body.appendChild(warn);
+  } else if (card.rarity === 'void') {
+    const warn = document.createElement('div');
+    warn.className = 'card-artifact-warn';
+    warn.style.borderColor = 'rgba(124, 58, 237, 0.5)';
+    warn.style.background = 'rgba(124, 58, 237, 0.1)';
+    warn.style.color = 'var(--rarity-void)';
+    warn.textContent = '⚠ Void — limit 1. Only one may exist.';
     body.appendChild(warn);
   }
 

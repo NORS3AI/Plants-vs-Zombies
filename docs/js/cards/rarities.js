@@ -96,9 +96,21 @@ export const RARITIES = Object.freeze({
     sellMax: 15,
     tier: 6,
   },
+  void: {
+    id: 'void',
+    label: 'Void',
+    color: '#7c3aed',
+    cssVar: '--rarity-void',
+    dropWeight: 0, // fusion only
+    costMin: 50,
+    costMax: 50,
+    sellMin: 25,
+    sellMax: 50,
+    tier: 7,
+  },
 });
 
-export const RARITY_ORDER = ['trash', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'artifact'];
+export const RARITY_ORDER = ['trash', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'artifact', 'void'];
 
 /** Look up a rarity by id; returns null if not found. */
 export function getRarity(id) {
