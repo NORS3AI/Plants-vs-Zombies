@@ -36,6 +36,7 @@ let _onFirstBuy = null;
 // Pack buy multiplier: 1, 5, 10, or 'all'
 let _packBuyQty = 1;
 let _packBuyBarWired = false;
+let _shopRun = null; // refreshed every renderShop; read by closures
 let _onFirstPack = null;
 
 /**
@@ -265,25 +266,21 @@ export async function buyPack(run, packId) {
   const pack = PACKS[packId];
   if (!pack) return false;
 
-  // Determine how many packs to buy
+  if (run.gold < pack.cost) {
+    flashError(`Need ${pack.cost} gold (you have ${run.gold})`);
+    _audio?.playSfx('back');
+    return false;
+  }
+
+  // Determine how many packs to buy. "all" drains gold completely.
+  const affordable = Math.floor(run.gold / pack.cost);
   let qty;
   if (_packBuyQty === 'all') {
-    qty = Math.floor(run.gold / pack.cost);
+    qty = affordable;
   } else {
-    qty = Number(_packBuyQty) || 1;
+    qty = Math.min(Number(_packBuyQty) || 1, affordable);
   }
   if (qty < 1) qty = 1;
-  const totalCost = pack.cost * qty;
-
-  if (run.gold < totalCost) {
-    if (run.gold < pack.cost) {
-      flashError(`Need ${pack.cost} gold (you have ${run.gold})`);
-      _audio?.playSfx('back');
-      return false;
-    }
-    // Can't afford the full qty — buy as many as possible
-    qty = Math.floor(run.gold / pack.cost);
-  }
 
   // Open `qty` packs, collecting all cards
   const allCards = [];
@@ -369,9 +366,10 @@ function escapeHtml(s) {
  * Deck inventory + grid are rendered by placement.js since Phase 6.
  */
 export function renderShop(run) {
+  _shopRun = run;
   ensureShopRollForRound(run);
   renderShopCards(run);
-  wirePackBuyBar(run);
+  wirePackBuyBar();
   renderPackRow(run);
   renderAetherSpellInventory(run);
   updateRefreshButton(run);
@@ -468,7 +466,7 @@ function renderPackRow(run) {
  * Wire the ×1 / ×5 / ×10 / All bar above the pack chests. Updates
  * _packBuyQty on click and re-renders so pack cost labels refresh.
  */
-function wirePackBuyBar(run) {
+function wirePackBuyBar() {
   const bar = document.getElementById('pack-buy-bar');
   if (!bar) return;
   if (!_packBuyBarWired) {
@@ -478,8 +476,7 @@ function wirePackBuyBar(run) {
       const raw = btn.dataset.packQty;
       _packBuyQty = raw === 'all' ? 'all' : (Number(raw) || 1);
       _audio?.playSfx('click');
-      renderPackRow(run);
-      // Update active indicator
+      if (_shopRun) renderPackRow(_shopRun);
       bar.querySelectorAll('[data-pack-qty]').forEach((b) => {
         b.classList.toggle('is-active', b.dataset.packQty === raw);
       });
