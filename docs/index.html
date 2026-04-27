@@ -14,7 +14,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge hidden since v1.0.0 release -->
-    <div id="phase-badge" hidden>v1.1.4</div>
+    <div id="phase-badge" hidden>v1.1.5</div>
 
     <!-- Floating dev-gold button (bottom-right, only visible with dev mode) -->
     <button class="dev-gold-btn" data-action="dev-gold" title="+50 gold (dev)" aria-label="Dev gold" hidden>💰</button>
@@ -62,7 +62,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.4</button></p>
+        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.5</button></p>
       </div>
     </section>
 
@@ -111,11 +111,19 @@
           </div>
           <div class="deck-sort-bar" id="deck-sort-bar">
             <span class="deck-sort-label">Sort:</span>
-            <button class="deck-sort-btn is-active" data-sort="name">Name</button>
             <button class="deck-sort-btn" data-sort="rarity">Rarity</button>
-            <button class="deck-sort-btn" data-sort="health">HP</button>
             <button class="deck-sort-btn" data-sort="damage">DMG</button>
-            <button class="btn btn-small btn-danger" data-action="sell-all-plants" id="sell-all-plants-btn" hidden>Sell All</button>
+            <button class="deck-sort-btn" data-sort="name">Name</button>
+            <button class="deck-sort-btn" data-sort="health">HP</button>
+          </div>
+          <div class="deck-sort-bar" id="plant-sell-bar">
+            <span class="deck-sort-label">Sell:</span>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="trash">Trash</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="common">Common</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="uncommon">Uncommon</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="rare">Rare</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="epic">Epic</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-plants" data-rarity="legendary">Legendary</button>
           </div>
           <div class="deck-inventory" id="deck-inventory"></div>
           <p class="shop-hint">Tap a plant to place it on the grid. Tap the "Sell" pill to sell. Own as many as you like — only 10 can be on the grid at once.</p>
@@ -128,9 +136,15 @@
           </div>
           <div class="deck-sort-bar" id="spell-deck-sort-bar">
             <span class="deck-sort-label">Sort:</span>
-            <button class="deck-sort-btn is-active" data-sort="name">Name</button>
             <button class="deck-sort-btn" data-sort="rarity">Rarity</button>
-            <button class="btn btn-small btn-danger" data-action="sell-all-spells" id="sell-all-spells-btn" hidden>Sell All</button>
+            <button class="deck-sort-btn" data-sort="name">Name</button>
+          </div>
+          <div class="deck-sort-bar">
+            <span class="deck-sort-label">Sell:</span>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-spells" data-rarity="common">Common</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-spells" data-rarity="uncommon">Uncommon</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-spells" data-rarity="rare">Rare</button>
+            <button class="deck-sort-btn btn-danger-pill" data-action="sell-rarity-spells" data-rarity="epic">Epic</button>
           </div>
           <div class="deck-inventory" id="spell-deck-inventory"></div>
           <p class="shop-hint">Plant-target spells live here. Tap a spell then tap a placed plant to cast it — the plant keeps the buff even if removed from the grid.</p>

@@ -916,12 +916,16 @@ document.addEventListener('click', (e) => {
     case 'clear-grid':
       clearGridToDeck();
       break;
-    case 'sell-all-plants':
-      if (currentRun) Placement.sellAllPlants(currentRun);
+    case 'sell-rarity-plants': {
+      const rarity = e.target.closest('[data-rarity]')?.dataset.rarity;
+      if (currentRun && rarity) Placement.sellPlantsByRarity(currentRun, rarity);
       break;
-    case 'sell-all-spells':
-      if (currentRun) Placement.sellAllSpells(currentRun);
+    }
+    case 'sell-rarity-spells': {
+      const rarity = e.target.closest('[data-rarity]')?.dataset.rarity;
+      if (currentRun && rarity) Placement.sellSpellsByRarity(currentRun, rarity);
       break;
+    }
   }
 });
 
@@ -1261,5 +1265,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.4 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.5 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

@@ -444,10 +444,10 @@ function updateRefreshButton(run) {
 function flashError(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.className = 'shop-toast';
+  t.className = 'shop-toast shop-toast-info';
   const offset = document.querySelectorAll('.shop-toast').length;
   t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
-  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 8000);
-  setTimeout(() => t.remove(), 10000);
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 10000);
+  setTimeout(() => t.remove(), 12000);
 }

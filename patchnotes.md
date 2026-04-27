@@ -5,6 +5,26 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.5 — 2026-04-12 — Sell by rarity, skip-sell setting, artifact limits, QoL
+
+### Added
+- **Disable Sell Popup** setting — new checkbox in Settings. When active, every sell tap (single card, bulk by rarity, Aether-Root spell) executes instantly without the "are you sure?" confirmation modal.
+- **Sell by rarity** — the "Sell All" buttons on Plant Deck and Spell Deck are replaced with per-rarity sell pills (Trash, Common, Uncommon, Rare, Epic, Legendary). Tap one to sell all unplaced plants or spells of that rarity. Lily Weeds are always protected — they're never bulk-sold.
+- **Artifact rarity auto-sell limit** — only 1 copy of each artifact-rarity plant is allowed in the Plant Deck. Any duplicate created by a merge is immediately auto-sold for its gold value. Every artifact card shows a red warning banner: "⚠ Artifact — limit 1. Duplicates are auto-sold."
+- **Artifact gold dev button** (💎) — red-shimmering floating button stacked directly above the gold button. Grants +5000 gold per tap. Only visible when dev mode is on.
+- **Toast messages now use blue text** instead of red for info/updates. Red is reserved for errors only.
+
+### Changed
+- **Default sort is now Rarity** (was Name). Sort order in both Plant Deck and Spell Deck: Rarity, DMG, Name, HP.
+- **Toast timing: 10 seconds visible + 2 second fade-out** (12 s total before removal). Previously the math was slightly off (8+2).
+- **Merge-log button** repositioned to `bottom: 136px` to make room for the artifact gold button in the stack.
+
+### Fixed
+- **Lily Weeds protected from all bulk operations** — sell-by-rarity explicitly skips `cardId === 'lily_weed'`. The player can have infinite Lily Weeds.
+- **Artifact gold button visibility** — the button now properly shows/hides alongside the regular dev-gold button when dev mode is toggled.
+
+---
+
 ## v1.1.4 — 2026-04-12 — Artifact rarity, Spell Deck sort, Sell All, Fusion Log rework
 
 ### Added

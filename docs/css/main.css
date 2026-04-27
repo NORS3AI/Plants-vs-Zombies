@@ -477,11 +477,11 @@ input, select, textarea {
   transform: scale(0.92);
 }
 
-/* Artifact gold button — sits between merge-log and gold btn */
+/* Artifact gold button — stacked directly above the gold btn */
 .dev-artifact-gold-btn {
   position: fixed;
   bottom: 78px;
-  right: 78px;
+  right: 20px;
   width: 44px;
   height: 44px;
   min-height: 44px;
@@ -538,7 +538,7 @@ input, select, textarea {
    Visible during a run when the player has attained ≥ 1 fusion. */
 .merge-log-btn {
   position: fixed;
-  bottom: 78px;
+  bottom: 136px;
   right: 20px;
   width: 44px;
   height: 44px;
@@ -1447,6 +1447,16 @@ input, select, textarea {
   border-color: var(--accent);
   box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
 }
+.deck-sort-btn.btn-danger-pill {
+  border-color: var(--accent-red, #ef4444);
+  color: var(--accent-red, #ef4444);
+  font-size: 0.65rem;
+}
+.deck-sort-btn.btn-danger-pill:hover {
+  background: var(--accent-red, #ef4444);
+  color: var(--bg);
+  border-color: var(--accent-red, #ef4444);
+}
 
 /* ---------- Deck Inventory ---------- */
 .deck-inventory {
@@ -1802,6 +1812,12 @@ input, select, textarea {
 .shop-toast-success {
   color: var(--accent-green);
   border-color: var(--accent-green);
+}
+
+/* Info toasts — blue text for updates/notifications (red is for errors only) */
+.shop-toast-info {
+  color: var(--accent-blue, #60a5fa);
+  border-color: var(--accent-blue, #60a5fa);
 }
 
 .shop-toast {

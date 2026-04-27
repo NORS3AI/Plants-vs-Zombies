@@ -41,9 +41,9 @@ let _currentRun = null; // set each renderPlacement; read by sort handler
 
 // ---------- Plant Deck sort ----------
 // Persists for the session; reset on page reload.
-let _deckSortKey = 'name'; // 'name' | 'rarity' | 'health' | 'damage'
+let _deckSortKey = 'rarity'; // 'rarity' | 'damage' | 'name' | 'health'
 let _deckSortBarWired = false;
-let _spellSortKey = 'name'; // 'name' | 'rarity'
+let _spellSortKey = 'rarity'; // 'rarity' | 'name'
 let _spellSortBarWired = false;
 
 const RARITY_TIERS = {};
@@ -984,23 +984,23 @@ function escapeHtml(s) {
 function flashToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.className = 'shop-toast shop-toast-success';
+  t.className = 'shop-toast shop-toast-info';
   const offset = document.querySelectorAll('.shop-toast').length;
   t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
-  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 8000);
-  setTimeout(() => t.remove(), 10000);
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 10000);
+  setTimeout(() => t.remove(), 12000);
 }
 
 function flashError(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.className = 'shop-toast';
+  t.className = 'shop-toast shop-toast-info';
   const offset = document.querySelectorAll('.shop-toast').length;
   t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
-  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 8000);
-  setTimeout(() => t.remove(), 10000);
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 10000);
+  setTimeout(() => t.remove(), 12000);
 }
 
 // ============================================================
@@ -1221,23 +1221,36 @@ function autoSellExcessSpells(run) {
   }
 }
 
-/** Sell all unplaced plants in the Plant Deck. */
-export async function sellAllPlants(run) {
-  const unplaced = run.deck.filter((d) => d.gridRow == null);
-  if (unplaced.length === 0) return;
-  const totalGold = unplaced.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
+/**
+ * Sell all unplaced plants of a specific rarity from the Plant Deck.
+ * Lily Weeds (id 'lily_weed') are NEVER sold by bulk operations —
+ * they're a special collectible the player can have infinitely.
+ */
+export async function sellPlantsByRarity(run, rarity) {
+  const targets = run.deck.filter((d) => {
+    if (d.gridRow != null) return false;
+    if (d.cardId === 'lily_weed') return false;
+    const c = getCard(d.cardId);
+    return c?.rarity === rarity;
+  });
+  if (targets.length === 0) {
+    flashError(`No unplaced ${rarity} plants to sell.`);
+    return;
+  }
+  const totalGold = targets.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
   if (!Save.loadSettings().skipSellConfirm) {
     const ok = await confirmModal({
-      title: `Sell all ${unplaced.length} unplaced plants?`,
-      message: `You will receive ${totalGold} gold. Plants on the grid are NOT affected.`,
+      title: `Sell all ${targets.length} ${rarity} plants?`,
+      message: `You will receive ${totalGold} gold. Placed plants and Lily Weeds are NOT affected.`,
       confirmLabel: `Sell for ${totalGold}g`,
       cancelLabel: 'Cancel',
       danger: true,
     });
     if (!ok) return;
   }
+  const ids = new Set(targets.map((d) => d.instanceId));
   for (let i = run.deck.length - 1; i >= 0; i--) {
-    if (run.deck[i].gridRow == null) {
+    if (ids.has(run.deck[i].instanceId)) {
       run.gold += run.deck[i].sellValue ?? 0;
       run.deck.splice(i, 1);
     }
@@ -1247,14 +1260,23 @@ export async function sellAllPlants(run) {
   renderPlacement(run);
 }
 
-/** Sell all spells in the Spell Deck. */
-export async function sellAllSpells(run) {
+/**
+ * Sell all spells of a specific rarity from the Spell Deck.
+ */
+export async function sellSpellsByRarity(run, rarity) {
   const spellDeck = run.spellDeck ?? [];
-  if (spellDeck.length === 0) return;
-  const totalGold = spellDeck.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
+  const targets = spellDeck.filter((d) => {
+    const c = getCard(d.cardId);
+    return c?.rarity === rarity;
+  });
+  if (targets.length === 0) {
+    flashError(`No ${rarity} spells to sell.`);
+    return;
+  }
+  const totalGold = targets.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
   if (!Save.loadSettings().skipSellConfirm) {
     const ok = await confirmModal({
-      title: `Sell all ${spellDeck.length} spells?`,
+      title: `Sell all ${targets.length} ${rarity} spells?`,
       message: `You will receive ${totalGold} gold.`,
       confirmLabel: `Sell for ${totalGold}g`,
       cancelLabel: 'Cancel',
@@ -1262,8 +1284,13 @@ export async function sellAllSpells(run) {
     });
     if (!ok) return;
   }
-  run.gold += totalGold;
-  run.spellDeck = [];
+  const ids = new Set(targets.map((d) => d.instanceId));
+  for (let i = run.spellDeck.length - 1; i >= 0; i--) {
+    if (ids.has(run.spellDeck[i].instanceId)) {
+      run.gold += run.spellDeck[i].sellValue ?? 0;
+      run.spellDeck.splice(i, 1);
+    }
+  }
   _audio?.playSfx('click');
   _onChange?.();
   renderPlacement(run);
