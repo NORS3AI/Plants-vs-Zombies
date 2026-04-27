@@ -36,6 +36,7 @@ let _audio = null;
 let _onChange = null;
 let _onFirstPlace = null;
 let _instanceCounter = 1;
+let _currentRun = null; // set each renderPlacement; read by sort handler
 
 // ---------- Plant Deck sort ----------
 // Persists for the session; reset on page reload.
@@ -901,6 +902,7 @@ function flashError(msg) {
 
 export function renderPlacement(run) {
   if (!run.spellDeck) run.spellDeck = [];
+  _currentRun = run; // fresh ref for the sort-bar click handler
   renderDeckInventory(run);
   renderSpellDeckInventory(run);
   renderGridWithPlacements(run);
@@ -917,8 +919,9 @@ function renderDeckInventory(run) {
   if (!host) return;
   host.innerHTML = '';
 
-  // Wire sort-bar click handlers once (survives across re-renders)
-  wireDeckSortBar(run);
+  // Wire sort-bar click handlers once (survives across re-renders).
+  // No `run` arg — the handler reads _currentRun (set by renderPlacement).
+  wireDeckSortBar();
 
   // Only show unplaced plants in the deck inventory
   const unplaced = run.deck.filter((d) => d.gridRow == null);
@@ -962,8 +965,13 @@ function renderDeckInventory(run) {
  * Attach click handlers to the #deck-sort-bar buttons. Wired once;
  * subsequent calls just update the `.is-active` highlight to match
  * `_deckSortKey`.
+ *
+ * The handler reads `_currentRun` (module-level, refreshed every
+ * renderPlacement call) instead of a closure-captured `run` — this
+ * was the original bug: the first wire captured a stale run ref
+ * that never updated on new runs.
  */
-function wireDeckSortBar(run) {
+function wireDeckSortBar() {
   const bar = document.getElementById('deck-sort-bar');
   if (!bar) return;
 
@@ -975,7 +983,9 @@ function wireDeckSortBar(run) {
       if (!key) return;
       _deckSortKey = key;
       _audio?.playSfx('click');
-      renderPlacement(run);
+      // _currentRun is always the latest run reference, set by
+      // renderPlacement before this handler can fire.
+      if (_currentRun) renderPlacement(_currentRun);
     });
     _deckSortBarWired = true;
   }

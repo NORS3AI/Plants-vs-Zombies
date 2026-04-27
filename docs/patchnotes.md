@@ -5,6 +5,14 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.0 — 2026-04-12 — Sort fix, shop scroll-to-top
+
+### Fixed
+- **Plant Deck sort buttons didn't work** — `wireDeckSortBar` captured the `run` object in a closure on its first render. When the run mutated or a new run started, the handler still referenced the stale object, so tapping a sort button either did nothing or silently sorted an old deck. The handler now reads a module-level `_currentRun` reference that's refreshed on every `renderPlacement` call — tapping Name / Rarity / HP / DMG / Type now re-sorts the Plant Deck instantly.
+- **Shop started at the bottom after each round** — the shop screen kept its scroll position from the previous visit, so after combat the player landed deep in the page. `STATES.SHOP.enter()` now resets `shopScreen.scrollTop = 0` so you always start at the top, right at the 3 shop cards.
+
+---
+
 ## v1.0.9 — 2026-04-12 — Every plant can now fuse + 9 new fusion targets
 
 ### Added

@@ -158,6 +158,11 @@ state.register(STATES.SHOP, {
       refreshClearGridButton();
       Tutorial.trigger('first_shop');
     }
+    // After every round the player lands deep in the page — reset the
+    // shop screen scroll position to the very top so they always start
+    // at the shop cards, not at the battlefield or the Start Round btn.
+    const shopScreen = document.getElementById('screen-shop');
+    if (shopScreen) shopScreen.scrollTop = 0;
   },
   exit() {
     // Drop any pending placement selection when leaving the shop screen
@@ -1147,5 +1152,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.0.9 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.0 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
