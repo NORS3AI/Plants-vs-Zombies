@@ -785,4 +785,40 @@ export const FUSION_PLANTS = [
     notInShop: true,
     deckLimit: 1,
   },
+
+  // ============================================================
+  // ARTIFACT SPELL FUSIONS
+  // ============================================================
+
+  // Mycelium Network × 5 → Mycelium Tower
+  {
+    id: 'mycelium_tower',
+    name: 'Mycelium Tower',
+    type: 'spell',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 1000, max: 1000 },
+    target: 'board',
+    description: 'Artifact. Permanently grants all placed plants +100% damage and +100 HP.',
+    effect: { type: 'mycelium_tower', dmgMul: 2.0, hpBuff: 100 },
+    notInShop: true,
+    deckLimit: 1,
+  },
+
+  // World-Tree Seed × 5 → World-Tree (artifact)
+  {
+    id: 'world_tree_artifact',
+    name: 'World-Tree',
+    type: 'spell',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 1000, max: 1000 },
+    target: 'board',
+    description: 'Artifact. Fully heals all plants on the board and adds a +500 Shield to each.',
+    effect: { type: 'heal_all', heal: 'full', shield: 500 },
+    notInShop: true,
+    deckLimit: 1,
+  },
 ];

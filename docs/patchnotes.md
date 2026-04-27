@@ -5,6 +5,29 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.7 — 2026-04-12 — Artifact spell fusions, legendary cap, Void rarity
+
+### Added
+- **Mycelium Tower** (artifact spell) — 5 Mycelium Networks fuse into the Tower. **Permanently** grants all placed plants **+100% damage** and **+100 HP**. Only 1 allowed in the Spell Deck; extras auto-sell for 1000 gold.
+- **World-Tree** (artifact spell) — 5 World-Tree Seeds fuse into the artifact version. Fully heals all plants and adds a **+500 Shield** to each. Only 1 allowed; extras auto-sell for 1000 gold.
+- **Spell Deck merges** — `checkDeckMerges` now also scans `run.spellDeck` for spell evolution chains. When 5 copies of an evolving spell accumulate, they auto-fuse into the artifact version.
+- **Spell Deck limits** — new `enforceSpellDeckLimits`: artifact spells with `deckLimit` are capped. Excess copies auto-sell.
+- **Crimson Lily** (artifact) — 7 Blue Lilies → 5000 HP / 10000 DMG / 0.1s / omni 3-range / every ability. Limit 2 in deck.
+- **Void Lily** (void rarity) — 2 Crimson Lilies → 100k HP / 1M DMG / 0.1s / omni 12-range / 100k gold per cast / every ability. Limit 1. Blue/purple shimmer with fading star particles.
+- **Void rarity** — tier 7 above Artifact. Purple (#7c3aed) shimmer with `✦ ✧ ✦` star animation.
+
+### Changed
+- **Legendary cap: 3** — max 3 legendary plants in the Plant Deck. Extras auto-sold.
+- **Artifact limits** use per-card `deckLimit` (default 1). Crimson Lily overrides to 2.
+- `autoSellDuplicateArtifacts` replaced by `enforceRarityLimits` which handles legendary, artifact, and void caps in one pass. Lily Weeds always exempt.
+
+### Full Lily chain
+Lily Weed × 5 → Blue Lily × 7 → Crimson Lily × 2 → Void Lily
+
+76 cards, validator clean.
+
+---
+
 ## v1.1.6 — 2026-04-12 — Toast log panel, pack buy multiplier, settings scroll fix
 
 ### Added

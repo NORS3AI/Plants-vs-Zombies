@@ -315,6 +315,7 @@ export const FRENZY_EXCLUSIVES = [
     target: 'board',
     description: 'Rebirth. Fully heals all plants on the board and adds 50 Shield to each.',
     effect: { type: 'heal_all', heal: 'full', shield: 50 },
+    evolution: { requiresCount: 5, requiresSameId: true, intoId: 'world_tree_artifact' },
   },
   {
     id: 'mycelium_network',
@@ -328,6 +329,7 @@ export const FRENZY_EXCLUSIVES = [
     target: 'board',
     description: 'Links all placed plants: +20% damage and +20 HP for the round. Just works — tap any tile to cast.',
     effect: { type: 'link_all_plants', dmgBuffPct: 0.2, hpBuff: 20 },
+    evolution: { requiresCount: 5, requiresSameId: true, intoId: 'mycelium_tower' },
   },
   {
     id: 'midas_mandrake',

@@ -442,6 +442,26 @@ function applyBoardSpell(effect, run, card) {
       }
       return true;
     }
+    case 'mycelium_tower': {
+      // Mycelium Tower (artifact): permanent +100% damage and +100 HP
+      // to every placed plant. These are permanent buffs that survive
+      // round-end cleanup.
+      const dmgMul = effect.dmgMul ?? 2.0;
+      const hpBuff = effect.hpBuff ?? 100;
+      let touched = 0;
+      for (const inst of run.deck) {
+        if (inst.gridRow == null) continue;
+        if (!inst.buffs) inst.buffs = [];
+        inst.buffs.push({ type: 'dmg_mul', value: dmgMul, permanent: true, ...source });
+        inst.buffs.push({ type: 'hp_boost', value: hpBuff, permanent: true, ...source });
+        touched++;
+      }
+      if (touched === 0) {
+        flashError('No plants on the grid to empower.');
+        return false;
+      }
+      return true;
+    }
     default:
       flashError(`Board spell '${effect.type}' not implemented yet.`);
       return false;
@@ -927,6 +947,72 @@ export function checkDeckMerges(run) {
     }
   }
   enforceRarityLimits(run);
+
+  // --- Spell deck merges (same logic, different array) ---
+  if (run.spellDeck) {
+    let spellKeep = true;
+    while (spellKeep) {
+      spellKeep = false;
+      const groups = new Map();
+      for (const inst of run.spellDeck) {
+        if (!groups.has(inst.cardId)) groups.set(inst.cardId, []);
+        groups.get(inst.cardId).push(inst);
+      }
+      for (const [cardId, instances] of groups) {
+        const card = getCard(cardId);
+        if (!card?.evolution?.requiresSameId) continue;
+        const required = card.evolution.requiresCount ?? 3;
+        if (instances.length < required) continue;
+
+        const toMerge = instances.slice(0, required);
+        for (const inst of toMerge) {
+          const idx = run.spellDeck.findIndex((d) => d.instanceId === inst.instanceId);
+          if (idx >= 0) run.spellDeck.splice(idx, 1);
+        }
+
+        const resultCard = getCard(card.evolution.intoId);
+        if (!resultCard) continue;
+
+        run.spellDeck.push({
+          cardId: card.evolution.intoId,
+          instanceId: freshInstanceId(),
+          sellValue: rollSell(resultCard),
+        });
+        recordAttainedFusion(run, card.evolution.intoId);
+
+        _audio?.playSfx('go');
+        flashToast(`✨ ${required} ${card.name}s → ${resultCard.name}!`);
+        spellKeep = true;
+        break;
+      }
+    }
+    enforceSpellDeckLimits(run);
+  }
+}
+
+/**
+ * Enforce per-card deck limits on spells in run.spellDeck. Artifact
+ * spells use card.deckLimit (default 1). Excess copies are auto-sold
+ * for their sellValue.
+ */
+function enforceSpellDeckLimits(run) {
+  if (!run?.spellDeck) return;
+  const cardCounts = new Map();
+  for (let i = run.spellDeck.length - 1; i >= 0; i--) {
+    const inst = run.spellDeck[i];
+    const card = getCard(inst.cardId);
+    if (!card) continue;
+    const limit = card.deckLimit;
+    if (limit == null) continue;
+    const count = (cardCounts.get(inst.cardId) ?? 0) + 1;
+    cardCounts.set(inst.cardId, count);
+    if (count > limit) {
+      const gold = inst.sellValue ?? 0;
+      run.gold += gold;
+      run.spellDeck.splice(i, 1);
+      flashToast(`⚠️ ${card.name} auto-sold for ${gold}g (spell limit: ${limit})`);
+    }
+  }
 }
 
 // ============================================================

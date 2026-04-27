@@ -1261,5 +1261,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.6 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.7 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
