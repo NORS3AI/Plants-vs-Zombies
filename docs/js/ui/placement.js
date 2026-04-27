@@ -345,6 +345,25 @@ function applyPlantSpell(effect, targetInstance, card, run) {
  * hydration and adds +hpPerTier and +dmgPerTier per tier beyond 1.
  */
 function tierUpPlantInstance(instance, card, effect, run) {
+  // Cards with a tierEffect field (like Acorn) always tier up even if
+  // they're economy plants. The custom scaling is applied in combat.js.
+  if (card.tierEffect) {
+    const maxTier = effect.maxTier ?? 99;
+    const currentTier = instance.tier ?? 1;
+    if (currentTier >= maxTier) {
+      flashError(`${card.name} is already at T${maxTier} (the cap).`);
+      return false;
+    }
+    instance.tier = currentTier + 1;
+    const te = card.tierEffect;
+    const extras = [];
+    if (te.goldPerTier) extras.push(`+${te.goldPerTier}g`);
+    if (te.castTimePerTier) extras.push(`+${te.castTimePerTier}s cast`);
+    flashToast(`🍄 ${card.name} T${instance.tier}! ${extras.join(', ')}`);
+    return true;
+  }
+
+  // Economy / gold-producing plants duplicate instead of tiering up.
   const isEconomy = card.category === 'economy' || !!card.economy;
   if (isEconomy) {
     const freshInst = {
@@ -357,6 +376,7 @@ function tierUpPlantInstance(instance, card, effect, run) {
     return true;
   }
 
+  // Standard plants: +10 HP and +5 DMG per tier.
   const maxTier = effect.maxTier ?? 99;
   const currentTier = instance.tier ?? 1;
   if (currentTier >= maxTier) {
@@ -666,13 +686,19 @@ function computeEffectiveStats(card, instance, tier) {
   const baseHp = card.health ?? 0;
   const baseDmg = card.damage ?? 0;
   const baseCast = card.castTime ?? 0;
-  const tierHpBonus = (tier - 1) * 10;
-  const tierDmgBonus = (tier - 1) * 5;
+  const te = card.tierEffect;
+
+  // Cards with a tierEffect (Acorn) scale gold/cast per tier instead
+  // of the standard +10 HP / +5 DMG.
+  const hasTierEffect = !!te;
+  const tierHpBonus = hasTierEffect ? 0 : (tier - 1) * 10;
+  const tierDmgBonus = hasTierEffect ? 0 : (tier - 1) * 5;
+  const tierCastBonus = te?.castTimePerTier ? (tier - 1) * te.castTimePerTier : 0;
 
   let hp = baseHp + tierHpBonus;
   let dmg = baseDmg + tierDmgBonus;
   let dmgMul = 1;
-  let cast = baseCast;
+  let cast = baseCast + tierCastBonus;
 
   for (const buff of instance.buffs ?? []) {
     switch (buff.type) {
@@ -687,6 +713,11 @@ function computeEffectiveStats(card, instance, tier) {
   const parts = [`${hp} HP`];
   if (baseDmg > 0) parts.push(`${finalDmg} DMG`);
   if (baseCast > 0) parts.push(`${cast.toFixed(1)}s cast`);
+  // Show effective gold for economy plants with tierEffect
+  if (te?.goldPerTier && card.economy?.goldPerCast) {
+    const goldPerCast = card.economy.goldPerCast + (tier - 1) * te.goldPerTier;
+    parts.push(`${goldPerCast}g / cast`);
+  }
   return {
     statsHtml: parts.map((p) => escapeHtml(p)).join(' · '),
     hp,
@@ -917,6 +948,8 @@ function flashToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
   t.className = 'shop-toast shop-toast-success';
+  const offset = document.querySelectorAll('.shop-toast').length;
+  t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
@@ -925,6 +958,8 @@ function flashError(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
   t.className = 'shop-toast';
+  const offset = document.querySelectorAll('.shop-toast').length;
+  t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 1800);
 }

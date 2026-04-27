@@ -390,6 +390,8 @@ function flashCombatToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
   t.className = 'shop-toast shop-toast-success';
+  const offset = document.querySelectorAll('.shop-toast').length;
+  t.style.bottom = `${20 + offset * 48}px`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 1800);
 }

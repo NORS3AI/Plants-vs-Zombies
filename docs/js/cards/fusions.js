@@ -54,6 +54,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Blooming Scrubbers. Full-grown brawler.',
     abilities: [],
     notInShop: true,
+    evolution: { requiresCount: 6, requiresSameId: true, intoId: 'epic_scrubber' },
   },
 
   // ============================================================
@@ -338,6 +339,7 @@ export const FUSION_PLANTS = [
     abilities: [],
     economy: { goldPerCast: 120 },
     notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'pinecone' },
   },
 
   // ============================================================
@@ -546,5 +548,71 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Magma-Core Callas. Hotter scorching fire trail.',
     abilities: [{ type: 'fire_trail', dotPerSec: 12, duration: 4 }],
     notInShop: true,
+  },
+
+  // ============================================================
+  // Scrubber × 6 → Epic Scrubber
+  // ============================================================
+  {
+    id: 'epic_scrubber',
+    name: 'Epic Scrubber',
+    type: 'plant',
+    rarity: 'epic',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 6, max: 9 },
+    health: 125,
+    damage: 60,
+    castTime: 1.7,
+    range: 1.2,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Fusion: 6 Scrubbers. A living siege engine.',
+    abilities: [],
+    notInShop: true,
+  },
+
+  // ============================================================
+  // Thorn × 3 → Pinecone → Acorn
+  // ============================================================
+  {
+    id: 'pinecone',
+    name: 'Pinecone',
+    type: 'plant',
+    rarity: 'legendary',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 10, max: 15 },
+    health: 250,
+    damage: 0,
+    castTime: 8.0,
+    range: 0,
+    attackPattern: 'none',
+    targetingDefault: 'none',
+    description: 'Fusion: 3 Thorns. Generates 150 Gold every 8 seconds.',
+    abilities: [],
+    economy: { goldPerCast: 150 },
+    notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'acorn' },
+  },
+  {
+    id: 'acorn',
+    name: 'Acorn',
+    type: 'plant',
+    rarity: 'legendary',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 300,
+    damage: 0,
+    castTime: 5.0,
+    range: 0,
+    attackPattern: 'none',
+    targetingDefault: 'none',
+    description: 'Fusion: 3 Pinecones. Generates 300 Gold every 5 seconds. Magic Mushroom tiers up: +50g and +1s cast per tier.',
+    abilities: [],
+    economy: { goldPerCast: 300 },
+    notInShop: true,
+    tierEffect: { goldPerTier: 50, castTimePerTier: 1 },
   },
 ];

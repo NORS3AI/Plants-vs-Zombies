@@ -94,12 +94,28 @@ export function initCombat(run, callbacks = {}) {
     const card = getCard(instance.cardId);
     if (!card) continue;
 
-    // Magic Mushroom tier bonuses: +10 HP and +5 DMG per tier above 1.
-    // Stacks up to T99. Applied BEFORE buffs so spell hp/dmg buffs
-    // stack additively on top of the tier base stats.
+    // Magic Mushroom tier bonuses. Standard plants get +10 HP and
+    // +5 DMG per tier above 1. Cards with a `tierEffect` field (e.g.
+    // Acorn) apply custom per-tier scaling instead — goldPerTier adds
+    // to the base goldPerCast and castTimePerTier adds to the base
+    // castTime.
     const tier = Math.max(1, instance.tier ?? 1);
-    const tierHpBonus = (tier - 1) * 10;
-    const tierDmgBonus = (tier - 1) * 5;
+    const hasTierEffect = !!card.tierEffect;
+    const tierHpBonus = hasTierEffect ? 0 : (tier - 1) * 10;
+    const tierDmgBonus = hasTierEffect ? 0 : (tier - 1) * 5;
+
+    // Custom tier-scaled gold for economy plants like Acorn.
+    // If card.tierEffect.goldPerTier is set, the effective goldPerCast
+    // is base + (tier - 1) * goldPerTier and the effective castTime is
+    // base + (tier - 1) * castTimePerTier. Stored on the plant so
+    // produceGold can read it.
+    const te = card.tierEffect;
+    const customGoldPerCast = te?.goldPerTier
+      ? (card.economy?.goldPerCast ?? 0) + (tier - 1) * te.goldPerTier
+      : null;
+    const tierCastBonus = te?.castTimePerTier
+      ? (tier - 1) * te.castTimePerTier
+      : 0;
 
     const plant = {
       instanceId: instance.instanceId,
@@ -117,10 +133,11 @@ export function initCombat(run, callbacks = {}) {
       // Balance: plants start ready to fire, not after a full 2s delay.
       // A small initial delay (0.4s) lets the player see the grid before
       // everything starts firing.
-      castTimer: 0.4,
+      castTimer: 0.4 + tierCastBonus,
       targeting: instance.targeting ?? card.targetingDefault ?? 'first',
       isEconomy: card.category === 'economy' || !!card.economy,
       attackFlash: 0,
+      customGoldPerCast, // null unless card.tierEffect.goldPerTier is set
     };
 
     // Apply stored buffs (from pre-combat spell casts)
@@ -577,7 +594,7 @@ function tickPendingEffects() {
 
 /** Economy plant produces gold to the run. */
 function produceGold(plant) {
-  const amount = plant.card.economy?.goldPerCast ?? 0;
+  const amount = plant.customGoldPerCast ?? plant.card.economy?.goldPerCast ?? 0;
   if (amount <= 0) return;
   _run.gold += amount;
   _state.goldEarned += amount;

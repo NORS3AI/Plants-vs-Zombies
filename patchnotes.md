@@ -5,6 +5,21 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.3 — 2026-04-12 — Epic Scrubber, economy evolution chain, Acorn tier scaling
+
+### Added
+- **Epic Scrubber** — 6 Scrubbers fuse into an **Epic Scrubber** (`125 HP / 60 DMG / 1.2 range / 1.7 s cast`). Full Seedling line is now: Seedling Scrubber × 3 → Blooming Scrubber × 3 → Scrubber × 6 → Epic Scrubber.
+- **Pinecone** — 3 Thorns fuse into a **Pinecone** (`250 HP / 8 s cast / 150 g every 8 s`).
+- **Acorn** — 3 Pinecones fuse into an **Acorn** (`300 HP / 5 s cast / 300 g every 5 s`). The full economy chain is: Sunflower × 3 → Gilded Rose × 3 → Thorn × 3 → Pinecone × 3 → Acorn.
+- **Acorn tier scaling** — Magic Mushroom on Acorn DOES tier up (unlike other economy plants which duplicate). Each tier adds **+50 g per cast** and **+1 s cast time**. T2 = 350 g / 6 s, T3 = 400 g / 7 s, etc. The stats line in the placed-card modal shows effective gold per cast.
+- **`tierEffect` card field** — new data-driven per-tier scaling for economy plants. Acorn uses `{ goldPerTier: 50, castTimePerTier: 1 }`. combat.js hydration reads it and adjusts `customGoldPerCast` and `castTimer`; `produceGold` reads `plant.customGoldPerCast` if set.
+
+### Changed
+- **Magic Mushroom on economy plants** — Gilded Rose, Thorn, Pinecone all duplicate (add a copy to the deck). Acorn is the exception: because it has a `tierEffect`, it tiers up with custom scaling instead.
+- **Toast messages stagger** — when multiple toasts fire simultaneously (e.g. a cascade merge), each new toast offsets 48 px higher than the previous so they stack visually instead of overlapping. Applied to all four toast functions across placement.js, shop.js, combatView.js, and main.js.
+
+---
+
 ## v1.1.2 — 2026-04-12 — Mycelium Network rework, Fusion Log button
 
 ### Added

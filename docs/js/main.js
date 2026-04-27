@@ -1006,10 +1006,12 @@ function readSettingsFromDOM() {
 }
 
 function flashToast(msg) {
+  const offset = document.querySelectorAll('.shop-toast, [data-main-toast]').length;
   const t = document.createElement('div');
   t.textContent = msg;
+  t.setAttribute('data-main-toast', '');
   t.style.cssText = `
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: ${24 + offset * 48}px; left: 50%; transform: translateX(-50%);
     background: var(--bg-elev); color: var(--accent); padding: 0.75rem 1.25rem;
     border: 1px solid var(--accent); border-radius: 8px; z-index: 9999;
     font-size: 0.9rem; box-shadow: var(--shadow);
@@ -1236,5 +1238,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.2 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.3 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
