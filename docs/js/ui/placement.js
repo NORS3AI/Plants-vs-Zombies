@@ -1052,27 +1052,10 @@ function enforceRarityLimits(run) {
     }
   }
 
-  // --- Legendary cap: max 3 across ALL legendary cardIds ---
-  const MAX_LEGENDARY = 3;
-  const legendaries = [];
-  for (let i = 0; i < run.deck.length; i++) {
-    const inst = run.deck[i];
-    if (inst.cardId === 'lily_weed') continue;
-    const card = getCard(inst.cardId);
-    if (card?.rarity === 'legendary') legendaries.push(i);
-  }
-  if (legendaries.length > MAX_LEGENDARY) {
-    // Sell the newest extras (highest indices first)
-    const toSell = legendaries.slice(MAX_LEGENDARY).reverse();
-    for (const idx of toSell) {
-      const inst = run.deck[idx];
-      const card = getCard(inst.cardId);
-      const gold = inst.sellValue ?? 0;
-      run.gold += gold;
-      run.deck.splice(idx, 1);
-      flashToast(`⚠️ ${card?.name ?? 'Legendary'} auto-sold for ${gold}g (legendary cap: ${MAX_LEGENDARY})`);
-    }
-  }
+  // Global legendary cap removed — per-card deckLimit on specific
+  // legendaries (Bloody Mandrake, Runite Dragon, Dragon-Breath
+  // Snapdragon, Magma Calladara, Midas Mandrake, Solae, Void Lily)
+  // handles legendary limits individually via the loop above.
 }
 
 function recordAttainedFusion(run, cardId) {

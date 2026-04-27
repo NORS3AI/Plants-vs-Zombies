@@ -302,6 +302,7 @@ export const FRENZY_EXCLUSIVES = [
     description: 'Pyre. Fire damage in a 3-lane wide cone.',
     abilities: [{ type: 'cone_damage', width: 3, depth: 6 }],
     evolution: { requiresCount: 3, requiresSameId: true, intoId: 'runite_dragon' },
+    deckLimit: 3,
   },
   {
     id: 'world_tree_seed',
@@ -350,6 +351,7 @@ export const FRENZY_EXCLUSIVES = [
     abilities: [],
     economy: { goldPerKill: 'round_number' },
     evolution: { requiresCount: 3, requiresSameId: true, intoId: 'bloody_mandrake' },
+    deckLimit: 3,
   },
 
   // ---------- Frenzy easter egg: Lily Weed (1% per card slot) ----------

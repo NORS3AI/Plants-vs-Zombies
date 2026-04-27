@@ -5,6 +5,17 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.8 — 2026-04-12 — Per-card legendary limits
+
+### Changed
+- **7 specific legendaries now capped at 3 copies each** via `deckLimit: 3`:
+  - Bloody Mandrake, Runite Dragon, Dragon-Breath Snapdragon, Magma Calladara, Midas Mandrake, Solae, Void Lily.
+  - Any copies beyond 3 of the same card are auto-sold for their gold value.
+- **Global legendary cap removed** — the old "max 3 legendary total across all types" rule is replaced by per-card `deckLimit` values. Legendaries without a `deckLimit` are uncapped. This lets the player hold multiple different legendaries while still capping the 7 cards listed above.
+- Lily Weeds remain fully exempt from all limits.
+
+---
+
 ## v1.1.7 — 2026-04-12 — Artifact spell fusions, legendary cap, Void rarity
 
 ### Added

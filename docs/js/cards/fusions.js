@@ -250,6 +250,7 @@ export const FUSION_PLANTS = [
       { type: 'heal_adjacent', value: 12, interval: 2.0 },
     ],
     notInShop: true,
+    deckLimit: 3,
   },
 
   // ============================================================
@@ -272,6 +273,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Dragon-Breath Snapdragons. Runic cone burst.',
     abilities: [{ type: 'cone_damage', width: 3, depth: 6 }],
     notInShop: true,
+    deckLimit: 3,
   },
 
   // ============================================================
@@ -294,6 +296,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Void-Reaper Lilies. Executes sub-15% HP enemies.',
     abilities: [{ type: 'execute', threshold: 0.15, bossExempt: true }],
     notInShop: true,
+    deckLimit: 3,
     evolution: { requiresCount: 3, requiresSameId: true, intoId: 'void_demon_lily' },
   },
 
@@ -318,6 +321,7 @@ export const FUSION_PLANTS = [
     abilities: [],
     economy: { goldPerKill: 'round_number' },
     notInShop: true,
+    deckLimit: 3,
   },
 
   // ============================================================
@@ -662,6 +666,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Volcanic Callas. Magmatic fire trail.',
     abilities: [{ type: 'fire_trail', dotPerSec: 18, duration: 5 }],
     notInShop: true,
+    deckLimit: 3,
     evolution: { requiresCount: 3, requiresSameId: true, intoId: 'inferno_from_hella' },
   },
 
