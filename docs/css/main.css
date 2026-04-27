@@ -1267,6 +1267,9 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  max-height: 4.8rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .card-active-spells-item {
   font-size: 0.72rem;
@@ -2033,7 +2036,8 @@ input, select, textarea {
   font-weight: 700;
 }
 
-/* Stacked buffs list — one line per applied spell */
+/* Stacked buffs list — one line per applied spell.
+   Scrollable after ~3 items so the modal doesn't grow huge. */
 .placed-buffs-list {
   list-style: none;
   margin: 0;
@@ -2041,6 +2045,9 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: 9rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .placed-buffs-list li {
   background: var(--bg-elev);
