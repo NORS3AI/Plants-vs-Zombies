@@ -771,7 +771,8 @@ export const FUSION_PLANTS = [
     range: 12,
     attackPattern: 'omni',
     targetingDefault: 'first',
-    description: 'Void. Two Crimson Lilies collapsed into the void. 100k HP, 1M DMG, 100k gold/s. Every ability.',
+    attackAll: true,
+    description: 'Void. Two Crimson Lilies collapsed into the void. 100k HP, 1M DMG, 100k gold/s. Hits ALL targets every cast.',
     abilities: [
       { type: 'beam' },
       { type: 'splash', radius: 2 },

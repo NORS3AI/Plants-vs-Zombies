@@ -328,13 +328,19 @@ function tickPlants(dt) {
     if (plant.isEconomy) {
       produceGold(plant);
     } else if (plant.card.damage > 0) {
-      const target = findTarget(plant);
-      if (target) {
-        const baseDmg = plant.card.damage + (plant.dmgBonus ?? 0);
-        const finalDmg = Math.round(baseDmg * (plant.dmgMul ?? 1));
+      // attackAll: damage EVERY valid target simultaneously each cast
+      // (used by Void Lily so one plant can solo-clear the entire grid).
+      const targets = plant.card.attackAll
+        ? findAllTargets(plant)
+        : (() => { const t = findTarget(plant); return t ? [t] : []; })();
+      if (targets.length === 0) {
+        plant.castTimer = 0.1;
+        continue;
+      }
+      const baseDmg = plant.card.damage + (plant.dmgBonus ?? 0);
+      const finalDmg = Math.round(baseDmg * (plant.dmgMul ?? 1));
+      for (const target of targets) {
         damageZombie(target, finalDmg, plant);
-        plant.attackFlash = 0.35;
-        // Spawn a projectile visual from plant to target
         spawnProjectile(plant, target);
 
         // --- Plant abilities on attack ---
@@ -429,26 +435,23 @@ function tickPlants(dt) {
         }
 
         if (target.hp <= 0) killZombie(target);
+      } // end for-each target
 
-        // --- Passive abilities: heal adjacent on every cast ---
-        for (const ab of plant.card.abilities ?? []) {
-          if (ab.type === 'heal_adjacent') {
-            for (const ally of _state.plants) {
-              if (ally === plant || ally.hp <= 0) continue;
-              if (ally.hp >= ally.maxHp) continue;
-              const dRow = Math.abs(ally.row - plant.row);
-              const dCol = Math.abs(ally.col - plant.col);
-              if (dRow + dCol <= 1) {
-                ally.hp = Math.min(ally.maxHp, ally.hp + (ab.value ?? 5));
-              }
+      plant.attackFlash = 0.35;
+
+      // --- Passive abilities: heal adjacent on every cast ---
+      for (const ab of plant.card.abilities ?? []) {
+        if (ab.type === 'heal_adjacent') {
+          for (const ally of _state.plants) {
+            if (ally === plant || ally.hp <= 0) continue;
+            if (ally.hp >= ally.maxHp) continue;
+            const dRow = Math.abs(ally.row - plant.row);
+            const dCol = Math.abs(ally.col - plant.col);
+            if (dRow + dCol <= 1) {
+              ally.hp = Math.min(ally.maxHp, ally.hp + (ab.value ?? 5));
             }
           }
         }
-      } else {
-        // No target in range — partial cooldown recovery so we can
-        // re-check soon without spamming the loop.
-        plant.castTimer = 0.1;
-        continue;
       }
     }
 
@@ -691,6 +694,38 @@ function findTarget(plant) {
   }
   // 'first' = closest to the Aether-Root = lowest column
   return candidates.reduce((a, b) => (b.col < a.col ? b : a));
+}
+
+/**
+ * Return ALL valid targets for a plant (used when card.attackAll is
+ * true). Same filtering as findTarget but returns the full candidate
+ * array instead of picking the best single target.
+ */
+function findAllTargets(plant) {
+  const card = plant.card;
+  const pattern = card.attackPattern ?? 'forward';
+  const baseRange = card.range ?? 1;
+  const range = pattern === 'omni' ? baseRange : Math.max(5, baseRange);
+
+  const rows = new Set();
+  if (pattern === 'omni') {
+    for (let r = Math.max(0, plant.row - range); r <= Math.min(GRID_ROWS - 1, plant.row + range); r++) rows.add(r);
+  } else {
+    for (let r = 0; r < GRID_ROWS; r++) rows.add(r);
+  }
+
+  return _state.zombies.filter((z) => {
+    if (z.hp <= 0) return false;
+    if (!rows.has(z.row)) return false;
+    if (z.col >= STAGING_COL) return false;
+    if (pattern === 'omni') {
+      const absDx = Math.abs(z.col - plant.col);
+      const absDy = Math.abs(z.row - plant.row);
+      return Math.max(absDx, absDy) <= range;
+    }
+    const dx = z.col - plant.col;
+    return dx >= 0 && dx <= range;
+  });
 }
 
 // ---------- Zombie behavior ----------
