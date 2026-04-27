@@ -17,6 +17,7 @@
 import {
   getCard,
   rollSell,
+  RARITIES,
 } from '../cards/index.js';
 import { renderGrid, STAGING_COL } from '../game/grid.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
@@ -35,6 +36,42 @@ let _audio = null;
 let _onChange = null;
 let _onFirstPlace = null;
 let _instanceCounter = 1;
+
+// ---------- Plant Deck sort ----------
+// Persists for the session; reset on page reload.
+let _deckSortKey = 'name'; // 'name' | 'rarity' | 'health' | 'damage' | 'type'
+let _deckSortBarWired = false;
+
+const RARITY_TIERS = {};
+for (const [id, r] of Object.entries(RARITIES)) RARITY_TIERS[id] = r.tier ?? 0;
+
+function sortDeckInstances(instances) {
+  return instances.slice().sort((a, b) => {
+    const ca = getCard(a.cardId);
+    const cb = getCard(b.cardId);
+    if (!ca || !cb) return 0;
+    switch (_deckSortKey) {
+      case 'name':
+        return ca.name.localeCompare(cb.name);
+      case 'rarity':
+        return (RARITY_TIERS[cb.rarity] ?? 0) - (RARITY_TIERS[ca.rarity] ?? 0)
+            || ca.name.localeCompare(cb.name);
+      case 'health':
+        return (cb.health ?? 0) - (ca.health ?? 0)
+            || ca.name.localeCompare(cb.name);
+      case 'damage':
+        return (cb.damage ?? 0) - (ca.damage ?? 0)
+            || ca.name.localeCompare(cb.name);
+      case 'type': {
+        const ta = ca.category === 'economy' ? 'economy' : ca.type;
+        const tb = cb.category === 'economy' ? 'economy' : cb.type;
+        return ta.localeCompare(tb) || ca.name.localeCompare(cb.name);
+      }
+      default:
+        return 0;
+    }
+  });
+}
 
 /** Initialize the placement module. Call once at boot. */
 export function initPlacement({ audio, onChange, onFirstPlace }) {
@@ -880,6 +917,9 @@ function renderDeckInventory(run) {
   if (!host) return;
   host.innerHTML = '';
 
+  // Wire sort-bar click handlers once (survives across re-renders)
+  wireDeckSortBar(run);
+
   // Only show unplaced plants in the deck inventory
   const unplaced = run.deck.filter((d) => d.gridRow == null);
 
@@ -899,7 +939,10 @@ function renderDeckInventory(run) {
     return;
   }
 
-  for (const instance of unplaced) {
+  // Apply the current sort before rendering
+  const sorted = sortDeckInstances(unplaced);
+
+  for (const instance of sorted) {
     const card = getCard(instance.cardId);
     if (!card) continue;
     const isSelected = _selection?.instanceId === instance.instanceId;
@@ -907,16 +950,40 @@ function renderDeckInventory(run) {
       sellValue: instance.sellValue,
       small: true,
       isSelected,
-      // Pass the instance so the card can surface Active Spells and
-      // tier even for unplaced cards (e.g., a plant that was on the
-      // grid, got buffed, and was then removed — it retains its
-      // buffs and should show them here).
       instance,
       onClick: () => selectDeckCard(run, instance.instanceId),
       onSell: () => sellDeckInstance(run, instance.instanceId),
     });
     host.appendChild(el);
   }
+}
+
+/**
+ * Attach click handlers to the #deck-sort-bar buttons. Wired once;
+ * subsequent calls just update the `.is-active` highlight to match
+ * `_deckSortKey`.
+ */
+function wireDeckSortBar(run) {
+  const bar = document.getElementById('deck-sort-bar');
+  if (!bar) return;
+
+  if (!_deckSortBarWired) {
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.deck-sort-btn');
+      if (!btn) return;
+      const key = btn.dataset.sort;
+      if (!key) return;
+      _deckSortKey = key;
+      _audio?.playSfx('click');
+      renderPlacement(run);
+    });
+    _deckSortBarWired = true;
+  }
+
+  // Update active indicator
+  bar.querySelectorAll('.deck-sort-btn').forEach((btn) => {
+    btn.classList.toggle('is-active', btn.dataset.sort === _deckSortKey);
+  });
 }
 
 /**

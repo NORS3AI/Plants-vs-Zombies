@@ -1231,6 +1231,47 @@ input, select, textarea {
   50%      { box-shadow: 0 0 24px rgba(212, 175, 55, 0.25); }
 }
 
+/* ---------- Deck Sort Bar ---------- */
+.deck-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+}
+.deck-sort-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+  margin-right: 0.2rem;
+}
+.deck-sort-btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 32px;
+}
+.deck-sort-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.deck-sort-btn.is-active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
+}
+
 /* ---------- Deck Inventory ---------- */
 .deck-inventory {
   display: grid;

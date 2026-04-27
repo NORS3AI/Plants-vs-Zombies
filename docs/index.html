@@ -100,7 +100,17 @@
 
         <!-- Plant deck -->
         <section class="shop-section">
-          <h3 class="shop-section-title">Plant Deck (<span id="deck-count">0</span> owned · <span id="deck-placed">0</span>/10 on grid)</h3>
+          <div class="shop-section-head">
+            <h3 class="shop-section-title">Plant Deck (<span id="deck-count">0</span> owned · <span id="deck-placed">0</span>/10 on grid)</h3>
+          </div>
+          <div class="deck-sort-bar" id="deck-sort-bar">
+            <span class="deck-sort-label">Sort:</span>
+            <button class="deck-sort-btn is-active" data-sort="name">Name</button>
+            <button class="deck-sort-btn" data-sort="rarity">Rarity</button>
+            <button class="deck-sort-btn" data-sort="health">HP</button>
+            <button class="deck-sort-btn" data-sort="damage">DMG</button>
+            <button class="deck-sort-btn" data-sort="type">Type</button>
+          </div>
           <div class="deck-inventory" id="deck-inventory"></div>
           <p class="shop-hint">Tap a plant to place it on the grid. Tap the "Sell" pill to sell. Own as many as you like — only 10 can be on the grid at once.</p>
         </section>
