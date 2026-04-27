@@ -20,6 +20,7 @@ import {
   RARITIES,
 } from '../cards/index.js';
 import { renderGrid, STAGING_COL } from '../game/grid.js';
+import { Save } from '../game/save.js';
 import { renderCard, renderGridCardIcon } from './cardView.js';
 import { showModal, confirmModal } from './modal.js';
 
@@ -42,6 +43,8 @@ let _currentRun = null; // set each renderPlacement; read by sort handler
 // Persists for the session; reset on page reload.
 let _deckSortKey = 'name'; // 'name' | 'rarity' | 'health' | 'damage'
 let _deckSortBarWired = false;
+let _spellSortKey = 'name'; // 'name' | 'rarity'
+let _spellSortBarWired = false;
 
 const RARITY_TIERS = {};
 for (const [id, r] of Object.entries(RARITIES)) RARITY_TIERS[id] = r.tier ?? 0;
@@ -926,9 +929,16 @@ export function checkDeckMerges(run) {
 // ============================================================
 
 function recordAttainedFusion(run, cardId) {
+  // Write to BOTH run (for the merge-log button visibility check)
+  // and meta (so the fusion log persists across runs forever).
   if (!run.attainedFusions) run.attainedFusions = [];
-  if (!run.attainedFusions.includes(cardId)) {
-    run.attainedFusions.push(cardId);
+  if (!run.attainedFusions.includes(cardId)) run.attainedFusions.push(cardId);
+
+  const meta = Save.loadMeta();
+  if (!meta.attainedFusions) meta.attainedFusions = [];
+  if (!meta.attainedFusions.includes(cardId)) {
+    meta.attainedFusions.push(cardId);
+    Save.saveMeta(meta);
   }
 }
 
@@ -1077,6 +1087,19 @@ function renderSpellDeckInventory(run) {
   if (!host) return;
   host.innerHTML = '';
 
+  wireSpellSortBar();
+
+  // Auto-sell excess spells: if > 5 copies of any single spell
+  // (except Magic Mushroom), auto-sell the extras for their gold.
+  autoSellExcessSpells(run);
+
+  // Show/hide Sell All buttons
+  const sellPlantBtn = document.getElementById('sell-all-plants-btn');
+  const unplacedPlants = run.deck.filter((d) => d.gridRow == null);
+  if (sellPlantBtn) sellPlantBtn.hidden = unplacedPlants.length === 0;
+  const sellSpellBtn = document.getElementById('sell-all-spells-btn');
+  if (sellSpellBtn) sellSpellBtn.hidden = spellDeck.length === 0;
+
   if (spellDeck.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'deck-empty';
@@ -1085,7 +1108,8 @@ function renderSpellDeckInventory(run) {
     return;
   }
 
-  for (const instance of spellDeck) {
+  const sorted = sortSpellInstances(spellDeck);
+  for (const instance of sorted) {
     const card = getCard(instance.cardId);
     if (!card) continue;
     const isSelected = _selection?.instanceId === instance.instanceId;
@@ -1099,6 +1123,117 @@ function renderSpellDeckInventory(run) {
     });
     host.appendChild(el);
   }
+}
+
+function sortSpellInstances(instances) {
+  return instances.slice().sort((a, b) => {
+    const ca = getCard(a.cardId);
+    const cb = getCard(b.cardId);
+    if (!ca || !cb) return 0;
+    if (_spellSortKey === 'rarity') {
+      return (RARITY_TIERS[cb.rarity] ?? 0) - (RARITY_TIERS[ca.rarity] ?? 0)
+          || ca.name.localeCompare(cb.name);
+    }
+    return ca.name.localeCompare(cb.name);
+  });
+}
+
+function wireSpellSortBar() {
+  const bar = document.getElementById('spell-deck-sort-bar');
+  if (!bar) return;
+  if (!_spellSortBarWired) {
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.deck-sort-btn');
+      if (!btn) return;
+      const key = btn.dataset.sort;
+      if (!key) return;
+      _spellSortKey = key;
+      _audio?.playSfx('click');
+      if (_currentRun) renderPlacement(_currentRun);
+    });
+    _spellSortBarWired = true;
+  }
+  bar.querySelectorAll('.deck-sort-btn').forEach((btn) => {
+    btn.classList.toggle('is-active', btn.dataset.sort === _spellSortKey);
+  });
+}
+
+/**
+ * If any non-Magic-Mushroom spell has > 5 copies in run.spellDeck,
+ * auto-sell the extras and add the gold. Keeps the spell deck clean.
+ */
+function autoSellExcessSpells(run) {
+  if (!run?.spellDeck) return;
+  const MAX_SPELL_COPIES = 5;
+  const counts = new Map();
+  for (const inst of run.spellDeck) {
+    if (!counts.has(inst.cardId)) counts.set(inst.cardId, []);
+    counts.get(inst.cardId).push(inst);
+  }
+  let totalSold = 0;
+  let totalGold = 0;
+  for (const [cardId, copies] of counts) {
+    if (cardId === 'magic_mushroom') continue;
+    if (copies.length <= MAX_SPELL_COPIES) continue;
+    const excess = copies.slice(MAX_SPELL_COPIES);
+    for (const inst of excess) {
+      const idx = run.spellDeck.findIndex((d) => d.instanceId === inst.instanceId);
+      if (idx >= 0) {
+        run.spellDeck.splice(idx, 1);
+        const gold = inst.sellValue ?? 0;
+        run.gold += gold;
+        totalGold += gold;
+        totalSold++;
+      }
+    }
+  }
+  if (totalSold > 0) {
+    flashToast(`🧹 Auto-sold ${totalSold} excess spell${totalSold === 1 ? '' : 's'} for ${totalGold}g`);
+  }
+}
+
+/** Sell all unplaced plants in the Plant Deck. Returns gold gained. */
+export async function sellAllPlants(run) {
+  const unplaced = run.deck.filter((d) => d.gridRow == null);
+  if (unplaced.length === 0) return;
+  const totalGold = unplaced.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
+  const ok = await confirmModal({
+    title: `Sell all ${unplaced.length} unplaced plants?`,
+    message: `You will receive ${totalGold} gold. Plants on the grid are NOT affected.`,
+    confirmLabel: `Sell for ${totalGold}g`,
+    cancelLabel: 'Cancel',
+    danger: true,
+  });
+  if (!ok) return;
+  for (let i = run.deck.length - 1; i >= 0; i--) {
+    if (run.deck[i].gridRow == null) {
+      run.gold += run.deck[i].sellValue ?? 0;
+      run.deck.splice(i, 1);
+    }
+  }
+  _audio?.playSfx('click');
+  _onChange?.();
+  renderPlacement(run);
+}
+
+/** Sell all spells in the Spell Deck. Returns gold gained. */
+export async function sellAllSpells(run) {
+  const spellDeck = run.spellDeck ?? [];
+  if (spellDeck.length === 0) return;
+  const totalGold = spellDeck.reduce((sum, d) => sum + (d.sellValue ?? 0), 0);
+  const ok = await confirmModal({
+    title: `Sell all ${spellDeck.length} spells?`,
+    message: `You will receive ${totalGold} gold.`,
+    confirmLabel: `Sell for ${totalGold}g`,
+    cancelLabel: 'Cancel',
+    danger: true,
+  });
+  if (!ok) return;
+  run.gold += totalGold;
+  run.spellDeck = [];
+  _audio?.playSfx('click');
+  _onChange?.();
+  renderPlacement(run);
 }
 
 function renderGridWithPlacements(run) {

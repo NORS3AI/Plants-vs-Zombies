@@ -14,7 +14,7 @@
 <body>
   <div id="app">
     <!-- Phase Badge hidden since v1.0.0 release -->
-    <div id="phase-badge" hidden>v1.1.3</div>
+    <div id="phase-badge" hidden>v1.1.4</div>
 
     <!-- Floating dev-gold button (bottom-right, only visible with dev mode) -->
     <button class="dev-gold-btn" data-action="dev-gold" title="+50 gold (dev)" aria-label="Dev gold" hidden>💰</button>
@@ -59,7 +59,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.3</button></p>
+        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.4</button></p>
       </div>
     </section>
 
@@ -112,6 +112,7 @@
             <button class="deck-sort-btn" data-sort="rarity">Rarity</button>
             <button class="deck-sort-btn" data-sort="health">HP</button>
             <button class="deck-sort-btn" data-sort="damage">DMG</button>
+            <button class="btn btn-small btn-danger" data-action="sell-all-plants" id="sell-all-plants-btn" hidden>Sell All</button>
           </div>
           <div class="deck-inventory" id="deck-inventory"></div>
           <p class="shop-hint">Tap a plant to place it on the grid. Tap the "Sell" pill to sell. Own as many as you like — only 10 can be on the grid at once.</p>
@@ -119,7 +120,15 @@
 
         <!-- Spell deck -->
         <section class="shop-section">
-          <h3 class="shop-section-title">Spell Deck (<span id="spell-deck-count">0</span>)</h3>
+          <div class="shop-section-head">
+            <h3 class="shop-section-title">Spell Deck (<span id="spell-deck-count">0</span>)</h3>
+          </div>
+          <div class="deck-sort-bar" id="spell-deck-sort-bar">
+            <span class="deck-sort-label">Sort:</span>
+            <button class="deck-sort-btn is-active" data-sort="name">Name</button>
+            <button class="deck-sort-btn" data-sort="rarity">Rarity</button>
+            <button class="btn btn-small btn-danger" data-action="sell-all-spells" id="sell-all-spells-btn" hidden>Sell All</button>
+          </div>
           <div class="deck-inventory" id="spell-deck-inventory"></div>
           <p class="shop-hint">Plant-target spells live here. Tap a spell then tap a placed plant to cast it — the plant keeps the buff even if removed from the grid.</p>
         </section>

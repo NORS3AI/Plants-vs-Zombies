@@ -5,6 +5,25 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.4 — 2026-04-12 — Artifact rarity, Spell Deck sort, Sell All, Fusion Log rework
+
+### Added
+- **Artifact rarity** — a new tier above Legendary with a blood-red shimmer. Cards show a crimson pulsing glow and red diagonal shimmer sweep. Only obtainable via fusion.
+- **Artifact Void Bloom** — 3 Void Blooms fuse into this (`300 HP / 250 DMG / 2.5 s / 9 range, 2-tile splash`). Full Void-Petal chain: Void-Petal Bloom × 3 → Void Bloom × 3 → Artifact Void Bloom.
+- **Magma Calladara** — 3 Volcanic Callas → (`220 HP / 140 DMG / 2.2 s / 9 range, fire trail`).
+- **Inferno from Hella** — 3 Magma Calladaras → Artifact (`350 HP / 310 DMG / 2.5 s / 9 range, fire trail + 2-tile splash`). Full chain: Magma-Core Calla × 3 → Volcanic Calla × 3 → Magma Calladara × 3 → Inferno from Hella.
+- **Void Demon Lily** — 3 Void Lilies → Artifact (`290 HP / 190 DMG / 2.2 s / 9 range, execute`).
+- **Spell Deck sort** — Name / Rarity buttons above the Spell Deck, same pill UX as the Plant Deck.
+- **Sell All** buttons — one on the Plant Deck (sells all unplaced plants with confirmation) and one on the Spell Deck (sells all spells with confirmation). Auto-hides when the deck is empty.
+- **Auto-sell excess spells** — if any non-Magic-Mushroom spell exceeds 5 copies in the Spell Deck, the extras auto-sell for their gold value on every render, keeping the deck clean.
+- **Fusion Log rework** — now reads from `meta.attainedFusions` so it persists across ALL runs (not just the current one). Each entry shows a visual recipe: `🌱 Parent × N → 🌱 Result` with rarity-coloured borders and stats.
+
+### Changed
+- `recordAttainedFusion` now writes to BOTH `run.attainedFusions` (visibility check) and `meta.attainedFusions` (permanent history across runs).
+- Card database: 72 cards, 0 errors, 0 warnings.
+
+---
+
 ## v1.1.3 — 2026-04-12 — Epic Scrubber, economy evolution chain, Acorn tier scaling
 
 ### Added

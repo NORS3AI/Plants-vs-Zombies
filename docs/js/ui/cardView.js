@@ -38,6 +38,7 @@ export function renderCard(card, options = {}) {
   if (options.isSelected) el.classList.add('card-selected');
   if (options.isPlaced) el.classList.add('card-placed');
   if (card.rarity === 'legendary') el.classList.add('card-legendary-shine');
+  if (card.rarity === 'artifact') el.classList.add('card-artifact-shine');
   el.dataset.cardId = card.id;
 
   const instance = options.instance ?? null;

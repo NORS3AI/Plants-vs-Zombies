@@ -200,6 +200,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Void-Petal Blooms. Splash damage through the void.',
     abilities: [{ type: 'splash', radius: 1 }],
     notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'artifact_void_bloom' },
   },
 
   // ============================================================
@@ -293,6 +294,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Void-Reaper Lilies. Executes sub-15% HP enemies.',
     abilities: [{ type: 'execute', threshold: 0.15, bossExempt: true }],
     notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'void_demon_lily' },
   },
 
   // ============================================================
@@ -548,6 +550,7 @@ export const FUSION_PLANTS = [
     description: 'Fusion: 3 Magma-Core Callas. Hotter scorching fire trail.',
     abilities: [{ type: 'fire_trail', dotPerSec: 12, duration: 4 }],
     notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'magma_calladara' },
   },
 
   // ============================================================
@@ -614,5 +617,93 @@ export const FUSION_PLANTS = [
     economy: { goldPerCast: 300 },
     notInShop: true,
     tierEffect: { goldPerTier: 50, castTimePerTier: 1 },
+  },
+
+  // ============================================================
+  // ARTIFACT FUSIONS (blood-red shimmer rarity)
+  // ============================================================
+
+  // Void Bloom × 3 → Artifact Void Bloom
+  {
+    id: 'artifact_void_bloom',
+    name: 'Artifact Void Bloom',
+    type: 'plant',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 300,
+    damage: 250,
+    castTime: 2.5,
+    range: 9,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Artifact. Splash damage to 2 tiles from the void realm.',
+    abilities: [{ type: 'splash', radius: 2 }],
+    notInShop: true,
+  },
+
+  // Volcanic Calla × 3 → Magma Calladara
+  {
+    id: 'magma_calladara',
+    name: 'Magma Calladara',
+    type: 'plant',
+    rarity: 'legendary',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 10, max: 15 },
+    health: 220,
+    damage: 140,
+    castTime: 2.2,
+    range: 9,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Fusion: 3 Volcanic Callas. Magmatic fire trail.',
+    abilities: [{ type: 'fire_trail', dotPerSec: 18, duration: 5 }],
+    notInShop: true,
+    evolution: { requiresCount: 3, requiresSameId: true, intoId: 'inferno_from_hella' },
+  },
+
+  // Magma Calladara × 3 → Inferno from Hella
+  {
+    id: 'inferno_from_hella',
+    name: 'Inferno from Hella',
+    type: 'plant',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 350,
+    damage: 310,
+    castTime: 2.5,
+    range: 9,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Artifact. Fire trail + 2-tile splash from the fires of Hella.',
+    abilities: [
+      { type: 'fire_trail', dotPerSec: 24, duration: 6 },
+      { type: 'splash', radius: 2 },
+    ],
+    notInShop: true,
+  },
+
+  // Void Lily × 3 → Void Demon Lily
+  {
+    id: 'void_demon_lily',
+    name: 'Void Demon Lily',
+    type: 'plant',
+    rarity: 'artifact',
+    category: 'fusion',
+    cost: null,
+    sell: { min: 12, max: 18 },
+    health: 290,
+    damage: 190,
+    castTime: 2.2,
+    range: 9,
+    attackPattern: 'forward',
+    targetingDefault: 'first',
+    description: 'Artifact. Executes sub-15% HP enemies from the demonic void.',
+    abilities: [{ type: 'execute', threshold: 0.15, bossExempt: true }],
+    notInShop: true,
   },
 ];

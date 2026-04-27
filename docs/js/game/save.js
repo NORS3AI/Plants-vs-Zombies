@@ -84,6 +84,7 @@ const DEFAULT_META = {
   tutorialDone: false,
   leaderboard: [],
   packsOpened: { mythic: 0, arcane: 0, frenzy: 0 },
+  attainedFusions: [], // card IDs of fusions ever created (persists across runs)
 };
 
 function safeParse(raw, fallback) {

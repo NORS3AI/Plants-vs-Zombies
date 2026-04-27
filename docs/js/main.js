@@ -907,6 +907,12 @@ document.addEventListener('click', (e) => {
     case 'clear-grid':
       clearGridToDeck();
       break;
+    case 'sell-all-plants':
+      if (currentRun) Placement.sellAllPlants(currentRun);
+      break;
+    case 'sell-all-spells':
+      if (currentRun) Placement.sellAllSpells(currentRun);
+      break;
   }
 });
 
@@ -1055,49 +1061,55 @@ function refreshMergeLogButton() {
   const btn = document.getElementById('merge-log-btn') ??
               document.querySelector('.merge-log-btn');
   if (!btn) return;
-  const fusions = currentRun?.attainedFusions ?? [];
-  btn.hidden = fusions.length === 0;
+  // Check both run-level (current session) and meta-level (all-time)
+  const meta = Save.loadMeta();
+  const runFusions = currentRun?.attainedFusions ?? [];
+  const metaFusions = meta?.attainedFusions ?? [];
+  btn.hidden = runFusions.length === 0 && metaFusions.length === 0;
 }
 
 /**
  * Build and show a scrollable modal listing every fusion the player
- * has attained in this run. Each entry shows the fusion card's name,
- * stats, rarity colour, and what it's made from (derived by scanning
- * ALL_CARDS for a card whose evolution.intoId matches).
+ * has EVER created (from meta.attainedFusions, which persists across
+ * runs). Each entry shows: N × Parent Plant → Result Plant with
+ * stats and rarity colour.
  */
 function openMergeLogModal() {
-  const fusions = currentRun?.attainedFusions ?? [];
+  const meta = Save.loadMeta();
+  const fusions = [
+    ...new Set([
+      ...(meta?.attainedFusions ?? []),
+      ...(currentRun?.attainedFusions ?? []),
+    ]),
+  ];
   if (fusions.length === 0) return;
 
   const entries = fusions.map((id) => {
     const card = Cards.getCard(id);
     if (!card) return null;
-    // Find the parent card(s) that evolve into this fusion
     const parents = Cards.ALL_CARDS.filter(
       (c) => c.evolution?.intoId === id,
     );
-    const recipe = parents.length > 0
-      ? parents
-          .map((p) => `${p.evolution?.requiresCount ?? 3} × ${p.name}`)
-          .join(' or ')
-      : '—';
+    const parentName = parents[0]?.name ?? '?';
+    const count = parents[0]?.evolution?.requiresCount ?? 3;
+    const parentIcon = (parents[0]?.category === 'economy' || parents[0]?.economy) ? '💰' : '🌱';
+    const resultIcon = (card.category === 'economy' || card.economy) ? '💰' : '🌱';
     const stats = [
       card.health != null ? `${card.health} HP` : null,
       card.damage ? `${card.damage} DMG` : null,
       card.castTime ? `${card.castTime}s` : null,
     ].filter(Boolean).join(' · ');
-    const icon = (card.category === 'economy' || card.economy) ? '💰' : '🌱';
-    return { card, recipe, stats, icon };
+    return { card, parentName, parentIcon, resultIcon, count, stats };
   }).filter(Boolean);
 
   const listHtml = entries.map((e) => `
     <li class="merge-log-entry merge-log-entry-${e.card.rarity}">
-      <div class="merge-log-icon">${e.icon}</div>
-      <div class="merge-log-body">
-        <div class="merge-log-name">${esc(e.card.name)}</div>
-        <div class="merge-log-recipe">${esc(e.recipe)}</div>
-        <div class="merge-log-stats">${esc(e.stats)}</div>
+      <div class="merge-log-recipe-visual">
+        <span class="merge-log-parent">${e.parentIcon} ${esc(e.parentName)} × ${e.count}</span>
+        <span class="merge-log-arrow">→</span>
+        <span class="merge-log-result">${e.resultIcon} <strong>${esc(e.card.name)}</strong></span>
       </div>
+      <div class="merge-log-stats">${esc(e.stats)}</div>
     </li>
   `).join('');
 
@@ -1238,5 +1250,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.3 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.4 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
