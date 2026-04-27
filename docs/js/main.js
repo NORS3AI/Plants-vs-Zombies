@@ -79,6 +79,11 @@ applySettings(settings);
 
 // Initialize shop + placement with audio + run-mutation callback
 function onRunChange() {
+  // Auto-merge any unplaced deck groups that hit evolution thresholds
+  // BEFORE saving — so the saved state is always fully merged.
+  if (currentRun && state.current === STATES.SHOP) {
+    Placement.checkDeckMerges(currentRun);
+  }
   if (currentRun) Save.saveRun(currentRun);
   syncHUD();
   if (state.current === STATES.SHOP) {
@@ -144,6 +149,10 @@ state.register(STATES.SHOP, {
     screens.show('shop');
     syncHUD();
     if (currentRun) {
+      // Merge unplaced deck copies first (e.g. plants that died and
+      // returned to the deck mid-round, hitting the evolution threshold).
+      Placement.checkDeckMerges(currentRun);
+      Save.saveRun(currentRun);
       Shop.renderShop(currentRun);
       Placement.renderPlacement(currentRun);
       refreshClearGridButton();

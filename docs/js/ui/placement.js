@@ -771,6 +771,61 @@ function mergeEvolution(run, cardId, anchorRow, anchorCol) {
   return true;
 }
 
+/**
+ * Scan `run.deck` for any group of UNPLACED plants (gridRow == null)
+ * whose count reaches the evolution `requiresCount`. When found,
+ * the N copies are removed and replaced with a single evolved
+ * instance — still unplaced, living in the deck. This cascades via
+ * a while-loop so buying the 9th Seedling Scrubber can collapse all
+ * the way to a Scrubber in one tick.
+ *
+ * Called from main.js onRunChange (before save) and STATES.SHOP.enter
+ * so the deck is always in its fully-merged state when the player
+ * sees it.
+ */
+export function checkDeckMerges(run) {
+  if (!run?.deck) return;
+  let keepGoing = true;
+  while (keepGoing) {
+    keepGoing = false;
+    // Group unplaced instances by cardId
+    const groups = new Map();
+    for (const inst of run.deck) {
+      if (inst.gridRow != null) continue; // placed on grid — skip
+      if (!groups.has(inst.cardId)) groups.set(inst.cardId, []);
+      groups.get(inst.cardId).push(inst);
+    }
+    for (const [cardId, instances] of groups) {
+      const card = getCard(cardId);
+      if (!card?.evolution?.requiresSameId) continue;
+      const required = card.evolution.requiresCount ?? 3;
+      if (instances.length < required) continue;
+
+      // Merge! Take `required` instances from the deck.
+      const toMerge = instances.slice(0, required);
+      for (const inst of toMerge) {
+        const idx = run.deck.findIndex((d) => d.instanceId === inst.instanceId);
+        if (idx >= 0) run.deck.splice(idx, 1);
+      }
+
+      const resultCard = getCard(card.evolution.intoId);
+      if (!resultCard) continue;
+
+      run.deck.push({
+        cardId: card.evolution.intoId,
+        instanceId: freshInstanceId(),
+        sellValue: rollSell(resultCard),
+        targeting: resultCard.targetingDefault ?? 'first',
+      });
+
+      _audio?.playSfx('go');
+      flashToast(`✨ ${required} ${card.name}s → ${resultCard.name}!`);
+      keepGoing = true; // restart to check for cascading merges
+      break; // restart the while loop with fresh grouping
+    }
+  }
+}
+
 // ============================================================
 // HELPERS
 // ============================================================
