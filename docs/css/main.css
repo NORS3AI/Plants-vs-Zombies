@@ -481,6 +481,78 @@ input, select, textarea {
   50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 22px rgba(212, 175, 55, 0.95); }
 }
 
+/* ---------- Merge-Log Button ---------- */
+/* Positioned just above the dev-gold button in the lower-right.
+   Visible during a run when the player has attained ≥ 1 fusion. */
+.merge-log-btn {
+  position: fixed;
+  bottom: 78px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border: 2px solid #a855f7;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  z-index: 50;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4),
+              0 0 12px rgba(168, 85, 247, 0.55);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.merge-log-btn:hover { transform: scale(1.08); }
+.merge-log-btn:active { transform: scale(0.92); }
+.merge-log-btn[hidden] { display: none !important; }
+
+/* Modal list inside the merge log */
+.merge-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+.merge-log-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+.merge-log-entry-legendary { border-left-color: var(--rarity-legendary); }
+.merge-log-entry-epic      { border-left-color: var(--rarity-epic); }
+.merge-log-entry-rare      { border-left-color: var(--rarity-rare); }
+.merge-log-entry-uncommon  { border-left-color: var(--rarity-uncommon); }
+.merge-log-entry-common    { border-left-color: var(--rarity-common); }
+.merge-log-icon { font-size: 1.3rem; flex-shrink: 0; }
+.merge-log-body { flex: 1; min-width: 0; }
+.merge-log-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--fg-base);
+}
+.merge-log-recipe {
+  font-size: 0.72rem;
+  color: var(--fg-muted);
+  margin-top: 0.15rem;
+}
+.merge-log-stats {
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-top: 0.1rem;
+}
+
 /* Settings hint text (shown when dev mode is on) */
 .setting-hint {
   font-size: 0.75rem;

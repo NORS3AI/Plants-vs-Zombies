@@ -72,6 +72,11 @@ const DEFAULT_RUN = {
   // Lane/tile spells cast in shop mode that will fire at the start
   // of the next combat round. { type, row, col?, value, ... }
   pendingSpellEffects: [],
+
+  // Card IDs of every fusion plant the player has ever created in
+  // this run (via grid merge or deck auto-merge). Used by the merge
+  // log button — only fusions the player has attained are shown.
+  attainedFusions: [],
 };
 
 const DEFAULT_META = {

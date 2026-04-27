@@ -5,6 +5,17 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.2 — 2026-04-12 — Mycelium Network rework, Fusion Log button
+
+### Added
+- **Fusion Log button** (🧬) — a purple floating button in the lower-right corner (above the dev-gold button) that opens a scrollable modal listing every fusion the player has attained in this run. Each entry shows the fusion plant's name, rarity-coloured left border, recipe ("3 × Seedling Scrubber"), and stats (HP / DMG / cast). Fusions the player hasn't created yet are NOT shown — the list grows as you discover new merges. Button auto-hides when there are no fusions yet.
+- **`run.attainedFusions`** — new persistent array that records the card ID of every fusion plant created (via grid merge or deck auto-merge). Both `mergeEvolution` and `checkDeckMerges` call `recordAttainedFusion` on success.
+
+### Changed
+- **Mycelium Network rework** — target changed from `plant_group` (which was unimplemented and showed "coming soon") to `board`. It now just works: tap any tile to cast, and every placed plant gets **+20% damage** and **+20 HP** for the round. No Synthesis UI needed.
+
+---
+
 ## v1.1.1 — 2026-04-12 — Deck merge fix, economy duplication, QoL
 
 ### Fixed

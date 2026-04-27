@@ -325,9 +325,9 @@ export const FRENZY_EXCLUSIVES = [
     pack: 'frenzy',
     cost: null,
     sell: { min: 4, max: 7 },
-    target: 'plant_group',
-    description: 'Links 3 plants together; they share a health pool and all gain +20% damage.',
-    effect: { type: 'link_plants', count: 3, dmgBuffPct: 0.2 },
+    target: 'board',
+    description: 'Links all placed plants: +20% damage and +20 HP for the round. Just works — tap any tile to cast.',
+    effect: { type: 'link_all_plants', dmgBuffPct: 0.2, hpBuff: 20 },
   },
   {
     id: 'midas_mandrake',

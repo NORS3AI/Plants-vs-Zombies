@@ -400,6 +400,25 @@ function applyBoardSpell(effect, run, card) {
       }
       return true;
     }
+    case 'link_all_plants': {
+      // Mycelium Network: buff every placed plant with +20% DMG and
+      // +20 HP for the round. No special targeting UI — just works.
+      const dmgMul = 1 + (effect.dmgBuffPct ?? 0.2);
+      const hpBuff = effect.hpBuff ?? 20;
+      let touched = 0;
+      for (const inst of run.deck) {
+        if (inst.gridRow == null) continue;
+        if (!inst.buffs) inst.buffs = [];
+        inst.buffs.push({ type: 'dmg_mul', value: dmgMul, permanent: false, ...source });
+        inst.buffs.push({ type: 'hp_boost', value: hpBuff, permanent: false, ...source });
+        touched++;
+      }
+      if (touched === 0) {
+        flashError('No plants on the grid to link.');
+        return false;
+      }
+      return true;
+    }
     default:
       flashError(`Board spell '${effect.type}' not implemented yet.`);
       return false;
@@ -797,9 +816,10 @@ function mergeEvolution(run, cardId, anchorRow, anchorCol) {
     targeting: resultCard.targetingDefault ?? 'first',
   };
   run.deck.push(resultInst);
+  recordAttainedFusion(run, evolution.intoId);
 
   _audio?.playSfx('go');
-  flashToast(`✨ 3 ${card.name}s → ${resultCard.name}!`);
+  flashToast(`✨ ${requiresCount} ${card.name}s → ${resultCard.name}!`);
 
   // Chain: if the new plant can itself merge (there are already 2
   // more of the evolved form placed), cascade the merge through
@@ -860,6 +880,7 @@ export function checkDeckMerges(run) {
         sellValue: rollSell(resultCard),
         targeting: resultCard.targetingDefault ?? 'first',
       });
+      recordAttainedFusion(run, card.evolution.intoId);
 
       _audio?.playSfx('go');
       flashToast(`✨ ${required} ${card.name}s → ${resultCard.name}!`);
@@ -872,6 +893,13 @@ export function checkDeckMerges(run) {
 // ============================================================
 // HELPERS
 // ============================================================
+
+function recordAttainedFusion(run, cardId) {
+  if (!run.attainedFusions) run.attainedFusions = [];
+  if (!run.attainedFusions.includes(cardId)) {
+    run.attainedFusions.push(cardId);
+  }
+}
 
 function findAtTile(run, row, col) {
   return run.deck.find(

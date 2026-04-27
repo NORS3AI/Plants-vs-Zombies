@@ -14,10 +14,13 @@
 <body>
   <div id="app">
     <!-- Phase Badge hidden since v1.0.0 release -->
-    <div id="phase-badge" hidden>v1.1.1</div>
+    <div id="phase-badge" hidden>v1.1.2</div>
 
     <!-- Floating dev-gold button (bottom-right, only visible with dev mode) -->
-    <button class="dev-gold-btn" data-action="dev-gold" title="+10 gold (dev)" aria-label="Dev gold" hidden>💰</button>
+    <button class="dev-gold-btn" data-action="dev-gold" title="+50 gold (dev)" aria-label="Dev gold" hidden>💰</button>
+
+    <!-- Merge log button — shows attained fusions. Positioned above the gold btn. -->
+    <button class="merge-log-btn" data-action="open-merge-log" title="Fusion log" aria-label="Fusion log" hidden>🧬</button>
 
     <!-- Sticky HUD sidebar — visible only during a run (shop / combat) -->
     <aside id="hud-sidebar" hidden>
@@ -56,7 +59,7 @@
           <button class="btn" data-action="open-settings">Settings</button>
           <button class="btn" id="leaderboard-button" data-action="open-leaderboard" disabled title="Unlocks after Round 10">Leaderboard</button>
         </div>
-        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.1</button></p>
+        <p class="version"><button type="button" class="version-btn" data-action="open-patch-notes" title="View patch notes">v1.1.2</button></p>
       </div>
     </section>
 

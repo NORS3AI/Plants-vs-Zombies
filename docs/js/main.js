@@ -90,6 +90,7 @@ function onRunChange() {
     Shop.renderShop(currentRun);
     Placement.renderPlacement(currentRun);
     refreshClearGridButton();
+    refreshMergeLogButton();
   }
 }
 
@@ -156,6 +157,7 @@ state.register(STATES.SHOP, {
       Shop.renderShop(currentRun);
       Placement.renderPlacement(currentRun);
       refreshClearGridButton();
+    refreshMergeLogButton();
       Tutorial.trigger('first_shop');
     }
     // After every round the player lands deep in the page — reset the
@@ -899,6 +901,9 @@ document.addEventListener('click', (e) => {
     case 'open-patch-notes':
       openPatchNotesModal();
       break;
+    case 'open-merge-log':
+      openMergeLogModal();
+      break;
     case 'clear-grid':
       clearGridToDeck();
       break;
@@ -1035,6 +1040,85 @@ state.onChange((current) => {
 
 let _patchNotesCache = null;
 
+// ============================================================
+// MERGE LOG
+// ============================================================
+
+/**
+ * Show/hide the 🧬 merge-log button. Visible whenever the player has
+ * a current run with at least one attained fusion. Called on every
+ * shop enter and onRunChange.
+ */
+function refreshMergeLogButton() {
+  const btn = document.getElementById('merge-log-btn') ??
+              document.querySelector('.merge-log-btn');
+  if (!btn) return;
+  const fusions = currentRun?.attainedFusions ?? [];
+  btn.hidden = fusions.length === 0;
+}
+
+/**
+ * Build and show a scrollable modal listing every fusion the player
+ * has attained in this run. Each entry shows the fusion card's name,
+ * stats, rarity colour, and what it's made from (derived by scanning
+ * ALL_CARDS for a card whose evolution.intoId matches).
+ */
+function openMergeLogModal() {
+  const fusions = currentRun?.attainedFusions ?? [];
+  if (fusions.length === 0) return;
+
+  const entries = fusions.map((id) => {
+    const card = Cards.getCard(id);
+    if (!card) return null;
+    // Find the parent card(s) that evolve into this fusion
+    const parents = Cards.ALL_CARDS.filter(
+      (c) => c.evolution?.intoId === id,
+    );
+    const recipe = parents.length > 0
+      ? parents
+          .map((p) => `${p.evolution?.requiresCount ?? 3} × ${p.name}`)
+          .join(' or ')
+      : '—';
+    const stats = [
+      card.health != null ? `${card.health} HP` : null,
+      card.damage ? `${card.damage} DMG` : null,
+      card.castTime ? `${card.castTime}s` : null,
+    ].filter(Boolean).join(' · ');
+    const icon = (card.category === 'economy' || card.economy) ? '💰' : '🌱';
+    return { card, recipe, stats, icon };
+  }).filter(Boolean);
+
+  const listHtml = entries.map((e) => `
+    <li class="merge-log-entry merge-log-entry-${e.card.rarity}">
+      <div class="merge-log-icon">${e.icon}</div>
+      <div class="merge-log-body">
+        <div class="merge-log-name">${esc(e.card.name)}</div>
+        <div class="merge-log-recipe">${esc(e.recipe)}</div>
+        <div class="merge-log-stats">${esc(e.stats)}</div>
+      </div>
+    </li>
+  `).join('');
+
+  const bodyHtml = `<ul class="merge-log-list">${listHtml}</ul>`;
+  showModal({
+    title: `Fusion Log (${entries.length})`,
+    bodyHtml,
+    buttons: [{ label: 'Close', value: null, kind: 'default' }],
+    showClose: true,
+    wide: true,
+  });
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+// ============================================================
+// PATCH NOTES
+// ============================================================
+
 /**
  * Fetch docs/patchnotes.md, convert to HTML, and show in a wide
  * scrollable modal. The file is cached after the first fetch so
@@ -1152,5 +1236,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.1 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.2 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
