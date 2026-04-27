@@ -853,11 +853,11 @@ document.addEventListener('click', (e) => {
       }
       break;
     case 'dev-gold':
-      // Dev-mode cheat: +10 gold per tap. Only wired when
+      // Dev-mode cheat: +50 gold per tap. Only wired when
       // settings.devMode is true (the button is hidden otherwise,
       // but check again here defensively).
       if (Save.loadSettings().devMode && currentRun) {
-        currentRun.gold += 10;
+        currentRun.gold += 50;
         syncHUD();
         Save.saveRun(currentRun);
         audio.playSfx('click');
@@ -1152,5 +1152,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.0 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.1 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

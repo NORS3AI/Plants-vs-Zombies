@@ -5,6 +5,18 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.1 — 2026-04-12 — Deck merge fix, economy duplication, QoL
+
+### Fixed
+- **Sunflower (and all plants) now merge correctly in the Plant Deck.** The old `checkDeckMerges` only counted *unplaced* copies — so 2 Sunflowers on the grid + 1 in the deck = 3 total, but only 1 counted, no merge. It now counts ALL copies (placed + unplaced). When a merge fires, placed copies are pulled off the grid (unplaced copies are consumed first to minimise disruption) and the evolved result lands in the deck unplaced so the player can place it wherever they want.
+
+### Changed
+- **Magic Mushroom on gold-producing plants duplicates them.** Previously only Sunflower triggered the duplication — now any plant with `card.economy` or `card.category === 'economy'` (Sunflower, Gilded Rose, Amber Grain, Crystal Fern, Midas Mandrake, Thorn, Golden Grain, Diamond Fern, Bloody Mandrake) gets a fresh unplaced copy in the deck instead of a tier-up. The original is untouched.
+- **Dev gold button grants +50 per tap** (was +10) for faster testing.
+- **Removed Type from the sort bar** — the Plant Deck sort buttons are now Name, Rarity, HP, DMG (four buttons instead of five).
+
+---
+
 ## v1.1.0 — 2026-04-12 — Sort fix, shop scroll-to-top
 
 ### Fixed

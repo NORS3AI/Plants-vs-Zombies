@@ -40,7 +40,7 @@ let _currentRun = null; // set each renderPlacement; read by sort handler
 
 // ---------- Plant Deck sort ----------
 // Persists for the session; reset on page reload.
-let _deckSortKey = 'name'; // 'name' | 'rarity' | 'health' | 'damage' | 'type'
+let _deckSortKey = 'name'; // 'name' | 'rarity' | 'health' | 'damage'
 let _deckSortBarWired = false;
 
 const RARITY_TIERS = {};
@@ -63,11 +63,6 @@ function sortDeckInstances(instances) {
       case 'damage':
         return (cb.damage ?? 0) - (ca.damage ?? 0)
             || ca.name.localeCompare(cb.name);
-      case 'type': {
-        const ta = ca.category === 'economy' ? 'economy' : ca.type;
-        const tb = cb.category === 'economy' ? 'economy' : cb.type;
-        return ta.localeCompare(tb) || ca.name.localeCompare(cb.name);
-      }
       default:
         return 0;
     }
@@ -337,24 +332,28 @@ function applyPlantSpell(effect, targetInstance, card, run) {
 /**
  * Magic Mushroom — Tier Up.
  *
- * On Sunflower: duplicates the plant (adds a fresh unplaced Sunflower
- * to the deck) so the player can stack gold production / eventually
- * merge 3 into a Gilded Rose. The original Sunflower is untouched.
+ * On economy / gold-producing plants (Sunflower, Gilded Rose, Amber
+ * Grain, Crystal Fern, Midas Mandrake, Thorn, Golden Grain, Diamond
+ * Fern, Bloody Mandrake — anything with `card.economy` or
+ * `card.category === 'economy'`): duplicates the plant. A fresh
+ * unplaced copy is added to the deck so the player can stack gold
+ * production or eventually hit the evolution merge threshold. The
+ * original is untouched.
  *
  * On any other plant: bumps `instance.tier` by +1 (defaulting from 1),
  * capped at `effect.maxTier` (99). Combat.js reads the tier during
  * hydration and adds +hpPerTier and +dmgPerTier per tier beyond 1.
  */
 function tierUpPlantInstance(instance, card, effect, run) {
-  // Sunflower special case: duplicate instead of tier up.
-  if (card.id === 'sunflower') {
+  const isEconomy = card.category === 'economy' || !!card.economy;
+  if (isEconomy) {
     const freshInst = {
-      cardId: 'sunflower',
+      cardId: card.id,
       instanceId: freshInstanceId(),
       sellValue: rollSell(card),
     };
     run.deck.push(freshInst);
-    flashToast('🍄 A new Sunflower sprouts in your deck!');
+    flashToast(`🍄 A new ${card.name} sprouts in your deck!`);
     return true;
   }
 
@@ -826,10 +825,12 @@ export function checkDeckMerges(run) {
   let keepGoing = true;
   while (keepGoing) {
     keepGoing = false;
-    // Group unplaced instances by cardId
+    // Group ALL instances by cardId — both placed (gridRow != null)
+    // and unplaced. If the total hits the evolution threshold the
+    // copies are consumed (pulled off the grid if needed) and the
+    // evolved result lands in the deck unplaced.
     const groups = new Map();
     for (const inst of run.deck) {
-      if (inst.gridRow != null) continue; // placed on grid — skip
       if (!groups.has(inst.cardId)) groups.set(inst.cardId, []);
       groups.get(inst.cardId).push(inst);
     }
@@ -839,8 +840,12 @@ export function checkDeckMerges(run) {
       const required = card.evolution.requiresCount ?? 3;
       if (instances.length < required) continue;
 
-      // Merge! Take `required` instances from the deck.
-      const toMerge = instances.slice(0, required);
+      // Merge! Take `required` instances (prefer unplaced first so
+      // the grid isn't disrupted unless we have to).
+      const sorted = instances.slice().sort((a, b) =>
+        (a.gridRow == null ? 0 : 1) - (b.gridRow == null ? 0 : 1),
+      );
+      const toMerge = sorted.slice(0, required);
       for (const inst of toMerge) {
         const idx = run.deck.findIndex((d) => d.instanceId === inst.instanceId);
         if (idx >= 0) run.deck.splice(idx, 1);
@@ -858,8 +863,8 @@ export function checkDeckMerges(run) {
 
       _audio?.playSfx('go');
       flashToast(`✨ ${required} ${card.name}s → ${resultCard.name}!`);
-      keepGoing = true; // restart to check for cascading merges
-      break; // restart the while loop with fresh grouping
+      keepGoing = true;
+      break;
     }
   }
 }
