@@ -1447,6 +1447,15 @@ input, select, textarea {
   border-color: var(--accent);
   box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
 }
+/* Pack buy quantity bar — reuses deck-sort-bar styling */
+.pack-buy-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
 .deck-sort-btn.btn-danger-pill {
   border-color: var(--accent-red, #ef4444);
   color: var(--accent-red, #ef4444);

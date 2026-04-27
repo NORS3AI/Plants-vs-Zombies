@@ -381,7 +381,11 @@ export function renderPackChest(pack, options = {}) {
 
   const cost = document.createElement('div');
   cost.className = 'pack-cost';
-  cost.textContent = `${pack.cost} gold`;
+  if (options.costOverride != null && options.qtyLabel) {
+    cost.textContent = `${options.costOverride} gold ${options.qtyLabel}`;
+  } else {
+    cost.textContent = `${pack.cost} gold`;
+  }
   el.appendChild(cost);
 
   if (options.opened != null && pack.pityLegendaryEvery) {

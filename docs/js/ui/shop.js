@@ -32,6 +32,10 @@ export const REFRESH_COST = 1;
 let _audio = null;
 let _onChange = null;
 let _onFirstBuy = null;
+
+// Pack buy multiplier: 1, 5, 10, or 'all'
+let _packBuyQty = 1;
+let _packBuyBarWired = false;
 let _onFirstPack = null;
 
 /**
@@ -252,40 +256,59 @@ export async function sellDeckCard(run, instanceId) {
 // ============================================================
 
 /**
- * Buy and open a pack. Animates the reveal in a modal, adds cards to
- * the deck (or aetherSpells inventory). Honors deck cap and pity rules.
+ * Buy and open packs. The quantity is controlled by the ×1/×5/×10/All
+ * bar above the pack chests. "All" calculates floor(gold / cost) and
+ * opens that many. Each opening increments the pity counter, rolls
+ * independently, and distributes cards.
  */
 export async function buyPack(run, packId) {
   const pack = PACKS[packId];
   if (!pack) return false;
 
-  if (run.gold < pack.cost) {
-    flashError(`Need ${pack.cost} gold (you have ${run.gold})`);
-    _audio?.playSfx('back');
-    return false;
+  // Determine how many packs to buy
+  let qty;
+  if (_packBuyQty === 'all') {
+    qty = Math.floor(run.gold / pack.cost);
+  } else {
+    qty = Number(_packBuyQty) || 1;
+  }
+  if (qty < 1) qty = 1;
+  const totalCost = pack.cost * qty;
+
+  if (run.gold < totalCost) {
+    if (run.gold < pack.cost) {
+      flashError(`Need ${pack.cost} gold (you have ${run.gold})`);
+      _audio?.playSfx('back');
+      return false;
+    }
+    // Can't afford the full qty — buy as many as possible
+    qty = Math.floor(run.gold / pack.cost);
   }
 
-  // Pre-increment the pity counter, then roll
-  run.gold -= pack.cost;
+  // Open `qty` packs, collecting all cards
+  const allCards = [];
   if (!run.packsOpened) run.packsOpened = { mythic: 0, arcane: 0, frenzy: 0 };
-  run.packsOpened[packId] = (run.packsOpened[packId] ?? 0) + 1;
-  const pityState = {
-    mythicCount: run.packsOpened.mythic,
-    arcaneCount: run.packsOpened.arcane,
-    frenzyCount: run.packsOpened.frenzy,
-  };
 
-  const cards = rollPackCards(packId, pityState);
-  if (cards.length === 0) {
+  for (let i = 0; i < qty; i++) {
+    run.gold -= pack.cost;
+    run.packsOpened[packId] = (run.packsOpened[packId] ?? 0) + 1;
+    const pityState = {
+      mythicCount: run.packsOpened.mythic,
+      arcaneCount: run.packsOpened.arcane,
+      frenzyCount: run.packsOpened.frenzy,
+    };
+    const cards = rollPackCards(packId, pityState);
+    allCards.push(...cards);
+  }
+
+  if (allCards.length === 0) {
     flashError(`Pack opened empty — please report this bug`);
     _onChange?.();
     return false;
   }
 
-  // Distribute: every card is kept. Regular cards go to the deck (no
-  // size cap — "opening a chest should be super exciting, never a
-  // negative"). Aether-Root spells go to the side panel inventory.
-  for (const card of cards) {
+  // Distribute all cards at once
+  for (const card of allCards) {
     if (card.category === 'aether_root') {
       addToAetherSpells(run, card);
     } else {
@@ -297,13 +320,15 @@ export async function buyPack(run, packId) {
   _onFirstPack?.();
   _onChange?.();
 
-  // Show pack-opening modal
-  await showPackRevealModal(pack, cards);
+  // Show one combined reveal modal
+  await showPackRevealModal(pack, allCards, qty);
   return true;
 }
 
-function showPackRevealModal(pack, cards) {
-  const titleEl = `${pack.label} Pack — ${cards.length} cards`;
+function showPackRevealModal(pack, cards, qty = 1) {
+  const titleEl = qty > 1
+    ? `${pack.label} Pack × ${qty} — ${cards.length} cards`
+    : `${pack.label} Pack — ${cards.length} cards`;
   const cardsHtml = cards
     .map((c) => {
       // Keep the rarity-driven border via card-rarity-* class, but
@@ -346,6 +371,7 @@ function escapeHtml(s) {
 export function renderShop(run) {
   ensureShopRollForRound(run);
   renderShopCards(run);
+  wirePackBuyBar(run);
   renderPackRow(run);
   renderAetherSpellInventory(run);
   updateRefreshButton(run);
@@ -422,13 +448,49 @@ function renderPackRow(run) {
   for (const id of PACK_ORDER) {
     const pack = PACKS[id];
     const opened = run.packsOpened?.[id] ?? 0;
+    // Effective cost depends on the buy multiplier
+    const qty = _packBuyQty === 'all'
+      ? Math.max(1, Math.floor(run.gold / pack.cost))
+      : (Number(_packBuyQty) || 1);
+    const effectiveCost = pack.cost * qty;
     const el = renderPackChest(pack, {
       opened,
       disabled: run.gold < pack.cost,
+      costOverride: _packBuyQty !== 1 ? effectiveCost : null,
+      qtyLabel: _packBuyQty !== 1 ? `×${_packBuyQty === 'all' ? qty : _packBuyQty}` : null,
       onClick: () => buyPack(run, id),
     });
     host.appendChild(el);
   }
+}
+
+/**
+ * Wire the ×1 / ×5 / ×10 / All bar above the pack chests. Updates
+ * _packBuyQty on click and re-renders so pack cost labels refresh.
+ */
+function wirePackBuyBar(run) {
+  const bar = document.getElementById('pack-buy-bar');
+  if (!bar) return;
+  if (!_packBuyBarWired) {
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-pack-qty]');
+      if (!btn) return;
+      const raw = btn.dataset.packQty;
+      _packBuyQty = raw === 'all' ? 'all' : (Number(raw) || 1);
+      _audio?.playSfx('click');
+      renderPackRow(run);
+      // Update active indicator
+      bar.querySelectorAll('[data-pack-qty]').forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.packQty === raw);
+      });
+    });
+    _packBuyBarWired = true;
+  }
+  bar.querySelectorAll('[data-pack-qty]').forEach((b) => {
+    const raw = b.dataset.packQty;
+    const val = raw === 'all' ? 'all' : Number(raw);
+    b.classList.toggle('is-active', val === _packBuyQty);
+  });
 }
 
 function updateRefreshButton(run) {
