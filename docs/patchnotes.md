@@ -5,6 +5,18 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.0.8 — 2026-04-12 — Deck sort, auto-merge in deck, Solae & fixes
+
+### Added
+- **Plant Deck sorting** — five sort buttons (Name, Rarity, HP, DMG, Type) sit above the Plant Deck. Tap any to re-sort instantly. Active sort is highlighted as a gold pill; persists for the session.
+- **Auto-merge in the Plant Deck** — when 3 (or N) unplaced copies of the same plant accumulate in your deck, they auto-fuse into the evolved form without needing to be placed on the grid. Cascades in one tick (e.g. 9 Seedling Scrubbers → 3 Blooming Scrubbers → 1 Scrubber). Triggers on every shop buy, pack open, and grid removal.
+- **Solae** — the first **4-way** fusion in the game: **4 Solar Breaches → Solae** (`500 HP / 600 DMG / 3.0 s cast`, beam + heal_adjacent 12). The entire Solar line is now Solar Archon × 3 → Solar Breach × 4 → Solae (requires 12 Solar Archons total).
+
+### Fixed
+- **Dev gold button stayed visible after disabling dev mode** — `.dev-gold-btn` had `display: flex` which outranked the UA `[hidden] { display: none }` rule. Added an explicit `.dev-gold-btn[hidden] { display: none !important }` override.
+
+---
+
 ## v1.0.7 — 2026-04-11 — Lily Weed, Blue Lily & omni attack pattern
 
 ### Added
