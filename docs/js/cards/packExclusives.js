@@ -369,7 +369,7 @@ export const FRENZY_EXCLUSIVES = [
     range: 1,
     attackPattern: 'forward',
     targetingDefault: 'first',
-    description: 'A brittle weed. One free at the start of every run — more drop from Frenzy packs at 1%. Five on the grid fuse into a Blue Lily.',
+    description: 'A brittle weed. One free at the start of every run.',
     abilities: [],
     notInShop: true,
     packDropChance: 0.01,

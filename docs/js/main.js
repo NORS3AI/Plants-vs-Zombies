@@ -1026,19 +1026,15 @@ function readSettingsFromDOM() {
 }
 
 function flashToast(msg) {
-  const offset = document.querySelectorAll('.shop-toast, [data-main-toast]').length;
+  const log = document.getElementById('toast-log');
+  if (!log) return;
   const t = document.createElement('div');
   t.textContent = msg;
-  t.setAttribute('data-main-toast', '');
-  t.style.cssText = `
-    position: fixed; bottom: ${24 + offset * 48}px; left: 50%; transform: translateX(-50%);
-    background: var(--bg-elev); color: var(--accent); padding: 0.75rem 1.25rem;
-    border: 1px solid var(--accent); border-radius: 8px; z-index: 9999;
-    font-size: 0.9rem; box-shadow: var(--shadow); transition: opacity 2s ease;
-  `;
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; }, 8000);
-  setTimeout(() => t.remove(), 10000);
+  t.className = 'shop-toast shop-toast-info';
+  log.appendChild(t);
+  log.scrollTop = log.scrollHeight;
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 5000);
+  setTimeout(() => t.remove(), 7000);
 }
 
 // ---------- Game Loop ----------
@@ -1265,5 +1261,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.5 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.6 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

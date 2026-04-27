@@ -387,14 +387,15 @@ function movePlantTo(plant, row, col, run) {
 }
 
 function flashCombatToast(msg) {
+  const log = document.getElementById('toast-log');
+  if (!log) return;
   const t = document.createElement('div');
   t.textContent = msg;
   t.className = 'shop-toast shop-toast-info';
-  const offset = document.querySelectorAll('.shop-toast').length;
-  t.style.bottom = `${20 + offset * 48}px`;
-  document.body.appendChild(t);
-  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 10000);
-  setTimeout(() => t.remove(), 12000);
+  log.appendChild(t);
+  log.scrollTop = log.scrollHeight;
+  setTimeout(() => { t.classList.add('shop-toast-fade'); }, 5000);
+  setTimeout(() => t.remove(), 7000);
 }
 
 /**

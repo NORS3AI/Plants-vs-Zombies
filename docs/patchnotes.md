@@ -5,6 +5,22 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.6 — 2026-04-12 — Toast log panel, pack buy multiplier, settings scroll fix
+
+### Added
+- **Pack buy multiplier** — ×1 / ×5 / ×10 / All buttons above the Card Packs section. ×5 costs 5× the pack price and opens 5 packs in one burst (each rolled independently with pity tracking). ×10 does the same at 10×. "All" calculates `floor(gold / cost)` and opens that many, draining gold to the remainder. One combined reveal modal shows all cards.
+
+### Changed
+- **Toasts moved to a log panel** — messages now stack in a small scrollable panel pinned to the bottom-left instead of floating over the game grid. Toasts stay visible for 5 seconds, then fade out over 2 seconds. The panel auto-scrolls to the latest message and hides when empty. This stops toast messages from covering the grid and blocking plant moves during combat.
+- **Lily Weed description simplified** — removed the fusion hint about Blue Lily and the 1% Frenzy drop rate from the card text. Discovery is part of the fun.
+- **Default toast color is now blue** (info/updates). Red is reserved for errors only.
+
+### Fixed
+- **Settings page can now scroll to the Back button** — added `overflow-y: auto` and extra bottom padding to the settings screen so the Back button is always reachable on small phones.
+- **Artifact gold button** now stacks directly above the regular gold button (`right: 20px, bottom: 78px`). Merge-log button pushed up to `bottom: 136px` to make room.
+
+---
+
 ## v1.1.5 — 2026-04-12 — Sell by rarity, skip-sell setting, artifact limits, QoL
 
 ### Added
