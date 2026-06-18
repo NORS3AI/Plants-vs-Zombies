@@ -434,7 +434,7 @@ function startNewRun(difficultyId) {
     currentRun.deck.push({
       cardId: 'verde_lily',
       instanceId: `inst_${Date.now()}_starter`,
-      sellValue: Cards.rollSell(lilyWeedCard),
+      sellValue: Cards.rollSell(lilyCard),
     });
   }
 
