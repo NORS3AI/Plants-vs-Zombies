@@ -5,16 +5,17 @@ Format: `Version — Date — Summary`
 
 ---
 
-## v1.1.8a — 2026-04-12 — Crimson Mandrake, Mythril Dragon, scrollable Fusion Log
+## v1.1.9 — 2026-04-12 — Retry on defeat, round-1 starter, Void Lily attackAll
 
 ### Added
-- **Crimson Mandrake** (artifact) — 3 Bloody Mandrakes → `330 HP / 180 DMG / 2.2 s / 9 range`. Gold per kill scales with round. Limit 1 in deck.
-- **Mythril Dragon** (artifact) — 3 Runite Dragons → `200 HP / 200 DMG / 2.2 s / 9 range`. Cone damage across 3 lanes. Limit 1 in deck.
+- **Retry on defeat** — when the Aether-Root falls, the player is sent back to the shop instead of the game-over screen. HP is restored to full, shield cleared, and the round number stays the same. Rearrange your deck, buy more cards, and try the same round again. No more permadeath on a bad round.
+- **Round-1 starter shop** — on the very first shop visit, the shop offers exactly two free cards: **Ironroot Sentry** (cost 0) and **Wild Growth** (cost 0), with a toast telling the player to grab them. After round 1 completes (or on retry), the normal shop randomizer takes over. This prevents the "impossible round 1" problem on all difficulties.
+- **Void Lily `attackAll`** — the Void Lily now hits **every valid zombie simultaneously** each 0.1 s cast via a new `attackAll` card flag. combat.js gains `findAllTargets(plant)` which returns the full candidate array instead of the best single target. Every ability (beam, splash, chain, cone, execute, slow, stun, fire trail) fires on each zombie per cast. One Void Lily truly solo-clears the board.
 
-### Fixed
-- **Fusion Log is now scrollable** — the modal uses the `modal-dialog-patchnotes` scroll class and the list itself caps at `max-height: 60vh` with `overflow-y: auto`. No longer unusable when the player has many fusions.
-
-78 cards, validator clean.
+### v1.1.8a (same day)
+- **Crimson Mandrake** (artifact) — 3 Bloody Mandrakes → `330 HP / 180 DMG / 2.2 s / 9 range`, gold per kill scales with round. Limit 1.
+- **Mythril Dragon** (artifact) — 3 Runite Dragons → `200 HP / 200 DMG / 2.2 s / 9 range`, cone damage. Limit 1.
+- **Fusion Log scrollable** — modal uses `max-height: 60vh` + `overflow-y: auto`.
 
 ---
 
