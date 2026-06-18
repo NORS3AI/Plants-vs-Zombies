@@ -283,6 +283,12 @@ state.register(STATES.ROUND_END, {
   enter() {
     screens.show('round_end');
     paintRoundSummary();
+    // Hide replay button when limit reached (max 3 replays per round)
+    const replayBtn = document.querySelector('[data-action="replay-round"]');
+    if (replayBtn && currentRun) {
+      const used = currentRun.roundReplaysUsed ?? 0;
+      replayBtn.hidden = used >= 3;
+    }
   },
 });
 
@@ -915,24 +921,14 @@ document.addEventListener('click', (e) => {
         state.transition(STATES.SHOP);
       }
       break;
-    case 'replay-round': {
-      // Go back to shop to replay the SAME round. endRound already
-      // incremented the round counter, so roll it back by 1.
-      // Max 3 replays per round (not counting the first completion).
-      const MAX_REPLAYS = 3;
+    case 'replay-round':
       if (currentRun) {
-        const used = currentRun.roundReplaysUsed ?? 0;
-        if (used >= MAX_REPLAYS) {
-          flashToast(`Maximum ${MAX_REPLAYS} replays reached — advance to the next round.`);
-          break;
-        }
         currentRun.round = Math.max(1, currentRun.round - 1);
-        currentRun.roundReplaysUsed = used + 1;
+        currentRun.roundReplaysUsed = (currentRun.roundReplaysUsed ?? 0) + 1;
         Save.saveRun(currentRun);
       }
       state.transition(STATES.SHOP);
       break;
-    }
     case 'back-to-menu':
       // currentRun was kept for game-over rendering; clear it now
       if (state.current === STATES.GAME_OVER) currentRun = null;
