@@ -5,6 +5,40 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.2.0 — 2026-04-12 — Complete card database rewrite + QoL
+
+### Card Database Rewrite (95 cards, from spreadsheet)
+Every plant chain has been restructured with new names, tiers, and stats:
+- **Scrubber chain** (7 tiers): Seedling → Blooming → Wilted → Dusted → Fruity → Scrub-a-Rub-Dub → Thundering Scrubber. Merge counts: ×3 → ×4 → ×5 → ×6 → ×7 → ×10.
+- **Ironroot chain** (6 tiers): Sentry → Archer → Knight → Lord → King → Emperor (artifact, spawns archers).
+- **Fern chain** (6 tiers): Ember Fern (new) → Cinder → Smoldering → Flaming → Inferno → Magma Fern (artifact, fire DoT).
+- **Willow chain** (4 tiers): Frost-Bite Willow → Frozen → Pulsing → Bound Willow (artifact, 90% slow).
+- **Void chain** (3 tiers): Void Petal Bloom → Void Bloom → Starry Void Bloom (artifact, splash 3 + backward).
+- **Solar chain** (3 tiers): Solar Archon (now epic) → Solar Breach (×5) → Solae (artifact).
+- **Economy chain** (7 tiers): Weed (1g/60s) → Sunflower (5g/50s) → Daisy (20g/40s) → Rose (65g/30s) → Pinecone (200g/20s) → Thorn (650g/10s, ×6) → Aether Seed (2000g/5s, artifact).
+- **Snapdragon chain** (3 tiers): Snapdragon (epic) → Mythril Dragon → Runite Dragon (artifact).
+- **Reaper chain** (3 tiers): Mini Reaper (epic, <5%) → Mini Arranger (<10%) → Mini Demon (artifact, <15%).
+- **Mandrake chain** (3 tiers): Midas Mandrake (epic) → Bloody → Crimson Mandrake (artifact).
+- **Lily chain** (8 tiers, all ×5): Verde Lily → Azule → Verdant → Crimson → Maroon → Washed (omni) → Gifted (artifact, 8 abilities) → Void Lily (void, attackAll, 1000g/cast).
+- **Calla chain**, **Aegis chain** (now 3 tiers with Elder Berry Aegis artifact), plus all single-tier fusions updated.
+
+### Added
+- **Replay round limit**: max 3 replays per round (not counting the first completion). Counter resets when advancing.
+- **Settings auto-save**: all checkboxes (Skip Countdown, Disable Sell Popup, Music, Sounds, Theme) now save immediately on toggle — no need to click "Save Game".
+- **Clear Grid respects Disable Sell Popup**: skips the confirmation when the setting is on.
+- **Clear-buffs returns spells**: the "Clear all buffs" button on the placed-card modal now returns tagged spells to the Spell Deck.
+- **Selling a buffed plant returns spells** to the Spell Deck.
+
+### Changed
+- **Verde Lily** replaces Lily Weed (id: verde_lily). Free starter + 1% Frenzy drop.
+- **Solar Archon** rarity: legendary → epic.
+- **Midas Mandrake** rarity: legendary → epic.
+- **Snapdragon** replaces Dragon-Breath Snapdragon (epic, cone 1w×2d).
+- **Mini Reaper** replaces Void-Reaper Lily (epic, execute <5%).
+- **Ancient Aegis** (new, epic) starts the Aegis chain. Shield scales with round level.
+
+---
+
 ## v1.1.9d — 2026-04-12 — Random enemy spawns, escalating refresh cost
 
 ### Changed

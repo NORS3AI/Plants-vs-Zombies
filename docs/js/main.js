@@ -907,22 +907,32 @@ document.addEventListener('click', (e) => {
       }
       break;
     case 'next-round':
-      // Round 10 victory check (Phase 3 stub — Phase 8 adds full victory screen)
+      // Reset replay counter when advancing to the next round.
+      if (currentRun) currentRun.roundReplaysUsed = 0;
       if (currentRun && currentRun.difficulty !== 'endless' && currentRun.round > ROUNDS_TOTAL) {
         handleRound10Victory();
       } else {
         state.transition(STATES.SHOP);
       }
       break;
-    case 'replay-round':
+    case 'replay-round': {
       // Go back to shop to replay the SAME round. endRound already
       // incremented the round counter, so roll it back by 1.
+      // Max 3 replays per round (not counting the first completion).
+      const MAX_REPLAYS = 3;
       if (currentRun) {
+        const used = currentRun.roundReplaysUsed ?? 0;
+        if (used >= MAX_REPLAYS) {
+          flashToast(`Maximum ${MAX_REPLAYS} replays reached — advance to the next round.`);
+          break;
+        }
         currentRun.round = Math.max(1, currentRun.round - 1);
+        currentRun.roundReplaysUsed = used + 1;
         Save.saveRun(currentRun);
       }
       state.transition(STATES.SHOP);
       break;
+    }
     case 'back-to-menu':
       // currentRun was kept for game-over rendering; clear it now
       if (state.current === STATES.GAME_OVER) currentRun = null;
@@ -1316,5 +1326,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.9d boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.2.0 boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);
