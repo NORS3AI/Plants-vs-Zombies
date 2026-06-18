@@ -285,7 +285,7 @@ export function generateSpawnSchedule(round, diff = {}) {
       const baseTime = (i / Math.max(1, count - 1)) * windowSec;
       const jitter = (Math.random() - 0.5) * (windowSec / count) * 0.6;
       const time = Math.max(0, baseTime + jitter);
-      const row = i % GRID_ROWS;
+      const row = Math.floor(Math.random() * GRID_ROWS);
       const type = typePool[i % typePool.length];
       schedule.push({ time, type, row, isBoss: false });
     }
@@ -296,7 +296,7 @@ export function generateSpawnSchedule(round, diff = {}) {
       const baseTime = (i / Math.max(1, count - 1)) * windowSec;
       const jitter = (Math.random() - 0.5) * (windowSec / count) * 0.6;
       const time = Math.max(0, baseTime + jitter);
-      const row = i % GRID_ROWS;
+      const row = Math.floor(Math.random() * GRID_ROWS);
       schedule.push({ time, type, row, isBoss: false });
     }
   }

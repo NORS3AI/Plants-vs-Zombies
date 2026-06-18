@@ -82,17 +82,27 @@ export function ensureShopRollForRound(run) {
     run.shopRollRound !== run.round
   ) {
     rerollShop(run);
+    // Reset the refresh cost escalation at the start of each round
+    run.refreshCount = 0;
   }
 }
 
-/** Pay 1 gold to refresh the shop offering. Returns true on success. */
+/** Current refresh cost: base 1g + 10% per prior refresh this round. */
+function getRefreshCost(run) {
+  const count = run.refreshCount ?? 0;
+  return Math.max(1, Math.ceil(REFRESH_COST * Math.pow(1.1, count)));
+}
+
+/** Pay to refresh the shop offering. Cost increases 10% each use. */
 export function refreshShop(run) {
-  if (run.gold < REFRESH_COST) {
-    flashError(`Need ${REFRESH_COST} gold to refresh`);
+  const cost = getRefreshCost(run);
+  if (run.gold < cost) {
+    flashError(`Need ${cost} gold to refresh`);
     _audio?.playSfx('back');
     return false;
   }
-  run.gold -= REFRESH_COST;
+  run.gold -= cost;
+  run.refreshCount = (run.refreshCount ?? 0) + 1;
   rerollShop(run);
   _audio?.playSfx('click');
   _onChange?.();
@@ -499,7 +509,9 @@ function updateRefreshButton(run) {
     return;
   }
   btn.hidden = false;
-  btn.disabled = run.gold < REFRESH_COST;
+  const cost = getRefreshCost(run);
+  btn.disabled = run.gold < cost;
+  btn.textContent = `↻ Refresh (${cost}g)`;
 }
 
 // ============================================================

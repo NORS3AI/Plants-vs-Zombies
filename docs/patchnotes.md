@@ -5,6 +5,14 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.9d — 2026-04-12 — Random enemy spawns, escalating refresh cost
+
+### Changed
+- **Enemies spawn in random rows** — zombies no longer march in a predictable top-to-bottom pattern. Each zombie picks a random row (0–4) independently, so waves are chaotic and unpredictable. Boss still spawns in the center row.
+- **Refresh cost escalates 10% per use** — the first refresh each round costs 1g (unchanged). Each subsequent refresh that round costs 10% more (1 → 2 → 2 → 2 → 3 → 3 → …). The cost resets to 1g when a new round begins. The button label updates to show the current cost.
+
+---
+
 ## v1.1.9c — 2026-04-12 — Larger battlefield, drag-to-move, sell returns spells
 
 ### Added
