@@ -76,14 +76,16 @@ export function rerollShop(run) {
  * across save/reload within a round).
  */
 export function ensureShopRollForRound(run) {
+  const roundChanged = run.shopRollRound !== run.round;
   if (
     !run.shopRoll ||
     run.shopRoll.length === 0 ||
-    run.shopRollRound !== run.round
+    roundChanged ||
+    run.shopRoll.every((s) => s.sold) // all cards sold → free reroll
   ) {
     rerollShop(run);
     // Reset the refresh cost escalation at the start of each round
-    run.refreshCount = 0;
+    if (roundChanged) run.refreshCount = 0;
   }
 }
 
