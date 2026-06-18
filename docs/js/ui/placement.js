@@ -326,6 +326,8 @@ function applyPlantSpell(effect, targetInstance, card, run) {
       return true;
     case 'tier_up':
       return tierUpPlantInstance(targetInstance, targetCard, effect, run);
+    case 'merge':
+      return synthesizePlant(targetInstance, targetCard, run);
     default:
       flashError(`Effect '${effect.type}' not implemented yet.`);
       return false;
@@ -388,6 +390,43 @@ function tierUpPlantInstance(instance, card, effect, run) {
   }
   instance.tier = currentTier + 1;
   flashToast(`🍄 ${card.name} is now T${instance.tier}!`);
+  return true;
+}
+
+/**
+ * Synthesis — instantly evolve a single plant into its next fusion
+ * form. The target plant is replaced in-place (same grid position,
+ * same deck slot) with the evolved card. Buffs and tier are reset
+ * on the new plant (it's a completely new species). If the plant
+ * has no evolution defined, the spell fizzles with an error toast.
+ */
+function synthesizePlant(instance, card, run) {
+  const evo = card.evolution;
+  if (!evo?.intoId) {
+    flashError(`${card.name} has no further evolution.`);
+    return false;
+  }
+  const resultCard = getCard(evo.intoId);
+  if (!resultCard) {
+    flashError(`Evolution target '${evo.intoId}' not found.`);
+    return false;
+  }
+
+  // Replace the plant in-place: keep grid position, reset everything else
+  const oldRow = instance.gridRow;
+  const oldCol = instance.gridCol;
+
+  instance.cardId = resultCard.id;
+  instance.sellValue = rollSell(resultCard);
+  instance.targeting = resultCard.targetingDefault ?? 'first';
+  instance.buffs = [];
+  instance.tier = undefined;
+
+  // Record the fusion for the merge log
+  recordAttainedFusion(run, resultCard.id);
+
+  _audio?.playSfx('go');
+  flashToast(`✨ Synthesis! ${card.name} → ${resultCard.name}!`);
   return true;
 }
 
