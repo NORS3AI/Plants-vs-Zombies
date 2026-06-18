@@ -23,6 +23,7 @@ Every plant chain has been restructured with new names, tiers, and stats:
 - **Calla chain**, **Aegis chain** (now 3 tiers with Elder Berry Aegis artifact), plus all single-tier fusions updated.
 
 ### Added
+- **Synthesis spell now works** — cast on any placed plant to instantly evolve it to its next fusion form. The plant is replaced in-place (same grid position), buffs/tier reset. If the plant has no evolution, the spell fizzles. No longer shows "coming soon".
 - **Replay round limit**: max 3 replays per round (not counting the first completion). Counter resets when advancing.
 - **Settings auto-save**: all checkboxes (Skip Countdown, Disable Sell Popup, Music, Sounds, Theme) now save immediately on toggle — no need to click "Save Game".
 - **Clear Grid respects Disable Sell Popup**: skips the confirmation when the setting is on.
