@@ -84,9 +84,10 @@ export function ensureShopRollForRound(run) {
     run.shopRoll.every((s) => s.sold) // all cards sold → free reroll
   ) {
     rerollShop(run);
-    // Reset the refresh cost escalation at the start of each round
-    if (roundChanged) run.refreshCount = 0;
   }
+  // Always reset refresh cost when entering the shop — the escalation
+  // is per-visit, not cumulative across the entire run.
+  run.refreshCount = 0;
 }
 
 /** Current refresh cost: base 1g + 10% per prior refresh this round. */
