@@ -57,11 +57,12 @@ let _overlayEl = null;
 const _zombieEls = new Map(); // zombie.id → { el, hpFill }
 const _plantEls = new Map(); // plant.instanceId → { el, hpFill }
 
-// Combat-time plant move mode. When set the next tap on an empty
-// (non-staging) tile relocates the plant to that position. Cleared
-// after a successful move, cancellation, or modal close.
-let _moveMode = null; // { plant, run } | null
-let _currentCombatRun = null; // captured in initCombatView for tile handlers
+// Combat-time plant drag-to-move state.
+let _moveMode = null;        // legacy (kept for exitMoveMode cleanup)
+let _currentCombatRun = null; // captured in initCombatView for handlers
+
+// Drag state for pointer-based plant relocation
+let _dragState = null; // { plant, startRow, startCol, ghostEl } | null
 
 /**
  * Build the static grid DOM for combat. Called once on COMBAT enter.
@@ -98,10 +99,13 @@ export function initCombatView(host, run) {
       tile.className = `grid-tile ${parity}${isStaging ? ' tile-staging' : ''}`;
       tile.dataset.row = String(r);
       tile.dataset.col = String(c);
-      tile.addEventListener('click', () => handleCombatTileClick(r, c));
       gridEl.appendChild(tile);
     }
   }
+
+  // Wire drag-to-move + tap-to-inspect on the grid (delegated)
+  wireCombatGridPointerEvents(gridEl);
+
   wrap.appendChild(gridEl);
 
   // Overlay for zombies + floating text (absolute positioned)
@@ -159,6 +163,119 @@ function findTile(row, col) {
 // ============================================================
 // COMBAT TILE CLICKS — plant details + mid-round move
 // ============================================================
+
+// ============================================================
+// DRAG-TO-MOVE — pointer events on the combat grid
+// ============================================================
+
+function tileFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const tile = el?.closest?.('.grid-tile');
+  if (!tile) return null;
+  return { row: Number(tile.dataset.row), col: Number(tile.dataset.col), tile };
+}
+
+function wireCombatGridPointerEvents(gridEl) {
+  let pointerDownTime = 0;
+  let moved = false;
+
+  gridEl.addEventListener('pointerdown', (e) => {
+    const state = getCombatState();
+    const run = _currentCombatRun;
+    if (!state || !run) return;
+
+    const hit = tileFromPoint(e.clientX, e.clientY);
+    if (!hit) return;
+
+    const plant = state.plants.find(
+      (p) => p.hp > 0 && p.row === hit.row && p.col === hit.col,
+    );
+    if (!plant) return;
+
+    // Start drag
+    e.preventDefault();
+    gridEl.setPointerCapture(e.pointerId);
+    pointerDownTime = Date.now();
+    moved = false;
+
+    // Create a ghost element that follows the pointer
+    const ghost = document.createElement('div');
+    ghost.className = 'combat-drag-ghost';
+    ghost.textContent = plant.card.type === 'plant' ? '🌱' : '✨';
+    ghost.style.left = `${e.clientX}px`;
+    ghost.style.top = `${e.clientY}px`;
+    document.body.appendChild(ghost);
+
+    _dragState = { plant, startRow: hit.row, startCol: hit.col, ghostEl: ghost };
+
+    // Highlight valid drop targets
+    gridEl.querySelectorAll('.grid-tile').forEach((tile) => {
+      const r = Number(tile.dataset.row);
+      const c = Number(tile.dataset.col);
+      if (c === STAGING_COL) return;
+      const occ = state.plants.some((p) => p.hp > 0 && p.row === r && p.col === c);
+      if (!occ) tile.classList.add('combat-move-target-valid');
+    });
+    hit.tile.classList.add('combat-move-source');
+  });
+
+  gridEl.addEventListener('pointermove', (e) => {
+    if (!_dragState) return;
+    moved = true;
+    _dragState.ghostEl.style.left = `${e.clientX}px`;
+    _dragState.ghostEl.style.top = `${e.clientY}px`;
+
+    // Highlight the tile under the pointer
+    gridEl.querySelectorAll('.grid-tile.combat-drag-hover').forEach((t) =>
+      t.classList.remove('combat-drag-hover'),
+    );
+    const hit = tileFromPoint(e.clientX, e.clientY);
+    if (hit?.tile) hit.tile.classList.add('combat-drag-hover');
+  });
+
+  gridEl.addEventListener('pointerup', (e) => {
+    if (!_dragState) return;
+    const { plant, ghostEl } = _dragState;
+    const run = _currentCombatRun;
+    const state = getCombatState();
+
+    // Clean up ghost + highlights
+    ghostEl.remove();
+    gridEl.querySelectorAll('.grid-tile').forEach((t) => {
+      t.classList.remove('combat-move-target-valid', 'combat-move-source', 'combat-drag-hover');
+    });
+    gridEl.releasePointerCapture(e.pointerId);
+
+    const hit = tileFromPoint(e.clientX, e.clientY);
+    const wasDrag = moved && Date.now() - pointerDownTime > 120;
+
+    if (wasDrag && hit && run && state) {
+      // Drop on a valid empty non-staging tile → move
+      if (hit.col !== STAGING_COL) {
+        const occupied = state.plants.some(
+          (p) => p.hp > 0 && p.row === hit.row && p.col === hit.col,
+        );
+        if (!occupied && (hit.row !== plant.row || hit.col !== plant.col)) {
+          movePlantTo(plant, hit.row, hit.col, run);
+        }
+      }
+    } else if (!moved || Date.now() - pointerDownTime < 200) {
+      // Short tap (no drag) → open plant details modal
+      openCombatPlantModal(plant, run);
+    }
+
+    _dragState = null;
+  });
+
+  gridEl.addEventListener('pointercancel', () => {
+    if (!_dragState) return;
+    _dragState.ghostEl.remove();
+    gridEl.querySelectorAll('.grid-tile').forEach((t) => {
+      t.classList.remove('combat-move-target-valid', 'combat-move-source', 'combat-drag-hover');
+    });
+    _dragState = null;
+  });
+}
 
 function handleCombatTileClick(row, col) {
   const run = _currentCombatRun;

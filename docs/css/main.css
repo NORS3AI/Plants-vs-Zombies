@@ -2267,6 +2267,29 @@ input, select, textarea {
   50%      { box-shadow: inset 0 0 0 2px rgba(74, 222, 128, 0.9), 0 0 14px rgba(74, 222, 128, 0.7); }
 }
 
+/* Drag ghost — follows the pointer during a combat plant drag */
+.combat-drag-ghost {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: rgba(74, 222, 128, 0.25);
+  border: 2px solid var(--accent-green);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.6);
+}
+.grid-tile.combat-drag-hover {
+  box-shadow:
+    inset 0 0 0 3px rgba(74, 222, 128, 1),
+    0 0 18px rgba(74, 222, 128, 0.85);
+}
+
 /* Tier badge (Magic Mushroom upgrade) shown inline in the stats line. */
 .placed-tier-badge {
   display: inline-block;
@@ -2703,7 +2726,11 @@ input, select, textarea {
   display: inline-block;
 }
 
-.combat-grid { position: relative; z-index: 0; }
+.combat-grid {
+  position: relative;
+  z-index: 0;
+  touch-action: none; /* let pointer events handle drag-to-move */
+}
 
 .combat-overlay {
   position: absolute;
