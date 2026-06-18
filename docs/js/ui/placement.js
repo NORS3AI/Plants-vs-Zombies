@@ -592,8 +592,26 @@ async function openPlacedCardModal(run, instance) {
       if (clearBtn) {
         clearBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const count = (instance.buffs ?? []).length;
+          const buffs = instance.buffs ?? [];
+          const count = buffs.length;
+          // Return tagged spells to the spell deck before clearing
+          let returned = 0;
+          for (const buff of buffs) {
+            if (!buff.spellId) continue;
+            const spellCard = getCard(buff.spellId);
+            if (!spellCard || spellCard.type !== 'spell') continue;
+            if (!run.spellDeck) run.spellDeck = [];
+            run.spellDeck.push({
+              cardId: buff.spellId,
+              instanceId: freshInstanceId(),
+              sellValue: rollSell(spellCard),
+            });
+            returned++;
+          }
           instance.buffs = [];
+          if (returned > 0) {
+            flashToast(`♻️ ${returned} spell${returned === 1 ? '' : 's'} returned to the Spell Deck.`);
+          }
           _audio?.playSfx('back');
           _onChange?.();
           renderPlacement(run);
@@ -1060,7 +1078,7 @@ function enforceRarityLimits(run) {
   const cardCounts = new Map();
   for (let i = run.deck.length - 1; i >= 0; i--) {
     const inst = run.deck[i];
-    if (inst.cardId === 'lily_weed') continue;
+    if (inst.cardId === 'verde_lily') continue;
     const card = getCard(inst.cardId);
     if (!card) continue;
     const limit = card.deckLimit;
@@ -1351,13 +1369,13 @@ function autoSellExcessSpells(run) {
 
 /**
  * Sell all unplaced plants of a specific rarity from the Plant Deck.
- * Lily Weeds (id 'lily_weed') are NEVER sold by bulk operations —
+ * Verde Lilies (id 'verde_lily') are NEVER sold by bulk operations —
  * they're a special collectible the player can have infinitely.
  */
 export async function sellPlantsByRarity(run, rarity) {
   const targets = run.deck.filter((d) => {
     if (d.gridRow != null) return false;
-    if (d.cardId === 'lily_weed') return false;
+    if (d.cardId === 'verde_lily') return false;
     const c = getCard(d.cardId);
     return c?.rarity === rarity;
   });

@@ -429,10 +429,10 @@ function startNewRun(difficultyId) {
   // (every difficulty). Beyond that, extra Lily Weeds only drop from
   // Frenzy packs at 1% — you have to hunt the other four if you want
   // to fuse them into a Blue Lily.
-  const lilyWeedCard = Cards.getCard('lily_weed');
-  if (lilyWeedCard) {
+  const lilyCard = Cards.getCard('verde_lily');
+  if (lilyCard) {
     currentRun.deck.push({
-      cardId: 'lily_weed',
+      cardId: 'verde_lily',
       instanceId: `inst_${Date.now()}_starter`,
       sellValue: Cards.rollSell(lilyWeedCard),
     });
@@ -748,13 +748,15 @@ async function clearGridToDeck() {
   const placed = currentRun.deck.filter((d) => d.gridRow != null);
   if (placed.length === 0) return;
 
-  const confirmed = await confirmModal({
-    title: 'Clear the Grid?',
-    message: `Return all ${placed.length} plant${placed.length === 1 ? '' : 's'} to the deck? Any buffs and tiers are kept — you just get to rearrange.`,
-    confirmLabel: `Return ${placed.length} to deck`,
-    cancelLabel: 'Cancel',
-  });
-  if (!confirmed) return;
+  if (!Save.loadSettings().skipSellConfirm) {
+    const confirmed = await confirmModal({
+      title: 'Clear the Grid?',
+      message: `Return all ${placed.length} plant${placed.length === 1 ? '' : 's'} to the deck? Any buffs and tiers are kept — you just get to rearrange.`,
+      confirmLabel: `Return ${placed.length} to deck`,
+      cancelLabel: 'Cancel',
+    });
+    if (!confirmed) return;
+  }
 
   for (const inst of placed) {
     inst.gridRow = null;
@@ -1039,6 +1041,19 @@ document.addEventListener('input', (e) => {
     const s = readSettingsFromDOM();
     Save.saveSettings(s);
     audio.setSettings(s);
+  }
+});
+
+// Auto-save all settings checkboxes on change so Skip Countdown,
+// Disable Sell Popup, etc. take effect immediately without needing
+// to click Save Game.
+document.addEventListener('change', (e) => {
+  const id = e.target.id;
+  if (id === 'setting-skip-sell-confirm' || id === 'setting-skip-countdown' ||
+      id === 'setting-music' || id === 'setting-sounds' || id === 'setting-theme') {
+    const s = readSettingsFromDOM();
+    Save.saveSettings(s);
+    applySettings(s);
   }
 });
 
