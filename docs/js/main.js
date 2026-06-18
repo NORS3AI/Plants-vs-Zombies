@@ -152,14 +152,29 @@ state.register(STATES.SHOP, {
     screens.show('shop');
     syncHUD();
     if (currentRun) {
-      // Merge unplaced deck copies first (e.g. plants that died and
-      // returned to the deck mid-round, hitting the evolution threshold).
+      // Round 1 starter: override the shop with a free Ironroot
+      // Sentry and Wild Growth so the player isn't helpless. This
+      // only fires once per run (guarded by starterGiven flag).
+      if (currentRun.round === 1 && !currentRun.starterGiven) {
+        currentRun.starterGiven = true;
+        currentRun.shopRoll = [
+          { cardId: 'ironroot_sentry', cost: 0, sold: false },
+          { cardId: 'wild_growth',     cost: 0, sold: false },
+        ];
+        currentRun.shopRollRound = 1;
+        Save.saveRun(currentRun);
+        // Show a hint popup after a brief delay so the shop renders first
+        setTimeout(() => {
+          flashToast('🌱 Welcome! Grab the free Ironroot Sentry and Wild Growth to survive Round 1.');
+        }, 300);
+      }
+
       Placement.checkDeckMerges(currentRun);
       Save.saveRun(currentRun);
       Shop.renderShop(currentRun);
       Placement.renderPlacement(currentRun);
       refreshClearGridButton();
-    refreshMergeLogButton();
+      refreshMergeLogButton();
       Tutorial.trigger('first_shop');
     }
     // After every round the player lands deep in the page — reset the
@@ -228,7 +243,16 @@ state.register(STATES.COMBAT, {
       onRoundComplete: () => endRound(),
       onGameOver: () => {
         audio.playSfx('gameover');
-        state.transition(STATES.GAME_OVER);
+        // Let the player retry — go back to shop instead of ending
+        // the run. Restore Aether-Root HP to full so they can
+        // rearrange and try the same round again.
+        if (currentRun) {
+          currentRun.aetherRootHP = currentRun.aetherRootMaxHP;
+          currentRun.aetherRootShield = 0;
+          Save.saveRun(currentRun);
+        }
+        flashToast('The Aether-Root has fallen — regroup and try again!');
+        state.transition(STATES.SHOP);
       },
     });
     CombatView.initCombatView(
