@@ -807,6 +807,29 @@ async function sellDeckInstance(run, instanceId) {
   // Re-find index in case the deck mutated during the modal (defensive).
   const nowHit = pickDeck(instanceId);
   if (!nowHit) return false;
+
+  // Return any buff spells back to the spell deck before removing
+  // the plant, so the player doesn't lose their spell investment.
+  if (instance.buffs && instance.buffs.length > 0 && card.type === 'plant') {
+    let returned = 0;
+    for (const buff of instance.buffs) {
+      if (!buff.spellId) continue;
+      const spellCard = getCard(buff.spellId);
+      if (!spellCard || spellCard.type !== 'spell') continue;
+      if (!run.spellDeck) run.spellDeck = [];
+      run.spellDeck.push({
+        cardId: buff.spellId,
+        instanceId: freshInstanceId(),
+        sellValue: rollSell(spellCard),
+      });
+      returned++;
+    }
+    if (returned > 0) {
+      flashToast(`♻️ ${returned} spell${returned === 1 ? '' : 's'} returned to the Spell Deck.`);
+    }
+    instance.buffs = [];
+  }
+
   nowHit.arr.splice(nowHit.idx, 1);
   run.gold += instance.sellValue;
   _audio?.playSfx('click');

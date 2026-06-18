@@ -39,8 +39,10 @@ ul, ol { list-style: none; }
   --rarity-artifact: #dc2626;
   --rarity-void: #7c3aed;
 
-  /* Tile sizing — single source of truth, overridden on mobile */
-  --tile-size: 56px;
+  /* Tile sizing — single source of truth, overridden on mobile.
+     Combat and shop grids both read these. Sizes are chosen so
+     9 tiles + aether-root + gaps fit without horizontal scroll. */
+  --tile-size: 64px;
   --tile-gap: 4px;
   --aether-width: 80px;
 }
@@ -2520,6 +2522,7 @@ input, select, textarea {
   margin-top: 4rem;
   width: 100%;
   justify-content: center;
+  overflow: hidden; /* never scroll the combat area */
 }
 
 .spell-panel {
@@ -2720,16 +2723,19 @@ input, select, textarea {
   text-align: right;
 }
 
-/* Combat grid wrapper (static grid + absolute overlay for zombies) */
+/* Combat grid wrapper (static grid + absolute overlay for zombies).
+   overflow: hidden prevents any stray scroll — tiles are sized via
+   --tile-size which is set per-breakpoint to always fit. */
 .combat-grid-wrap {
   position: relative;
   display: inline-block;
+  overflow: hidden;
 }
 
 .combat-grid {
   position: relative;
   z-index: 0;
-  touch-action: none; /* let pointer events handle drag-to-move */
+  touch-action: none;
 }
 
 .combat-overlay {
@@ -3259,7 +3265,7 @@ input, select, textarea {
 /* Tablets + small laptops: shrink tiles */
 @media (max-width: 900px) {
   :root {
-    --tile-size: 44px;
+    --tile-size: 50px;
     --aether-width: 64px;
   }
   .aether-root::before { font-size: 2rem; }
@@ -3273,7 +3279,7 @@ input, select, textarea {
 /* Phones */
 @media (max-width: 640px) {
   :root {
-    --tile-size: 40px;
+    --tile-size: 44px;
     --tile-gap: 3px;
     --aether-width: 52px;
   }

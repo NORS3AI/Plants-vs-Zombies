@@ -5,6 +5,20 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.9c — 2026-04-12 — Larger battlefield, drag-to-move, sell returns spells
+
+### Added
+- **Drag-to-move plants in combat** — press and hold a plant, drag it to any empty tile, release to drop. A green ghost follows the pointer, valid tiles light up, the source tile glows yellow. Short taps still open the plant details modal. Replaces the old click-to-select / click-to-move pattern.
+- **Selling a buffed plant returns its spells** — when selling a plant that has buff spells on it, every tagged spell is returned as a fresh copy to the Spell Deck. A toast shows how many spells were returned. You no longer lose your spell investment when selling a buffed plant.
+
+### Changed
+- **Larger combat battlefield** — desktop tiles bumped 56→64 px, tablets 44→50 px, phones 40→44 px. The combat container has `overflow: hidden` and the grid wrapper caps its width so horizontal scroll never appears.
+
+### v1.1.9b (same day)
+- Drag-to-move implementation with pointer events + ghost element.
+
+---
+
 ## v1.1.9a — 2026-04-12 — Replay Round, skip countdown, collapsible shop sections
 
 ### Added
