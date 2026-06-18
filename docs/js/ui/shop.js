@@ -493,6 +493,12 @@ function wirePackBuyBar() {
 function updateRefreshButton(run) {
   const btn = document.getElementById('refresh-shop-button');
   if (!btn) return;
+  // Hide the refresh button on round 1 (starter shop is free, no reroll needed)
+  if (run.round === 1) {
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
   btn.disabled = run.gold < REFRESH_COST;
 }
 

@@ -805,6 +805,37 @@ input, select, textarea {
   gap: 1rem;
 }
 
+/* Collapse toggle arrow on section titles */
+.collapse-toggle {
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  transition: transform 0.2s ease;
+  vertical-align: middle;
+  line-height: 1;
+}
+.shop-section.is-collapsed .collapse-toggle {
+  transform: rotate(-90deg);
+}
+.shop-section-body {
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+.shop-section.is-collapsed > .shop-section-body {
+  max-height: 0 !important;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+}
+/* Also hide hints and sort bars that aren't inside .shop-section-body */
+.shop-section.is-collapsed > .shop-hint {
+  display: none;
+}
+
 .shop-section-title {
   font-size: 0.95rem;
   font-weight: 700;

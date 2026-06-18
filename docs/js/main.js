@@ -51,6 +51,7 @@ function applySettings(settings) {
   const musicVol = document.getElementById('setting-music-volume');
   const sfxVol = document.getElementById('setting-sfx-volume');
   const skipSellCb = document.getElementById('setting-skip-sell-confirm');
+  const skipCountdownCb = document.getElementById('setting-skip-countdown');
   const devModeCb = document.getElementById('setting-dev-mode');
   const devHint = document.getElementById('dev-mode-hint');
 
@@ -60,6 +61,7 @@ function applySettings(settings) {
   if (musicVol) musicVol.value = Math.round((settings.musicVolume ?? 0.6) * 100);
   if (sfxVol) sfxVol.value = Math.round((settings.sfxVolume ?? 0.8) * 100);
   if (skipSellCb) skipSellCb.checked = !!settings.skipSellConfirm;
+  if (skipCountdownCb) skipCountdownCb.checked = !!settings.skipCountdown;
   if (devModeCb) devModeCb.checked = !!settings.devMode;
   if (devHint) devHint.hidden = !settings.devMode;
 
@@ -243,16 +245,7 @@ state.register(STATES.COMBAT, {
       onRoundComplete: () => endRound(),
       onGameOver: () => {
         audio.playSfx('gameover');
-        // Let the player retry — go back to shop instead of ending
-        // the run. Restore Aether-Root HP to full so they can
-        // rearrange and try the same round again.
-        if (currentRun) {
-          currentRun.aetherRootHP = currentRun.aetherRootMaxHP;
-          currentRun.aetherRootShield = 0;
-          Save.saveRun(currentRun);
-        }
-        flashToast('The Aether-Root has fallen — regroup and try again!');
-        state.transition(STATES.SHOP);
+        state.transition(STATES.GAME_OVER);
       },
     });
     CombatView.initCombatView(
@@ -905,7 +898,11 @@ document.addEventListener('click', (e) => {
       }
       break;
     case 'start-countdown':
-      state.transition(STATES.COUNTDOWN);
+      if (Save.loadSettings().skipCountdown) {
+        state.transition(STATES.COMBAT);
+      } else {
+        state.transition(STATES.COUNTDOWN);
+      }
       break;
     case 'next-round':
       // Round 10 victory check (Phase 3 stub — Phase 8 adds full victory screen)
@@ -914,6 +911,15 @@ document.addEventListener('click', (e) => {
       } else {
         state.transition(STATES.SHOP);
       }
+      break;
+    case 'replay-round':
+      // Go back to shop to replay the SAME round. endRound already
+      // incremented the round counter, so roll it back by 1.
+      if (currentRun) {
+        currentRun.round = Math.max(1, currentRun.round - 1);
+        Save.saveRun(currentRun);
+      }
+      state.transition(STATES.SHOP);
       break;
     case 'back-to-menu':
       // currentRun was kept for game-over rendering; clear it now
@@ -951,6 +957,14 @@ document.addEventListener('click', (e) => {
       break;
     }
   }
+});
+
+// Collapsible shop sections: toggle .is-collapsed on the parent section
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.collapse-toggle');
+  if (!toggle) return;
+  const section = toggle.closest('.shop-section[data-collapsible]');
+  if (section) section.classList.toggle('is-collapsed');
 });
 
 // Escape clears placement selection (if in shop)
@@ -1045,6 +1059,7 @@ function readSettingsFromDOM() {
     musicVolume: (musicVolRaw !== undefined ? Number(musicVolRaw) : 60) / 100,
     sfxVolume: (sfxVolRaw !== undefined ? Number(sfxVolRaw) : 80) / 100,
     skipSellConfirm: !!document.getElementById('setting-skip-sell-confirm')?.checked,
+    skipCountdown: !!document.getElementById('setting-skip-countdown')?.checked,
     devMode: persistedDevMode,
   };
 }
@@ -1286,5 +1301,5 @@ window.__pvz = {
   currentRun: () => currentRun,
   DIFFICULTIES,
 };
-console.log('[pvz] v1.1.9 boot complete. Use window.__pvz for debug.');
+console.log('[pvz] v1.1.9a boot complete. Use window.__pvz for debug.');
 console.log(`[pvz] Card database: ${Cards.ALL_CARDS.length} cards`);

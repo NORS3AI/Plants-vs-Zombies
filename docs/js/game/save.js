@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS = {
   musicVolume: 0.6,
   sfxVolume: 0.8,
   skipSellConfirm: false,
+  skipCountdown: false,
   devMode: false, // Unlocked via 4-digit code in the Settings screen
 };
 

@@ -5,6 +5,19 @@ Format: `Version — Date — Summary`
 
 ---
 
+## v1.1.9a — 2026-04-12 — Replay Round, skip countdown, collapsible shop sections
+
+### Added
+- **Replay Round button** — after completing a round, a new "↻ Replay Round" button appears alongside "Next Round →". Tapping it rolls the round counter back by 1 and returns to the shop so the player can stay on the same round as long as they want.
+- **Skip Countdown setting** — new checkbox in Settings. When on, pressing Start Round skips the 3-second countdown and jumps straight to combat.
+- **Collapsible shop sections** — Shop, Card Packs, Aether-Root Spells, Plant Deck, and Spell Deck each have a ▾ toggle arrow in their header. Tap it to collapse/expand the section. Collapses with a CSS transition.
+- **Refresh button hidden on Round 1** — since the starter shop is free and predetermined, the "↻ Refresh (1g)" button is hidden until Round 2.
+
+### Changed
+- **Defeat is game-over again** — the v1.1.9 retry-on-defeat was reverted. When the Aether-Root falls, the run ends as intended. Use the "Replay Round" button on successful rounds to farm and prepare instead.
+
+---
+
 ## v1.1.9 — 2026-04-12 — Retry on defeat, round-1 starter, Void Lily attackAll
 
 ### Added
